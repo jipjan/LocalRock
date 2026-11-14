@@ -1,7 +1,6 @@
 package com.kodraliu.localrock.shared.auth
 
 import com.kodraliu.localrock.shared.http.ProdJson
-import com.kodraliu.localrock.shared.model.ApiResponse
 import com.kodraliu.localrock.shared.model.UserData
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -16,12 +15,16 @@ import kotlinx.serialization.json.JsonNull
 @Serializable
 private data class CodeLoginBody(val email: String, val code: String)
 
+/** The login answer's envelope; unlike [com.kodraliu.localrock.shared.model.ApiResponse], a refusal may leave out `data` or `msg`. */
+@Serializable
+internal data class LoginEnvelope(val code: Int = 0, val msg: String = "", val data: JsonElement = JsonNull)
+
 class LoginApi(private val client: HttpClient) {
 
     suspend fun login(email: String, code: String): UserData {
         // Read the envelope before the session: a refusal carries {reason, ...} in `data`, not a
         // session, and reading it as one hid the server's answer behind a serialization error.
-        val response: ApiResponse<JsonElement> = client.post("/api/v5/auth/email/login/code") {
+        val response: LoginEnvelope = client.post("/api/v5/auth/email/login/code") {
             contentType(ContentType.Application.Json)
             setBody(CodeLoginBody(email, code))
         }.body()
@@ -29,7 +32,7 @@ class LoginApi(private val client: HttpClient) {
     }
 }
 
-internal fun parseLoginResponse(response: ApiResponse<JsonElement>): UserData {
+internal fun parseLoginResponse(response: LoginEnvelope): UserData {
     if (response.code != 200) throw LoginException(response.code, response.msg)
     if (response.data is JsonNull) throw LoginException(response.code, "The server sent no session")
     return ProdJson.decodeFromJsonElement(UserData.serializer(), response.data)

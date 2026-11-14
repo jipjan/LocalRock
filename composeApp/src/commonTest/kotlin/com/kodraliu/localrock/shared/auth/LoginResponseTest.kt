@@ -1,7 +1,6 @@
 package com.kodraliu.localrock.shared.auth
 
 import com.kodraliu.localrock.shared.http.ProdJson
-import com.kodraliu.localrock.shared.model.ApiResponse
 import kotlinx.serialization.json.JsonElement
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -10,7 +9,7 @@ import kotlin.test.assertFailsWith
 class LoginResponseTest {
 
     private fun parse(body: String) =
-        parseLoginResponse(ProdJson.decodeFromString<ApiResponse<JsonElement>>(body))
+        parseLoginResponse(ProdJson.decodeFromString<LoginEnvelope>(body))
 
     @Test
     fun new_connections_switched_off_is_named_not_a_serialization_error() {
@@ -39,6 +38,12 @@ class LoginResponseTest {
         }
         assertEquals(LoginFailure.OTHER, e.failure)
         assertEquals("local_session_issue_failed", e.message)
+    }
+
+    @Test
+    fun a_refusal_without_data_still_names_the_reason() {
+        val e = assertFailsWith<LoginException> { parse("""{"code":2010,"msg":"invalid_credentials"}""") }
+        assertEquals(LoginFailure.INVALID_CREDENTIALS, e.failure)
     }
 
     @Test

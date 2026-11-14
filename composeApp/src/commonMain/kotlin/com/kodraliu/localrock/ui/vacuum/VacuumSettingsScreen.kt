@@ -78,6 +78,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -691,7 +692,10 @@ private fun VoicePackScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
     var packs by remember { mutableStateOf<List<VoicePack>?>(null) }
     var loadError by remember { mutableStateOf<String?>(null) }
     var confirm by remember { mutableStateOf<VoicePack?>(null) }
-    var installing by remember { mutableStateOf<VoicePack?>(null) }
+    var launched by remember { mutableStateOf<VoicePack?>(null) }
+    // An install keeps running in the view model after this page closes; the repository's state brings
+    // it back when the page is opened again.
+    val installing = launched ?: packs?.firstOrNull { pack -> state.inProgress == pack.id }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -780,10 +784,10 @@ private fun VoicePackScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
             confirmButton = {
                 TextButton(onClick = {
                     confirm = null
-                    installing = pack
+                    launched = pack
                     scope.launch {
                         viewModel.report { it.installVoicePack(pack) }.join()
-                        installing = null
+                        launched = null
                     }
                 }) { Text("Install") }
             },
@@ -801,11 +805,14 @@ private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPer
     // Sorted by start time, as the robot keeps them; the open period is known by its times, not its place.
     val periods = robotPeriods.sortedBy { it.startHour * 60 + it.startMinute }
     var editingTimes by remember { mutableStateOf<List<Int>?>(null) }
+    // Times are changed on a draft and sent once, on Save, so stepping through them is not one write per tap.
+    var draft by remember { mutableStateOf<DndPeriod?>(null) }
     val editing = periods.indexOfFirst { it.times == editingTimes }.takeIf { it >= 0 }
-    fun replace(index: Int, period: DndPeriod) {
-        if (editing == index) editingTimes = period.times
-        onChange(periods.toMutableList().also { it[index] = period })
+    fun open(period: DndPeriod?) {
+        editingTimes = period?.times
+        draft = period
     }
+    fun replace(index: Int, period: DndPeriod) = onChange(periods.toMutableList().also { it[index] = period })
 
     Scaffold(
         topBar = {
@@ -830,7 +837,7 @@ private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPer
                     Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer) {
                         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Column(Modifier.weight(1f).clickable { editingTimes = if (editing == index) null else period.times }) {
+                                Column(Modifier.weight(1f).clickable { open(if (editing == index) null else period) }) {
                                     Text(
                                         "${formatClock(period.startHour, period.startMinute)} – ${formatClock(period.endHour, period.endMinute)}",
                                         style = MaterialTheme.typography.titleMedium,
@@ -841,23 +848,24 @@ private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPer
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
-                                IconButton(onClick = { editingTimes = null; onChange(periods.filterIndexed { i, _ -> i != index }) }) {
+                                IconButton(onClick = { open(null); onChange(periods.filterIndexed { i, _ -> i != index }) }) {
                                     Icon(Icons.Filled.Delete, "Delete period")
                                 }
                                 Switch(checked = period.enabled, onCheckedChange = { replace(index, period.copy(enabled = it)) })
                             }
-                            if (editing == index) {
-                                Text("Start", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    NumberStepper2("Hour", period.startHour, 0..23) { replace(index, period.copy(startHour = it)) }
-                                    Text(":", style = MaterialTheme.typography.headlineMedium)
-                                    NumberStepper2("Minute", period.startMinute, 0..59, step = 15) { replace(index, period.copy(startMinute = it)) }
-                                }
-                                Text("End", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    NumberStepper2("Hour", period.endHour, 0..23) { replace(index, period.copy(endHour = it)) }
-                                    Text(":", style = MaterialTheme.typography.headlineMedium)
-                                    NumberStepper2("Minute", period.endMinute, 0..59, step = 15) { replace(index, period.copy(endMinute = it)) }
+                            val d = draft
+                            if (editing == index && d != null) {
+                                DndTimeRow("Start", d.startHour, d.startMinute) { h, m -> draft = d.copy(startHour = h, startMinute = m) }
+                                DndTimeRow("End", d.endHour, d.endMinute) { h, m -> draft = d.copy(endHour = h, endMinute = m) }
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                                    TextButton(onClick = { open(null) }) { Text("Cancel") }
+                                    Button(
+                                        onClick = {
+                                            replace(index, d.copy(enabled = period.enabled))
+                                            open(null)
+                                        },
+                                        enabled = d.times != period.times && periods.none { it !== period && it.times == d.times },
+                                    ) { Text("Save") }
                                 }
                             }
                         }
@@ -870,7 +878,7 @@ private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPer
                             val taken = periods.map { it.times }.toSet()
                             val hour = (12..35).map { it % 24 }.first { listOf(it, 0, (it + 1) % 24, 0) !in taken }
                             val added = DndPeriod(hour, 0, (hour + 1) % 24, 0, true, periods.firstOrNull()?.actions)
-                            editingTimes = added.times
+                            open(added)
                             onChange(periods + added)
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -878,6 +886,16 @@ private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPer
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DndTimeRow(label: String, hour: Int, minute: Int, onChange: (Int, Int) -> Unit) {
+    Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        NumberStepper2("Hour", hour, 0..23) { onChange(it, minute) }
+        Text(":", style = MaterialTheme.typography.headlineMedium)
+        NumberStepper2("Minute", minute, 0..59, step = 15) { onChange(hour, it) }
     }
 }
 

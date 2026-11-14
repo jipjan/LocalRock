@@ -509,8 +509,12 @@ class VacuumRepository(
                 throw IllegalStateException("The robot could not install the voice pack (error ${p.error}).")
             }
             if (p.inProgress == pack.id) sawProgress = true
-            // Done when the robot no longer reports this pack in progress, after having started it or at 100%.
-            if (p.inProgress != pack.id && (sawProgress || p.progress == 100)) break
+            if (p.inProgress == pack.id) continue
+            if (sawProgress) break
+            // Not seen in progress yet: a quick install may be done already, or the first answers may
+            // still describe the previous install (sid 0, 100%). Only stop once the pack is in use.
+            if (p.progress == 100 && runCatching { fetchVoicePack() }.isSuccess && _voicePack.value.inUse == pack.id) break
+            _voicePack.update { it.copy(inProgress = pack.id) }
         }
         _voicePack.update { it.copy(inProgress = null) }
         fetchVoicePack()
@@ -1184,13 +1188,21 @@ class VacuumRepository(
             if (last.error == null) betaSetAcceptedShape[id] = i
             if (last.error?.get("code")?.jsonPrimitive?.intOrNull !in BetaShapeRefusalCodes) break
         }
-        val updated = readBetaFeature(current.def)?.takeIf { it.answered && it.toggleable }
+        var updated = readBetaFeature(current.def)?.takeIf { it.answered && it.toggleable }
+        if (last?.error == null && updated != null && updated.value != value) {
+            // Give the robot a moment before deciding it ignored the change.
+            delay(1_000)
+            updated = readBetaFeature(current.def)?.takeIf { it.answered && it.toggleable } ?: updated
+        }
         if (updated != null) {
             if (_betaFeaturesLoading.value) setDuringRead += id
             _betaFeatures.update { list -> list.map { if (it.def.id == id) updated else it } }
             if (featuresRead) persist()
         }
         last?.requireOk(current.def.setMethod)
+        if (updated != null && updated.value != value) {
+            throw IllegalStateException("The robot accepted the change but still reports the old setting.")
+        }
     }
 
     /**
@@ -1208,7 +1220,8 @@ class VacuumRepository(
             autoEmptyMode = r.autoEmptyMode ?: before.autoEmptyMode,
             mopDrying = r.mopDrying ?: before.mopDrying,
             dryTimeSeconds = r.dryTimeSeconds ?: before.dryTimeSeconds,
-            dryerAnswer = r.dryerAnswer ?: before.dryerAnswer,
+            // Never kept from before: the dryer setters send this body back, so it must be the robot's latest.
+            dryerAnswer = r.dryerAnswer,
             dryStart = r.dryStart ?: before.dryStart,
             dryScheduleHour = if (r.dryStart != null) r.dryScheduleHour else before.dryScheduleHour,
             dryScheduleMinute = if (r.dryStart != null) r.dryScheduleMinute else before.dryScheduleMinute,
@@ -1410,6 +1423,22 @@ class VacuumRepository(
      */
     suspend fun setDnd(startHour: Int, startMinute: Int, endHour: Int, endMinute: Int) {
         val actions = _dndSettings.value?.actions
+        if (newFeatureBit(_robotFeatureSet.value, MULTI_DND_BIT)) {
+            // set_multi_dnd_timer replaces every period: change only the first and keep the others,
+            // read fresh so a period added elsewhere is not lost.
+            readDndPeriods()
+            val current = _dndPeriods.value
+                ?: throw IllegalStateException("Couldn't read the robot's quiet hours, so nothing was changed.")
+            if (current.isNotEmpty()) {
+                val sorted = current.sortedBy { it.startHour * 60 + it.startMinute }
+                setDndPeriods(listOf(sorted[0].copy(startHour = startHour, startMinute = startMinute, endHour = endHour, endMinute = endMinute, enabled = true)) + sorted.drop(1))
+                _dndSettings.update {
+                    it?.copy(enabled = true, startHour = startHour, startMinute = startMinute, endHour = endHour, endMinute = endMinute)
+                        ?: DndSettings(true, startHour, startMinute, endHour, endMinute)
+                }
+                return
+            }
+        }
         if (actions != null || newFeatureBit(_robotFeatureSet.value, MULTI_DND_BIT)) {
             session.setMultiDndTimer(startHour, startMinute, endHour, endMinute, actions).requireOk("set_multi_dnd_timer")
         } else {

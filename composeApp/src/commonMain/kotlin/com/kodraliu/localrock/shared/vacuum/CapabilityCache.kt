@@ -31,6 +31,7 @@ data class CachedDock(
     val autoEmptyMode: Int? = null,
     val mopDrying: Boolean? = null,
     val dryTimeSeconds: Int? = null,
+    /** No longer written: the dryer setters send this body back, so only a fresh read may supply it. */
     val dryerAnswer: JsonObject? = null,
     val dryStart: Int? = null,
     val dryScheduleHour: Int? = null,
@@ -40,7 +41,7 @@ data class CachedDock(
 
 internal fun DockSettings.toCache() = CachedDock(
     washMode, smartWash?.mode, smartWash?.intervalSeconds, autoEmptyMode, mopDrying, dryTimeSeconds,
-    dryerAnswer, dryStart, dryScheduleHour, dryScheduleMinute, washWaterTemperature,
+    null, dryStart, dryScheduleHour, dryScheduleMinute, washWaterTemperature,
 )
 
 internal fun CachedDock.toSettings() = DockSettings(
@@ -49,7 +50,6 @@ internal fun CachedDock.toSettings() = DockSettings(
     autoEmptyMode = autoEmptyMode,
     mopDrying = mopDrying,
     dryTimeSeconds = dryTimeSeconds,
-    dryerAnswer = dryerAnswer,
     dryStart = dryStart,
     dryScheduleHour = dryScheduleHour,
     dryScheduleMinute = dryScheduleMinute,

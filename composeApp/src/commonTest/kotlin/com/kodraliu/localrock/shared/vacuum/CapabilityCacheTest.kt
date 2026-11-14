@@ -36,7 +36,8 @@ class CapabilityCacheTest {
             dryTimeSeconds = 10800, dryerAnswer = JsonObject(mapOf("status" to JsonPrimitive(1))),
             dryStart = 2, dryScheduleHour = 17, dryScheduleMinute = 0, washWaterTemperature = 1,
         )
-        assertEquals(dock, dock.toCache().toSettings())
+        // The dryer's own answer is left out: the setters send it back, so only a fresh read may supply it.
+        assertEquals(dock.copy(dryerAnswer = null), dock.toCache().toSettings())
     }
 
     @Test
