@@ -39,13 +39,18 @@ import com.kodraliu.localrock.resources.login_code
 import com.kodraliu.localrock.resources.login_demo
 import com.kodraliu.localrock.resources.login_email
 import com.kodraliu.localrock.resources.login_error_failed
+import com.kodraliu.localrock.resources.login_error_invalid_credentials
+import com.kodraliu.localrock.resources.login_error_new_connections_disabled
 import com.kodraliu.localrock.resources.login_intro
 import com.kodraliu.localrock.resources.login_server
 import com.kodraliu.localrock.resources.login_sign_in
 import com.kodraliu.localrock.shared.auth.AuthRepository
+import com.kodraliu.localrock.shared.auth.LoginException
+import com.kodraliu.localrock.shared.auth.LoginFailure
 import com.kodraliu.localrock.shared.demo.isDemoCredentials
 import com.kodraliu.localrock.ui.LocalAppContainer
 import com.kodraliu.localrock.ui.adaptive.CenteredContent
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -85,6 +90,14 @@ class LoginModel(
             _error.value = null
             try {
                 auth.login(_email.value.trim(), _code.value.trim())
+            } catch (e: LoginException) {
+                // The refusals the server names get a message that says what to do; any other
+                // server message stays as it is.
+                _error.value = when (e.failure) {
+                    LoginFailure.NEW_CONNECTIONS_DISABLED -> getString(Res.string.login_error_new_connections_disabled)
+                    LoginFailure.INVALID_CREDENTIALS -> getString(Res.string.login_error_invalid_credentials)
+                    LoginFailure.OTHER -> e.message ?: ""
+                }
             } catch (e: Throwable) {
                 // Server messages stay as they are; an empty one is shown as a translated fallback.
                 _error.value = e.message ?: ""

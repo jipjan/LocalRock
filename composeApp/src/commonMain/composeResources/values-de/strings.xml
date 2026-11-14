@@ -10,5 +10,7 @@
     <string name="login_email">E-Mail</string>
     <string name="login_code">Anmeldecode</string>
     <string name="login_error_failed">Anmeldung fehlgeschlagen</string>
+    <string name="login_error_new_connections_disabled">Dein Server nimmt gerade keine neuen Anmeldungen an. Aktiviere neue Verbindungen auf der Admin-Seite des Servers, melde dich an und deaktiviere sie danach wieder.</string>
+    <string name="login_error_invalid_credentials">E-Mail-Adresse oder Anmeldecode passen nicht zu deinem Server. Prüfe sie in den Servereinstellungen und versuche es erneut.</string>
     <string name="login_demo">Demo ausprobieren (kein Server nötig)</string>
 </resources>

@@ -45,9 +45,11 @@ class AuthRepository(
         return try {
             login(email, code)
         } catch (e: LoginException) {
-            // The stored credentials are no longer valid — drop them so we stop retrying.
             println("[VacLocal] silent re-login rejected (${e.responseCode}): ${e.message}")
-            settings.writeLoginCredentials(null, null)
+            // Only wrong credentials are dropped, so we stop retrying them. New connections being
+            // switched off is the admin's choice for now: the credentials still work once it is
+            // switched back on, so they are kept.
+            if (e.failure != LoginFailure.NEW_CONNECTIONS_DISABLED) settings.writeLoginCredentials(null, null)
             null
         } catch (e: Throwable) {
             // Network trouble: keep the credentials, this is worth retrying later.

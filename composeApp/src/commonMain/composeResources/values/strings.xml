@@ -10,5 +10,7 @@
     <string name="login_email">Email</string>
     <string name="login_code">Login code</string>
     <string name="login_error_failed">Sign-in failed</string>
+    <string name="login_error_new_connections_disabled">Your server isn't accepting new sign-ins right now. Turn on new connections in the server's admin page, sign in, then turn it off again.</string>
+    <string name="login_error_invalid_credentials">That email or login code doesn't match your server. Check them in the server's settings and try again.</string>
     <string name="login_demo">Explore the demo (no server needed)</string>
 </resources>
