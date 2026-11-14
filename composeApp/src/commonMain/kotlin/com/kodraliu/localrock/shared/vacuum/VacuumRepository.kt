@@ -948,8 +948,8 @@ class VacuumRepository(
 
     /** Null when the robot did not reply at all, so a read that timed out is not mistaken for an answer. */
     private suspend fun readBetaFeature(def: BetaFeatureDef): BetaFeatureState? {
-        val resp = runCatching { session.sendCommand(def.getMethod) }.getOrNull() ?: return null
-        val parsed = parseBetaReply(resp.result)
+        val resp = runCatching { session.sendCommandRaw(def.getMethod, featureReadParams(def)) }.getOrNull() ?: return null
+        val parsed = readFeatureReply(def, resp.result)
         return BetaFeatureState(
             def = def,
             value = parsed?.second,
@@ -982,9 +982,12 @@ class VacuumRepository(
      * last time, then reads the option back so the screen shows what the robot holds. Throws the robot's
      * refusal, if any, after that.
      */
-    suspend fun setBetaFeature(id: String, on: Boolean) {
+    suspend fun setBetaFeature(id: String, on: Boolean) = setBetaFeature(id, if (on) 1 else 0)
+
+    /** Sets a feature to [value]: 0/1 for a switch, one of its choices for a picker. */
+    suspend fun setBetaFeature(id: String, value: Int) {
         val current = _betaFeatures.value.firstOrNull { it.def.id == id } ?: return
-        val candidates = betaSetParamCandidates(current.key, on)
+        val candidates = featureSetParamCandidates(current.def, current.key, value)
         var last: V1Response? = null
         for (i in betaSetTryOrder(candidates.size, betaSetAcceptedShape[id])) {
             last = session.sendCommandRaw(current.def.setMethod, candidates[i])

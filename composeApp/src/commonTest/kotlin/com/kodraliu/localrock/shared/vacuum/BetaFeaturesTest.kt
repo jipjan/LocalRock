@@ -13,12 +13,16 @@ class BetaFeaturesTest {
     fun supported_features_follow_the_feature_bits() {
         // QX Revo Ultra 2 newFeatureSet: bits 36, 40, 43, 54, 56, 60 and 63 are on, 58 is off.
         val set = "0000000000119418CCD57EFDA869B6DDDBFF8F7F7EFEFFFF"
+        val original = setOf(
+            "avoid_collision", "collision_mode", "corner_mop_stretch", "dirty_object_detect", "gap_deep_clean",
+            "pet_supplies_deep_clean", "right_brush_stretch", "water_leak_check",
+        )
         assertEquals(
             listOf(
-                "avoid_collision", "corner_mop_stretch", "dirty_object_detect", "gap_deep_clean",
+                "collision_mode", "corner_mop_stretch", "dirty_object_detect", "gap_deep_clean",
                 "pet_supplies_deep_clean", "right_brush_stretch", "water_leak_check",
             ),
-            supportedBetaFeatures(set).filter { it.bit != null && it.bit != 3 && it.bit != 112 }.map { it.id }.sorted(),
+            supportedBetaFeatures(set).filter { it.id in original }.map { it.id }.sorted(),
         )
         assertEquals(emptyList(), supportedBetaFeatures("0").filter { it.bit != null })
     }
@@ -35,9 +39,79 @@ class BetaFeaturesTest {
     @Test
     fun features_without_a_known_bit_are_always_probed() {
         assertEquals(
-            listOf("dust_collection_switch", "follow_ground_material", "identify_furniture", "identify_ground_material"),
+            listOf(
+                "carpet_boost", "dust_collection_switch", "follow_ground_material", "identify_furniture",
+                "identify_ground_material", "offline_map", "priority_carpet", "sway_arm_door_sill",
+            ),
             supportedBetaFeatures(null).map { it.id }.sorted(),
         )
+    }
+
+    @Test
+    fun collision_avoidance_is_a_mode_picker_on_robots_with_bit_118() {
+        // An a296 (Saros 20 Neo) has bit 118; the official app offers 1 Large coverage / 2 Less collision.
+        val a296 = "0000000000199518CED77EFDA8E9BEDDDBFF8F7F7EFEFFFF"
+        val ids = supportedBetaFeatures(a296).map { it.id }
+        assertTrue("collision_mode" in ids)
+        assertFalse("avoid_collision" in ids)
+        val mode = BetaFeatureDefs.first { it.id == "collision_mode" }
+        assertEquals(listOf(1, 2), mode.choices?.map { it.first })
+        // Without bit 118 (only bit 36) the old on/off switch stays.
+        val bit36Only = "1" + "0".repeat(9)
+        assertEquals(listOf("avoid_collision"), supportedBetaFeatures(bit36Only).filter { it.bit == 36 }.map { it.id })
+    }
+
+    @Test
+    fun the_new_a296_features_are_offered_on_an_a296() {
+        val a296 = "0000000000199518CED77EFDA8E9BEDDDBFF8F7F7EFEFFFF"
+        val ids = supportedBetaFeatures(a296).map { it.id }.toSet()
+        for (id in listOf(
+            "dirty_replenish", "clean_direction", "low_area_access", "lds_lifting", "remove_mop",
+            "dynamic_obstacle_replenish", "omission_reminder", "cross_carpet", "long_haired_carpet",
+            "carpet_wire", "identify_room", "smart_wash",
+        )) assertTrue(id in ids, id)
+    }
+
+    @Test
+    fun robot_settings_are_read_and_written_by_name() {
+        val def = BetaFeatureDefs.first { it.id == "clean_direction" }
+        assertEquals("app_get_robot_setting", def.getMethod)
+        assertEquals("""{"name":"clean_direction_status"}""", featureReadParams(def).toString())
+        assertEquals("status" to 2, readFeatureReply(def, Json.parseToJsonElement("""{"status":2}""")))
+        // Exactly as captured from the official app.
+        assertEquals(
+            listOf("""{"name":"clean_direction_status","status":2}"""),
+            featureSetParamCandidates(def, "status", 2).map { it.toString() },
+        )
+    }
+
+    @Test
+    fun status_bit_features_read_one_bit_of_get_status() {
+        val def = BetaFeatureDefs.first { it.id == "dirty_replenish" }
+        // switch_status 24 = bits 3 and 4: carpets first and re-mop on.
+        val status = Json.parseToJsonElement("""[{"state":8,"switch_status":24}]""")
+        assertEquals("status" to 1, readFeatureReply(def, status))
+        assertEquals("status" to 0, readFeatureReply(def, Json.parseToJsonElement("""[{"switch_status":8}]""")))
+        assertEquals("""{"status":1}""", featureSetParamCandidates(def, null, 1).first().toString())
+    }
+
+    @Test
+    fun carpet_boost_reads_enable_and_writes_it_wrapped() {
+        val def = BetaFeatureDefs.first { it.id == "carpet_boost" }
+        val reply = Json.parseToJsonElement("""[{"enable":1,"current_integral":1000,"current_high":500,"current_low":1000,"stall_time":10}]""")
+        assertEquals("enable" to 1, readFeatureReply(def, reply))
+        assertEquals(listOf("""[{"enable":0}]"""), featureSetParamCandidates(def, "enable", 0).map { it.toString() })
+    }
+
+    @Test
+    fun pickers_accept_only_their_own_values() {
+        val fluid = BetaFeatureDefs.first { it.id == "clean_fluid_delivery" }
+        assertTrue(BetaFeatureState(fluid, value = 3).toggleable)
+        assertEquals("High volume", BetaFeatureState(fluid, value = 3).choiceLabel)
+        assertFalse(BetaFeatureState(fluid, value = 2).toggleable)
+        val led = BetaFeatureDefs.first { it.id == "voice_control_led" }
+        assertTrue(BetaFeatureState(led, value = 1).toggleable)
+        assertFalse(BetaFeatureState(led, value = 3).toggleable)
     }
 
     @Test
@@ -57,9 +131,10 @@ class BetaFeaturesTest {
     }
 
     @Test
-    fun set_params_try_the_reply_shape_then_the_other_forms() {
+    fun set_params_try_the_bare_object_first_like_the_official_app() {
+        // Captured from the official app on an a296: set_gap_deep_clean_status {"status":1}.
         assertEquals(
-            listOf("""[{"status":1}]""", """{"status":1}""", "[1]"),
+            listOf("""{"status":1}""", """[{"status":1}]""", "[1]"),
             betaSetParamCandidates("status", true).map { it.toString() },
         )
         assertEquals(listOf("[0]"), betaSetParamCandidates(null, false).map { it.toString() })
@@ -85,7 +160,8 @@ class BetaFeaturesTest {
         val set = "0000000000119418CCD57EFDA869B6DDDBFF8F7F7EFEFFFF"
         val listed = unlistedAdvertisedFeatures(set).map { it.name }
         assertTrue("Matter" in listed)
-        assertTrue("Auto tear down mop" in listed)
+        // Bit 80 now has a switch (Detach mops automatically), so it is no longer listed as missing.
+        assertFalse("Auto tear down mop" in listed)
         assertFalse("Gap deep clean" in listed)
         assertFalse("UVC sterilize" in listed)
         assertFalse("Mechanical arm mode" in listed)

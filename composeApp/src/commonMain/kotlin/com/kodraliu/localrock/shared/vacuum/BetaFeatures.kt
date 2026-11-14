@@ -16,6 +16,20 @@ import kotlinx.serialization.json.intOrNull
 /** The settings page a feature is shown on, following the official app's grouping. */
 enum class FeatureSection { CARPET, FLOOR, OBSTACLE, DOCK, ROBOT, BETA }
 
+/**
+ * [choices], when set, makes the feature a picker of those values instead of an on/off switch.
+ *
+ * Reads and writes take one of three forms:
+ * - the plain [getMethod] / [setMethod] pair;
+ * - with [robotSetting], the generic pair the official app uses for many options:
+ *   `app_get_robot_setting {"name": K}` answered `{"status": n}`, and
+ *   `app_set_robot_setting {"name": K, "status": n}` (captured from the official app, a296);
+ * - with [readField], one field of [getMethod]'s answer, or with [readBit] one bit of it, such as
+ *   `get_status` → `switch_status` bit 4; [setKey] then names the field the setter takes.
+ *
+ * [alsoRequiresBit] gates a feature on a second `newFeatureSet` bit, [unlessBit] hides it when that
+ * bit is set (so a robot gets the variant of a feature it actually has).
+ */
 data class BetaFeatureDef(
     val id: String,
     val title: String,
@@ -24,6 +38,48 @@ data class BetaFeatureDef(
     val getMethod: String,
     val setMethod: String,
     val section: FeatureSection = FeatureSection.BETA,
+    val choices: List<Pair<Int, String>>? = null,
+    val robotSetting: String? = null,
+    val readField: String? = null,
+    val readBit: Int? = null,
+    val setKey: String? = null,
+    val alsoRequiresBit: Int? = null,
+    val unlessBit: Int? = null,
+    /** Send the set params as `[{key: n}]` only, as the official app does for this command. */
+    val wrapSet: Boolean = false,
+)
+
+private const val GET_ROBOT_SETTING = "app_get_robot_setting"
+private const val SET_ROBOT_SETTING = "app_set_robot_setting"
+
+/** A switch read and written through the generic robot-setting pair. */
+private fun robotSettingSwitch(
+    id: String,
+    name: String,
+    title: String,
+    description: String,
+    bit: Int?,
+    section: FeatureSection,
+    choices: List<Pair<Int, String>>? = null,
+) = BetaFeatureDef(
+    id = id, title = title, description = description, bit = bit,
+    getMethod = GET_ROBOT_SETTING, setMethod = SET_ROBOT_SETTING, section = section,
+    choices = choices, robotSetting = name,
+)
+
+/** A switch read as one bit of `get_status`'s `switch_status`, written with its own `{"status": n}` setter. */
+private fun statusBitSwitch(
+    id: String,
+    setMethod: String,
+    statusBit: Int,
+    title: String,
+    description: String,
+    bit: Int?,
+    section: FeatureSection,
+) = BetaFeatureDef(
+    id = id, title = title, description = description, bit = bit,
+    getMethod = "get_status", setMethod = setMethod, section = section,
+    readField = "switch_status", readBit = statusBit, setKey = "status",
 )
 
 val BetaFeatureDefs = listOf(
@@ -80,6 +136,20 @@ val BetaFeatureDefs = listOf(
         getMethod = "get_collision_avoid_status",
         setMethod = "set_collision_avoid_status",
         section = FeatureSection.OBSTACLE,
+        unlessBit = 118,
+    ),
+    // With bit 118 the official app offers only these two (captured on an a296: 1, then 2); 0/1 as a
+    // switch would send "off" the robot does not have.
+    BetaFeatureDef(
+        id = "collision_mode",
+        title = "Collision mode",
+        description = "How closely the robot cleans around obstacles",
+        bit = 36,
+        getMethod = "get_collision_avoid_status",
+        setMethod = "set_collision_avoid_status",
+        section = FeatureSection.OBSTACLE,
+        choices = listOf(1 to "Large coverage", 2 to "Less collision"),
+        alsoRequiresBit = 118,
     ),
     BetaFeatureDef(
         id = "water_leak_check",
@@ -110,21 +180,25 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "clean_fluid_delivery",
-        title = "Auto cleaning fluid",
-        description = "Adds cleaning fluid to the mop water from the dock",
+        title = "Cleaning fluid dosing",
+        description = "How much cleaning fluid the dock adds to the mop water",
         bit = 112,
         getMethod = "get_auto_delivery_cleaning_fluid",
         setMethod = "set_auto_delivery_cleaning_fluid",
         section = FeatureSection.DOCK,
+        // Captured from the official app on an a296: 0, 1 and 3, labelled None / Standard / High volume.
+        choices = listOf(0 to "None", 1 to "Standard", 3 to "High volume"),
     ),
     BetaFeatureDef(
         id = "dust_collection_switch",
-        title = "Auto empty",
-        description = "Empties the dust bin into the dock after cleaning",
+        title = "Auto-empty frequency",
+        description = "When the dock empties the robot's dust bin",
         bit = null,
         getMethod = "get_dust_collection_switch_status",
         setMethod = "set_dust_collection_switch_status",
         section = FeatureSection.DOCK,
+        // Captured from the official app on an a296: Off, Balanced (after each clean), High (also during).
+        choices = listOf(0 to "Off", 1 to "Balanced", 2 to "High"),
     ),
     BetaFeatureDef(
         id = "identify_furniture",
@@ -133,6 +207,7 @@ val BetaFeatureDefs = listOf(
         bit = null,
         getMethod = "get_identify_furniture_status",
         setMethod = "set_identify_furniture_status",
+        section = FeatureSection.OBSTACLE,
     ),
     BetaFeatureDef(
         id = "identify_ground_material",
@@ -152,11 +227,115 @@ val BetaFeatureDefs = listOf(
         setMethod = "set_clean_follow_ground_material_status",
         section = FeatureSection.FLOOR,
     ),
+
+    // Below: captured from the official app talking to an a296 (Saros 20 Neo) through
+    // local_roborock_server, or read from its device plugin; see docs/robot-commands-a296.md.
+    statusBitSwitch(
+        id = "dirty_replenish", setMethod = "app_set_dirty_replenish_clean_status", statusBit = 4,
+        title = "Re-mop dirty spots", description = "Washes the mop and mops again where the floor is still dirty",
+        bit = 34, section = FeatureSection.FLOOR,
+    ),
+    robotSettingSwitch(
+        id = "clean_direction", name = "clean_direction_status",
+        title = "Cleaning direction", description = "The pattern the robot follows across a room",
+        bit = 70, section = FeatureSection.FLOOR,
+        choices = listOf(0 to "Smart", 1 to "Along the floor", 2 to "Crosswise"),
+    ),
+    robotSettingSwitch(
+        id = "low_area_access", name = "restrict_low_area_access_status",
+        title = "Cleaning under low furniture", description = "How low a gap the robot drives into",
+        bit = 116, section = FeatureSection.FLOOR,
+        choices = listOf(2 to "Off", 1 to "Safe clearance", 0 to "Extreme clearance"),
+    ),
+    robotSettingSwitch(
+        id = "lds_lifting", name = "lds_lifting_switch",
+        title = "Lower the LiDAR", description = "Lowers the laser tower to reach under furniture",
+        bit = 79, section = FeatureSection.FLOOR,
+    ),
+    robotSettingSwitch(
+        id = "sway_arm_door_sill", name = "enable_sway_arm_for_high_door_sill_carpet",
+        title = "Arm for high sills and carpets", description = "Uses the arm to climb high door sills and carpets",
+        bit = null, section = FeatureSection.FLOOR,
+    ),
+    robotSettingSwitch(
+        id = "remove_mop", name = "enable_remove_mop_status",
+        title = "Detach mops automatically", description = "Leaves the mops in the dock when only vacuuming",
+        bit = 80, section = FeatureSection.FLOOR,
+    ),
+    robotSettingSwitch(
+        id = "dynamic_obstacle_replenish", name = "dynamic_obstacle_replenish_status",
+        title = "Re-clean blocked areas", description = "Returns to spots that people or pets were blocking",
+        bit = 131, section = FeatureSection.FLOOR,
+    ),
+    robotSettingSwitch(
+        id = "omission_reminder", name = "enable_omission_area_clean_status",
+        title = "Missed-area reminder", description = "Points out areas the robot could not clean",
+        bit = 132, section = FeatureSection.FLOOR,
+    ),
+    statusBitSwitch(
+        id = "priority_carpet", setMethod = "app_set_priority_carpet_cleaning_status", statusBit = 3,
+        title = "Carpets first", description = "Detaches the mops, vacuums carpets first and then cleans the rest",
+        bit = null, section = FeatureSection.CARPET,
+    ),
+    statusBitSwitch(
+        id = "cross_carpet", setMethod = "app_set_cross_carpet_cleaning_status", statusBit = 5,
+        title = "Cross carpets", description = "Drives over carpets without cleaning them",
+        bit = 49, section = FeatureSection.CARPET,
+    ),
+    robotSettingSwitch(
+        id = "long_haired_carpet", name = "long_haired_carpet_clean_status",
+        title = "Adaptive lift", description = "Tilts up for high-pile carpets; works with Carpets first",
+        bit = 75, section = FeatureSection.CARPET,
+    ),
+    robotSettingSwitch(
+        id = "carpet_wire", name = "nearbycarpet_detecting_wire_status",
+        title = "Avoid cords at carpet edges", description = "Better cord detection along carpet edges",
+        bit = 105, section = FeatureSection.CARPET,
+    ),
+    BetaFeatureDef(
+        id = "carpet_boost",
+        title = "Carpet boost",
+        description = "Maximum suction on carpets",
+        bit = null,
+        getMethod = "get_carpet_mode",
+        setMethod = "set_carpet_mode",
+        section = FeatureSection.CARPET,
+        // The read answers [{"enable":1,"current_high":500,...}]; the official app writes [{"enable":n}].
+        readField = "enable",
+        setKey = "enable",
+        wrapSet = true,
+    ),
+    robotSettingSwitch(
+        id = "identify_room", name = "identify_room_status",
+        title = "Room recognition", description = "Recognizes room types from what the camera sees",
+        bit = 66, section = FeatureSection.OBSTACLE,
+    ),
+    robotSettingSwitch(
+        id = "smart_wash", name = "smart_wash_status",
+        title = "Smart mop washing", description = "Adapts water, time and temperature to how dirty the mop is",
+        bit = 144, section = FeatureSection.DOCK,
+    ),
+    BetaFeatureDef(
+        id = "offline_map",
+        title = "Offline map",
+        description = "Keeps showing where the robot was before it lost power",
+        bit = null,
+        getMethod = "get_offline_map_status",
+        setMethod = "set_offline_map_status",
+        section = FeatureSection.ROBOT,
+        readField = "common_switch_status",
+        readBit = 0,
+        setKey = "status",
+    ),
 )
 
 /** The features this robot's `newFeatureSet` advertises. */
 fun supportedBetaFeatures(newFeatureSet: String?): List<BetaFeatureDef> =
-    BetaFeatureDefs.filter { it.bit == null || newFeatureBit(newFeatureSet, it.bit) }
+    BetaFeatureDefs.filter { def ->
+        (def.bit == null || newFeatureBit(newFeatureSet, def.bit)) &&
+            (def.alsoRequiresBit == null || newFeatureBit(newFeatureSet, def.alsoRequiresBit)) &&
+            (def.unlessBit == null || !newFeatureBit(newFeatureSet, def.unlessBit))
+    }
 
 /** The reads of [features] that belong on [section], in the order the definitions list them. */
 fun List<BetaFeatureState>.inSection(section: FeatureSection): List<BetaFeatureState> =
@@ -261,7 +440,42 @@ data class BetaFeatureState(
     val answered: Boolean = true,
 ) {
     val enabled: Boolean get() = value == 1
-    val toggleable: Boolean get() = value == 0 || value == 1
+
+    /** True when [value] is one the page can show: 0/1 for a switch, one of [BetaFeatureDef.choices] for a picker. */
+    val toggleable: Boolean
+        get() = def.choices?.any { it.first == value } ?: (value == 0 || value == 1)
+
+    /** The label of [value] for a picker, or null for a switch. */
+    val choiceLabel: String? get() = def.choices?.firstOrNull { it.first == value }?.second
+}
+
+/** The params for reading [def]: `{"name": K}` for a robot setting, none otherwise. */
+fun featureReadParams(def: BetaFeatureDef): JsonElement =
+    def.robotSetting?.let { JsonObject(mapOf("name" to JsonPrimitive(it))) } ?: JsonArray(emptyList())
+
+/**
+ * The value of [def] in a reply, with the field name the setter takes. A [BetaFeatureDef.readField]
+ * is read out of a larger answer (such as `get_status`), optionally one bit of it.
+ */
+fun readFeatureReply(def: BetaFeatureDef, result: JsonElement?): Pair<String?, Int>? {
+    val field = def.readField ?: return parseBetaReply(result)
+    val obj = (if (result is JsonArray) result.firstOrNull() else result) as? JsonObject ?: return null
+    val raw = (obj[field] as? JsonPrimitive)?.intOrNull ?: return null
+    val value = def.readBit?.let { (raw shr it) and 1 } ?: raw
+    return def.setKey to value
+}
+
+/**
+ * Param shapes to try for setting [def] to [value], in order. A robot setting has exactly one shape;
+ * [BetaFeatureDef.wrapSet] commands take only the wrapped object; the rest try [betaSetParamCandidates].
+ */
+fun featureSetParamCandidates(def: BetaFeatureDef, replyKey: String?, value: Int): List<JsonElement> {
+    def.robotSetting?.let { name ->
+        return listOf(JsonObject(mapOf("name" to JsonPrimitive(name), "status" to JsonPrimitive(value))))
+    }
+    val key = def.setKey ?: replyKey
+    if (def.wrapSet && key != null) return listOf(JsonArray(listOf(JsonObject(mapOf(key to JsonPrimitive(value))))))
+    return betaSetParamCandidates(key, value)
 }
 
 /** Reads a reply that holds one number: `1`, `[1]`, `{"status":1}` or `[{"status":1}]`. */
@@ -278,18 +492,21 @@ fun parseBetaReply(result: JsonElement?): Pair<String?, Int>? {
 }
 
 /**
- * Param shapes to try for a set command, in order. python-roborock does not document these, so the
- * first is the wrapped form of the get reply and the rest are the other usual forms.
+ * Param shapes to try for a set command, in order. The bare object comes first: that is what the
+ * official app sends (captured on an a296, e.g. set_gap_deep_clean_status {"status":1}); the wrapped
+ * form and the bare value follow for robots that refuse it.
  */
-fun betaSetParamCandidates(key: String?, on: Boolean): List<JsonElement> {
-    val v = JsonPrimitive(if (on) 1 else 0)
+fun betaSetParamCandidates(key: String?, value: Int): List<JsonElement> {
+    val v = JsonPrimitive(value)
     val obj = key?.let { JsonObject(mapOf(it to v)) }
     return listOfNotNull(
-        JsonArray(listOf(obj ?: v)),
         obj,
+        JsonArray(listOf(obj ?: v)),
         JsonArray(listOf(v)).takeIf { obj != null },
     )
 }
+
+fun betaSetParamCandidates(key: String?, on: Boolean): List<JsonElement> = betaSetParamCandidates(key, if (on) 1 else 0)
 
 /**
  * Codes a robot answers to a param shape it does not take. Most options say -10007 "invalid params";

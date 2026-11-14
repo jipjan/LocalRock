@@ -1016,7 +1016,7 @@ private fun DockSettingsScreen(
     onAutoEmptyModeChange: (Int) -> Unit,
     onEmptyWaterTank: () -> Unit,
     features: List<BetaFeatureState>,
-    onFeatureToggle: (String, Boolean) -> Unit,
+    onFeatureToggle: (String, Int) -> Unit,
     valleySettings: ValleySettings?,
     onMopDryingChange: (Boolean) -> Unit,
     onDryTimeChange: (Int) -> Unit,
@@ -1326,7 +1326,7 @@ private fun RobotSettingsScreen(
     onChildLockChange: (Boolean) -> Unit,
     onLedChange: (Boolean) -> Unit,
     features: List<BetaFeatureState>,
-    onFeatureToggle: (String, Boolean) -> Unit,
+    onFeatureToggle: (String, Int) -> Unit,
     onBack: () -> Unit,
 ) {
     var findTriggered by remember { mutableStateOf(false) }
@@ -1456,7 +1456,7 @@ private fun VolumeSliderRow(volume: Int, onVolumeChange: (Int) -> Job) {
 
 /** One feature the robot reports, as a switch under the page it belongs to. */
 @Composable
-private fun FeatureToggleRow(f: BetaFeatureState, onToggle: (String, Boolean) -> Unit) {
+private fun FeatureToggleRow(f: BetaFeatureState, onToggle: (String, Int) -> Unit) {
     val icon = when (f.def.section) {
         FeatureSection.CARPET -> Icons.Default.GridView
         FeatureSection.FLOOR -> Icons.Default.CleaningServices
@@ -1465,14 +1465,36 @@ private fun FeatureToggleRow(f: BetaFeatureState, onToggle: (String, Boolean) ->
         FeatureSection.ROBOT -> Icons.Default.Settings
         FeatureSection.BETA -> Icons.Default.Science
     }
-    SettingRowSwitch(
+    val choices = f.def.choices
+    if (choices == null) {
+        SettingRowSwitch(
+            icon = icon,
+            iconTint = AppColors.AccentCyan,
+            title = f.def.title,
+            subtitle = f.def.description,
+            checked = f.enabled,
+            onCheckedChange = { onToggle(f.def.id, if (it) 1 else 0) },
+        )
+        return
+    }
+    // A feature with more than two values, such as the collision mode or cleaning fluid dosing.
+    var picking by remember { mutableStateOf(false) }
+    SettingRowClickable(
         icon = icon,
         iconTint = AppColors.AccentCyan,
         title = f.def.title,
-        subtitle = f.def.description,
-        checked = f.enabled,
-        onCheckedChange = { onToggle(f.def.id, it) },
+        subtitle = f.choiceLabel ?: f.def.description,
+        onClick = { picking = true },
     )
+    if (picking) {
+        SimplePickerDialog(
+            title = f.def.title,
+            options = choices.map { it.second },
+            selected = choices.indexOfFirst { it.first == f.value },
+            onSelect = { onToggle(f.def.id, choices[it].first); picking = false },
+            onDismiss = { picking = false },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1480,7 +1502,7 @@ private fun FeatureToggleRow(f: BetaFeatureState, onToggle: (String, Boolean) ->
 private fun FeatureSectionScreen(
     title: String,
     features: List<BetaFeatureState>,
-    onToggle: (String, Boolean) -> Unit,
+    onToggle: (String, Int) -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -1508,7 +1530,7 @@ private fun CarpetScreen(
     carpetMode: Int,
     features: List<BetaFeatureState>,
     onCarpetModeChange: (Int) -> Unit,
-    onToggle: (String, Boolean) -> Unit,
+    onToggle: (String, Int) -> Unit,
     onBack: () -> Unit,
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -1558,7 +1580,7 @@ private fun BetaFeaturesScreen(
     features: List<BetaFeatureState>,
     loading: Boolean,
     unlisted: List<AdvertisedFeature>,
-    onToggle: (String, Boolean) -> Unit,
+    onToggle: (String, Int) -> Unit,
     onBack: () -> Unit,
 ) {
     var showUnlisted by remember { mutableStateOf(false) }
@@ -1600,14 +1622,7 @@ private fun BetaFeaturesScreen(
                 }
                 items(features, key = { it.def.id }) { f ->
                     Column {
-                        SettingRowSwitch(
-                            icon = Icons.Default.Science,
-                            iconTint = AppColors.AccentCyan,
-                            title = f.def.title,
-                            subtitle = f.def.description,
-                            checked = f.enabled,
-                            onCheckedChange = { onToggle(f.def.id, it) },
-                        )
+                        FeatureToggleRow(f, onToggle)
                         Text(
                             "Robot reply: ${f.raw}",
                             style = MaterialTheme.typography.labelSmall,

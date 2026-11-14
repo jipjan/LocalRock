@@ -19,8 +19,10 @@ class FeatureSectionsTest {
 
     @Test
     fun only_what_fits_nowhere_else_stays_under_beta() {
+        // Furniture recognition moved to obstacles, where the official app has it (AI recognition).
         val beta = BetaFeatureDefs.filter { it.section == FeatureSection.BETA }.map { it.id }
-        assertEquals(listOf("identify_furniture"), beta)
+        assertEquals(emptyList(), beta)
+        assertEquals(FeatureSection.OBSTACLE, section("identify_furniture"))
     }
 
     @Test
