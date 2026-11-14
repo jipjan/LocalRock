@@ -6,6 +6,7 @@ import com.kodraliu.localrock.shared.AppContainer
 import com.kodraliu.localrock.shared.messages.MessageSeverity
 import com.kodraliu.localrock.shared.model.Scene
 import com.kodraliu.localrock.shared.model.SceneRunResult
+import com.kodraliu.localrock.shared.model.namesAVersion
 import com.kodraliu.localrock.shared.vacuum.DockCapabilities
 import com.kodraliu.localrock.shared.vacuum.FeatureSection
 import com.kodraliu.localrock.shared.vacuum.MapEditException
@@ -78,6 +79,9 @@ class VacuumViewModel(
                 val info = container.deviceRepository.checkFirmwareUpdate(device.duid)
                 when {
                     info == null -> FirmwareUpdateState.Unavailable("No firmware info returned")
+                    !info.namesAVersion -> FirmwareUpdateState.Unavailable(
+                        "Your server doesn't check for firmware updates, so it can't say whether newer firmware exists.",
+                    )
                     info.updatable -> FirmwareUpdateState.Available(
                         current = info.currentVersion ?: firmwareVersion,
                         latest = info.version,

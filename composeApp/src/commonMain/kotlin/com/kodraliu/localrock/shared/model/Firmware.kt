@@ -24,3 +24,11 @@ data class FirmwareUpdateInfo(
     /** Mandatory update the device will apply regardless of user action. */
     val forceUpdate: Boolean = false,
 )
+
+/**
+ * True when the answer names a firmware version, so it comes from something that checked.
+ * local_roborock_server has no update route and answers this one with its generic
+ * `{"ok": true, "route": ...}`; read as [FirmwareUpdateInfo] that has every field at its default,
+ * which used to show as "Up to date" although nothing was checked.
+ */
+val FirmwareUpdateInfo.namesAVersion: Boolean get() = version != null || currentVersion != null
