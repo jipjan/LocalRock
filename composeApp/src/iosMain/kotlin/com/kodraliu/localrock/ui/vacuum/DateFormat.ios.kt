@@ -17,3 +17,11 @@ actual fun formatCleanRecordTime(epochSeconds: Long): String {
     }
     return formatter.stringFromDate(date)
 }
+
+actual fun formatClockTime(epochSeconds: Long): String {
+    val formatter = NSDateFormatter().apply {
+        dateStyle = platform.Foundation.NSDateFormatterNoStyle
+        timeStyle = NSDateFormatterShortStyle
+    }
+    return formatter.stringFromDate(NSDate.dateWithTimeIntervalSince1970(epochSeconds.toDouble()))
+}

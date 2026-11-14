@@ -230,6 +230,14 @@ class VacuumSession(
     suspend fun fetchSavedMap(security: SecurityData, mapFlag: Int, backup: Boolean, timeoutMs: Long = 30_000L): MapResponse =
         requestMap(security, "get_multi_map", savedMapParams(mapFlag, backup), savedMap = true, timeoutMs = timeoutMs)
 
+    /** The map of a past clean, with its path (`get_clean_record_map {"start_time": begin}`, captured). */
+    suspend fun fetchCleanRecordMap(security: SecurityData, begin: Long, timeoutMs: Long = 30_000L): MapResponse =
+        requestMap(
+            security, "get_clean_record_map",
+            kotlinx.serialization.json.JsonObject(mapOf("start_time" to kotlinx.serialization.json.JsonPrimitive(begin))),
+            savedMap = true, timeoutMs = timeoutMs,
+        )
+
     private suspend fun requestMap(
         security: SecurityData,
         method: String,

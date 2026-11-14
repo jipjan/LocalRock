@@ -1486,6 +1486,25 @@ class VacuumRepository(
             ?: throw MapEditException("The robot sent a map this app can't read")
     }
 
+    /** The map of a past clean (its path included); null when the robot no longer has it. */
+    suspend fun fetchCleanRecordMap(begin: Long): ParsedMap? = mapFetchMutex.withLock {
+        val resp = runCatching { session.fetchCleanRecordMap(createSecurityData(rriotKeyProvider()), begin) }.getOrNull()
+            ?: return@withLock null
+        runCatching { parseB01Map(resp.data) }.getOrNull() ?: runCatching { parseLegacyMap(resp.data) }.getOrNull()
+    }
+
+    /** Every event of a past clean, page by page as the robot hands them out (at most 20 pages). */
+    suspend fun fetchCleanEvents(begin: Long): List<CleanEvent> {
+        val all = mutableListOf<CleanEvent>()
+        repeat(20) {
+            val page = parseCleanEventPage(session.getCleanDetail(begin, all.size).requireOk("get_clean_detail").result)
+                ?: return all
+            all += page.events
+            if (!page.more || page.events.isEmpty()) return all
+        }
+        return all
+    }
+
     private val photoMutex = Mutex()
     private val obstaclePhotos = mutableMapOf<String, ByteArray>()
 

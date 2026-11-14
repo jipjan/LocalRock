@@ -190,6 +190,10 @@ suspend fun VacuumSession.setCornerCleanMode(on: Boolean): V1Response =
 suspend fun VacuumSession.setWaterBoxDistanceOff(distance: Int): V1Response =
     sendCommandRaw("set_water_box_distance_off", JsonObject(mapOf("distance_off" to JsonPrimitive(distance))))
 
+/** A page of a past clean's events, from event [from] on (the official app asks 0, then 47, …). */
+suspend fun VacuumSession.getCleanDetail(begin: Long, from: Int): V1Response =
+    sendCommandRaw("get_clean_detail", cleanDetailParams(begin, from))
+
 suspend fun VacuumSession.getCurrentSound(): V1Response = sendCommand("get_current_sound")
 suspend fun VacuumSession.getSoundProgress(): V1Response = sendCommand("get_sound_progress")
 suspend fun VacuumSession.installSound(pack: VoicePack): V1Response =

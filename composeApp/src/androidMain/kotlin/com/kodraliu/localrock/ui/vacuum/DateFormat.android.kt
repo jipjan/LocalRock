@@ -26,3 +26,6 @@ actual fun formatCleanRecordTime(epochSeconds: Long): String {
         }
     }
 }
+
+actual fun formatClockTime(epochSeconds: Long): String =
+    DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(epochSeconds * 1000L))

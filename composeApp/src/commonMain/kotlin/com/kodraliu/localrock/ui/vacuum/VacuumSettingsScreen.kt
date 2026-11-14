@@ -1,5 +1,9 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.shared.vacuum.VacuumStateCodes
+import com.kodraliu.localrock.shared.vacuum.cleanStateChanges
+import com.kodraliu.localrock.shared.vacuum.CleanStateChange
+import com.kodraliu.localrock.shared.vacuum.CleanEvent
 import com.kodraliu.localrock.shared.vacuum.VoicePack
 import androidx.compose.foundation.layout.statusBarsPadding
 import com.kodraliu.localrock.shared.vacuum.MAX_DND_PERIODS
@@ -322,6 +326,8 @@ fun VacuumSettingsScreen(
                 runCatching { repository.fetchCleanSummary() }
             }
             HistoryScreen(
+                loadMap = { repository.fetchCleanRecordMap(it) },
+                loadEvents = { repository.fetchCleanEvents(it) },
                 records = cleanHistory,
                 summary = cleanSummary,
                 onRefresh = {
@@ -388,6 +394,8 @@ fun VacuumHistoryScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
         runCatching { repository.fetchCleanSummary() }
     }
     HistoryScreen(
+        loadMap = { repository.fetchCleanRecordMap(it) },
+        loadEvents = { repository.fetchCleanEvents(it) },
         records = cleanHistory,
         summary = cleanSummary,
         onRefresh = {
@@ -1106,7 +1114,15 @@ private fun HistoryScreen(
     summary: CleanSummary?,
     onRefresh: () -> Unit,
     onBack: () -> Unit,
+    /** The map of a past clean (by its begin time); null when the robot no longer has it. */
+    loadMap: (suspend (Long) -> ParsedMap?)? = null,
+    loadEvents: (suspend (Long) -> List<CleanEvent>)? = null,
 ) {
+    var opened by remember { mutableStateOf<CleanRecord?>(null) }
+    opened?.let { record ->
+        CleanRecordDetailScreen(record, loadMap, loadEvents, onBack = { opened = null })
+        return
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -1144,7 +1160,9 @@ private fun HistoryScreen(
                         item { CleanSummaryCard(summary) }
                     }
                     items(records.sortedByDescending { it.beginEpoch }, key = { it.beginEpoch }) { record ->
-                        CleanRecordRow(record)
+                        Box(Modifier.clickable(enabled = loadMap != null || loadEvents != null) { opened = record }) {
+                            CleanRecordRow(record)
+                        }
                         HorizontalDivider(Modifier.padding(start = 72.dp))
                     }
                 }
@@ -1183,6 +1201,86 @@ private fun SummaryStatItem(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/**
+ * One past clean: its map with the path the robot took (`get_clean_record_map`), the figures of the
+ * record, and a timeline of the robot's state changes during it (`get_clean_detail` event 11).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CleanRecordDetailScreen(
+    record: CleanRecord,
+    loadMap: (suspend (Long) -> ParsedMap?)?,
+    loadEvents: (suspend (Long) -> List<CleanEvent>)?,
+    onBack: () -> Unit,
+) {
+    var map by remember(record) { mutableStateOf<ParsedMap?>(null) }
+    var mapLoaded by remember(record) { mutableStateOf(false) }
+    var changes by remember(record) { mutableStateOf<List<CleanStateChange>?>(null) }
+    LaunchedEffect(record) {
+        map = loadMap?.let { runCatching { it(record.beginEpoch) }.getOrNull() }
+        mapLoaded = true
+    }
+    LaunchedEffect(record) {
+        changes = loadEvents?.let { runCatching { cleanStateChanges(it(record.beginEpoch)) }.getOrDefault(emptyList()) } ?: emptyList()
+    }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(formatCleanRecordTime(record.beginEpoch)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+            )
+        },
+    ) { padding ->
+        CenteredContent {
+            LazyColumn(contentPadding = padding) {
+                item {
+                    Surface(
+                        Modifier.fillMaxWidth().height(320.dp).padding(16.dp),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            val m = map
+                            when {
+                                m != null -> SavedMapImage(m, Modifier.fillMaxSize().padding(8.dp))
+                                mapLoaded -> Text("The robot has no map for this clean.", style = MaterialTheme.typography.bodySmall)
+                                else -> CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+                            }
+                        }
+                    }
+                }
+                item { CleanRecordRow(record) }
+                item { HorizontalDivider() }
+                item { Text("Timeline", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(16.dp)) }
+                val list = changes
+                when {
+                    list == null -> item {
+                        Text("Reading the timeline from the robot…", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+                    }
+                    list.isEmpty() -> item {
+                        Text("No timeline for this clean.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+                    }
+                    else -> items(list.size) { i ->
+                        val c = list[i]
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(formatClockTime(c.epoch), style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(56.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(VacuumStateCodes.describe(c.to), style = MaterialTheme.typography.bodyMedium)
+                                c.battery?.let {
+                                    Text("Battery $it%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
