@@ -425,6 +425,13 @@ class VacuumRepository(
         refreshStatus()
     }
 
+    /** Sets how many passes a clean makes; the robot keeps it and reports it as `repeat`. */
+    suspend fun setCleanRepeat(repeat: Int) {
+        require(repeat in 1..3) { "Unsupported cleaning count $repeat" }
+        session.setCleanRepeatTimes(repeat).requireOk("set_clean_repeat_times")
+        refreshStatus()
+    }
+
     /** Switches suction, water and route in one command, the only way in or out of SmartPlan. */
     suspend fun setCleanMotorMode(fanPower: Int, waterBoxMode: Int, mopMode: Int) {
         session.setCleanMotorMode(fanPower, waterBoxMode, mopMode).requireOk("set_clean_motor_mode")

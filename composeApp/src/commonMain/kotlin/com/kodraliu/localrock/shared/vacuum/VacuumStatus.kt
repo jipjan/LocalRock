@@ -220,6 +220,30 @@ object WaterBoxMode {
     const val SMART = 209
     const val SLIDE_MEDIUM = 235
 
+    /**
+     * Water slide robots (new feature bit 106, e.g. a296) take any water flow from 221 to 250, the
+     * official app's slider. Its marks: 225 low, 235 medium, 245 high; from 248 it calls the flow extra high.
+     */
+    val SLIDE_RANGE = 221..250
+    const val SLIDE_LOW = 225
+    const val SLIDE_HIGH = 245
+    const val SLIDE_EXTRA_HIGH_FROM = 248
+
+    /** A slide code as a 1-30 level, or null for a code outside the slide. */
+    fun slideLevel(code: Int?): Int? = code?.takeIf { it in SLIDE_RANGE }?.let { it - SLIDE_RANGE.first + 1 }
+
+    /** A slide code with its nearest mark, e.g. "12 · Medium"; null for a code outside the slide. */
+    fun slideLabel(code: Int?): String? {
+        val level = slideLevel(code) ?: return null
+        val band = when {
+            code!! >= SLIDE_EXTRA_HIGH_FROM -> "Extra high"
+            code >= (SLIDE_MEDIUM + SLIDE_HIGH) / 2 -> "High"
+            code >= (SLIDE_LOW + SLIDE_MEDIUM) / 2 -> "Medium"
+            else -> "Low"
+        }
+        return "$level · $band"
+    }
+
     /** Pure-water-flow robots (e.g. Saros 10R) report 201/202/203 back as 225/235/245. */
     fun normalize(code: Int?): Int? = when (code) {
         225 -> LOW

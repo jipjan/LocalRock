@@ -47,9 +47,10 @@ Parameters are shown exactly as sent. Most are a bare JSON object, not wrapped i
 | Pet supplies deep clean | `get_pet_supplies_deep_clean_status` | `set_pet_supplies_deep_clean_status {"status":0/1}` | already in LocalRock | Captured |
 | Re-clean areas blocked by people/pets | robot setting `dynamic_obstacle_replenish_status` | `app_set_robot_setting {...,"status":0/1}` | 0/1 | Captured |
 | Auto-detach mops | robot setting `enable_remove_mop_status` | `app_set_robot_setting {...,"status":0/1}` | 0/1 | Captured |
-| Repeat count | `get_status` → `repeat` | `set_clean_repeat_times {"repeat":n}` | passes | Plugin |
-| Intensive corner mopping | `get_status` → `corner_clean_mode` | `set_corner_clean_mode {"status":0/1}` | one run only | Plugin |
-| Custom water flow | `get_status` → `distance_off` | `set_water_box_custom_mode 207`, then `set_water_box_distance_off {"distance_off":n}` | see plugin notes | Plugin |
+| Repeat count | `get_status` → `repeat` | `set_clean_repeat_times {"repeat":n}` | passes; the official app sends it as soon as the count changes. Checked on the robot | Plugin |
+| Intensive corner mopping | `get_status` → `corner_clean_mode` | `set_corner_clean_mode {"status":0/1}` | only when bit 31 of the last 8 hex digits of `new_feature_info_str` is set; **not** on this a296 | Plugin |
+| Water flow (slide) | `get_status` → `water_box_mode` | `set_water_box_custom_mode [n]` | robots with new feature bit 106 (this a296): any of 221–250, the official slider; marks 225/235/245, "extra high" from 248. Checked on the robot | Plugin |
+| Custom water flow (no slide) | `get_status` → `distance_off` | `set_water_box_custom_mode 207`, then `set_water_box_distance_off {"distance_off":n}` | only robots without the slide and with bit 31 of `new_feature_info` (number); range 60–205 (85–230 with water modes), shown reversed | Plugin |
 | Uncleaned-area reminder | robot setting `enable_omission_area_clean_status` | `app_set_robot_setting` | 0/1 | Plugin |
 | LiDAR lowering | robot setting `lds_lifting_switch` | `app_set_robot_setting` | 0/1 | Plugin |
 | Skip current area | – | `app_skip_current_cleaning_area {"source":2}` | | Plugin |
@@ -142,7 +143,9 @@ Built and checked on an a296 against the official app's values and commands:
 - Vacuum then mop (`app_set_clean_sequence_type`, byte for byte as captured).
 - Mop drying Off / After cleaning / At a set time (`status` 0/1/2 with a daily cron).
 - Smart mop washing as `smart_wash_status`; wash mode 10 is no longer offered on AI-wash robots.
+- Cleaning count read from and saved on the robot (`set_clean_repeat_times`).
+- The 30-step water slider (221–250) on water slide robots.
 
-Not built yet (plugin-only, or bits not fully understood): repeat count stored on the robot
-(`set_clean_repeat_times`), intensive corner mopping, custom water flow (`distance_off`), the camera
-bitmask (fill light is value 2), several DND periods, and linking wash mode to water temperature.
+Not built yet: intensive corner mopping and `distance_off` water flow (this a296 has neither, so they
+can't be tested here), the camera bitmask (fill light is value 2), several DND periods, and linking
+wash mode to water temperature.

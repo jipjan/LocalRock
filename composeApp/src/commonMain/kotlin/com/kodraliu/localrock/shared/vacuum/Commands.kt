@@ -184,6 +184,10 @@ internal fun cleanSequenceTypeParams(type: Int, fanPower: Int, waterBoxMode: Int
 suspend fun VacuumSession.setCleanSequenceType(type: Int, fanPower: Int, waterBoxMode: Int, mopMode: Int, repeat: Int?): V1Response =
     sendCommandRaw("app_set_clean_sequence_type", cleanSequenceTypeParams(type, fanPower, waterBoxMode, mopMode, repeat))
 
+/** The number of passes a clean makes, kept on the robot (the official a296 plugin's setCleanCount). */
+suspend fun VacuumSession.setCleanRepeatTimes(repeat: Int): V1Response =
+    sendCommandRaw("set_clean_repeat_times", JsonObject(mapOf("repeat" to JsonPrimitive(repeat))))
+
 suspend fun VacuumSession.setCleanMotorMode(fanPower: Int, waterBoxMode: Int, mopMode: Int): V1Response =
     sendCommandRaw("set_clean_motor_mode", encodeCleanMotorModeParams(fanPower, waterBoxMode, mopMode))
 

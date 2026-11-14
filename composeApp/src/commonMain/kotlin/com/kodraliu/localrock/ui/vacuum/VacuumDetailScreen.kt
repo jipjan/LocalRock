@@ -111,6 +111,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.Slider
+import kotlin.math.roundToInt
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -254,6 +257,8 @@ fun VacuumDetailScreen(
     var choosingMapToKeep by remember { mutableStateOf(false) }
     var lastCleanArea by remember { mutableStateOf<Long?>(null) }
     var cleaningCount by remember { mutableIntStateOf(1) }
+    // The robot keeps its own count (get_status repeat); follow it when it reports one.
+    LaunchedEffect(status.repeat) { status.repeat?.takeIf { it in 1..2 }?.let { cleaningCount = it } }
     // The map's pan/zoom lives here so it survives the compact ↔ two-pane switch.
     val mapViewport = remember { LiveMapViewport() }
 
@@ -412,6 +417,7 @@ fun VacuumDetailScreen(
                     currentWaterMode = status.waterBoxCustomMode,
                     currentRoute = mopMode,
                     cleaningCount = cleaningCount,
+                    waterSlide = supportsWaterSlide,
                     busy = busy,
                     supportsSmartPlan = supportsSmartPlan,
                     rooms = parsedMap?.rooms ?: emptyList(),
@@ -436,7 +442,11 @@ fun VacuumDetailScreen(
                     onFanPowerSelected = { level -> runMode { it.setFanPower(level) } },
                     onWaterModeSelected = { level -> runMode { it.setWaterBoxMode(level) } },
                     onRouteSelected = { mode -> runMode { it.setMopMode(mode) } },
-                    onCountChange = { cleaningCount = it },
+                    onCountChange = { count ->
+                        cleaningCount = count
+                        // Saved on the robot as the official app does, so a full clean uses it too.
+                        if (status.repeat != null && count != status.repeat) runMode { it.setCleanRepeat(count) }
+                    },
                     vacuumThenMop = status.vacuumThenMop.takeIf { supportsVacuumThenMop },
                     onVacuumThenMopChange = { on -> runMode { it.setVacuumThenMop(on, cleaningCount) } },
                 )
@@ -1422,6 +1432,8 @@ private fun CleaningModeSheetContent(
     currentWaterMode: Int?,
     currentRoute: Int?,
     cleaningCount: Int,
+    /** Water slide robots get the official app's 30-step slider instead of the four water buttons. */
+    waterSlide: Boolean = false,
     busy: Boolean,
     supportsSmartPlan: Boolean,
     rooms: List<ParsedMapRoom>,
@@ -1531,7 +1543,8 @@ private fun CleaningModeSheetContent(
                         ModeOptionSelector("Suction power", FAN_OPTIONS.map { it.second }, FAN_OPTIONS.indexOfFirst { it.first == currentFanPower }, !busy) { onFanPowerSelected(FAN_OPTIONS[it].first) }
                     }
                     val water = @Composable {
-                        ModeOptionSelector("Water flow", WATER_OPTIONS.map { it.second }, WATER_OPTIONS.indexOfFirst { it.first == WaterBoxMode.normalize(currentWaterMode) }, !busy) { onWaterModeSelected(WATER_OPTIONS[it].first) }
+                        if (waterSlide) WaterSlideSelector(currentWaterMode, !busy, onWaterModeSelected)
+                        else ModeOptionSelector("Water flow", WATER_OPTIONS.map { it.second }, WATER_OPTIONS.indexOfFirst { it.first == WaterBoxMode.normalize(currentWaterMode) }, !busy) { onWaterModeSelected(WATER_OPTIONS[it].first) }
                     }
                     val route = @Composable {
                         ModeOptionSelector("Route", ROUTE_OPTIONS.map { it.second }, ROUTE_OPTIONS.indexOfFirst { it.first == currentRoute }, !busy) { onRouteSelected(ROUTE_OPTIONS[it].first) }
@@ -1686,6 +1699,32 @@ private fun VacuumThenMopRow(checked: Boolean, enabled: Boolean, onChange: (Bool
             )
         }
         Switch(checked = checked, enabled = enabled, onCheckedChange = onChange)
+    }
+}
+
+@Composable
+private fun WaterSlideSelector(current: Int?, enabled: Boolean, onSelect: (Int) -> Unit) {
+    val range = WaterBoxMode.SLIDE_RANGE
+    val reported = current?.takeIf { it in range } ?: WaterBoxMode.SLIDE_MEDIUM
+    var position by remember(reported) { mutableFloatStateOf(reported.toFloat()) }
+    val code = position.roundToInt().coerceIn(range)
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("Water flow", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(WaterBoxMode.slideLabel(code).orEmpty(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        }
+        Slider(
+            value = position,
+            onValueChange = { position = it },
+            // Read the state here: a tap ends before a recomposition, so a captured `code` would be stale.
+            onValueChangeFinished = {
+                val chosen = position.roundToInt().coerceIn(range)
+                if (chosen != current) onSelect(chosen)
+            },
+            valueRange = range.first.toFloat()..range.last.toFloat(),
+            steps = range.last - range.first - 1,
+            enabled = enabled,
+        )
     }
 }
 
