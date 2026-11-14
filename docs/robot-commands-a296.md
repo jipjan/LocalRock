@@ -145,6 +145,9 @@ Built and checked on an a296 against the official app's values and commands:
 - Smart mop washing as `smart_wash_status`; wash mode 10 is no longer offered on AI-wash robots.
 - Cleaning count read from and saved on the robot (`set_clean_repeat_times`).
 - The 30-step water slider (221–250) on water slide robots.
+- Quiet hours with `set_multi_dnd_timer`, keeping the robot's `actions`. The a296 refuses LocalRock's
+  old `set_dnd_timer` object (`get_dnd_timer` and `close_dnd_timer` do work), and that refusal used to
+  be swallowed.
 
 Not built yet: intensive corner mopping and `distance_off` water flow (this a296 has neither, so they
 can't be tested here), the camera bitmask (fill light is value 2), several DND periods, and linking

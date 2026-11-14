@@ -1177,11 +1177,21 @@ class VacuumRepository(
             startMinute = obj["start_minute"]?.jsonPrimitive?.intOrNull ?: 0,
             endHour = obj["end_hour"]?.jsonPrimitive?.intOrNull ?: 8,
             endMinute = obj["end_minute"]?.jsonPrimitive?.intOrNull ?: 0,
+            actions = obj["actions"] as? JsonObject,
         )
     }
 
+    /**
+     * Turns quiet hours on. Robots with several periods (bit 140) or that report quiet-hour actions get
+     * `set_multi_dnd_timer`, which the official app sends; an a296 refused `set_dnd_timer`.
+     */
     suspend fun setDnd(startHour: Int, startMinute: Int, endHour: Int, endMinute: Int) {
-        session.setDndTimer(startHour, startMinute, endHour, endMinute).requireOk("set_dnd_timer")
+        val actions = _dndSettings.value?.actions
+        if (actions != null || newFeatureBit(_robotFeatureSet.value, MULTI_DND_BIT)) {
+            session.setMultiDndTimer(startHour, startMinute, endHour, endMinute, actions).requireOk("set_multi_dnd_timer")
+        } else {
+            session.setDndTimer(startHour, startMinute, endHour, endMinute).requireOk("set_dnd_timer")
+        }
         _dndSettings.update {
             it?.copy(enabled = true, startHour = startHour, startMinute = startMinute, endHour = endHour, endMinute = endMinute)
                 ?: DndSettings(true, startHour, startMinute, endHour, endMinute)

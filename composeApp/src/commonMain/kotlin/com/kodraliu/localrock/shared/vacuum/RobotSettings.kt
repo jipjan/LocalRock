@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.shared.vacuum
 
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -83,7 +84,29 @@ data class DndSettings(
     val startMinute: Int = 0,
     val endHour: Int = 8,
     val endMinute: Int = 0,
+    /** What the robot holds back during quiet hours, e.g. `{"dry":0,"dust":0,"led":1,"resume":1,"vol":1}`; null when it reports none. */
+    val actions: JsonObject? = null,
 )
+
+/** New feature bit 140: several quiet-hour periods, set with `set_multi_dnd_timer`. */
+const val MULTI_DND_BIT = 140
+
+/** The actions the official app sent with `set_multi_dnd_timer` on an a296, for a robot that reported none. */
+internal val DEFAULT_DND_ACTIONS = JsonObject(mapOf(
+    "dry" to JsonPrimitive(0), "dust" to JsonPrimitive(0), "led" to JsonPrimitive(1),
+    "resume" to JsonPrimitive(1), "vol" to JsonPrimitive(1),
+))
+
+/**
+ * Parameters for `set_multi_dnd_timer` with one period, as the official app sent them (captured):
+ * `[{"actions":{...},"dnd":[22,0,8,0],"enabled":1}]`. The robot's own actions are kept.
+ */
+internal fun multiDndParams(startHour: Int, startMinute: Int, endHour: Int, endMinute: Int, actions: JsonObject?): JsonArray =
+    JsonArray(listOf(JsonObject(mapOf(
+        "actions" to (actions ?: DEFAULT_DND_ACTIONS),
+        "dnd" to JsonArray(listOf(startHour, startMinute, endHour, endMinute).map { JsonPrimitive(it) }),
+        "enabled" to JsonPrimitive(1),
+    ))))
 
 /**
  * The body for `app_set_dryer_setting`: the answer the robot gave with only `status`, and `on.dry_time`

@@ -292,8 +292,9 @@ fun VacuumSettingsScreen(
         )
         SettingsRoute.DndMode -> DndScreen(
             dndSettings = dndSettings,
-            onEnable = { sh, sm, eh, em -> scope.launch { runCatching { repository.setDnd(sh, sm, eh, em) } } },
-            onDisable = { scope.launch { runCatching { repository.disableDnd() } } },
+            // A refusal is shown and the robot's setting read back, so the switch never shows a state it lacks.
+            onEnable = { sh, sm, eh, em -> viewModel.report { r -> runCatching { r.setDnd(sh, sm, eh, em) }.onFailure { r.fetchDndSettings(); throw it } } },
+            onDisable = { viewModel.report { r -> runCatching { r.disableDnd() }.onFailure { r.fetchDndSettings(); throw it } } },
             onBack = { route = SettingsRoute.Root },
         )
         SettingsRoute.History -> {

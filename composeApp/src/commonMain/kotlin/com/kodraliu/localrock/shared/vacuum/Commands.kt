@@ -229,13 +229,12 @@ suspend fun VacuumSession.setDustCollectionMode(mode: Int): V1Response =
 
 
 suspend fun VacuumSession.getDndTimer(): V1Response = sendCommand("get_dnd_timer")
+/** `[start_hour, start_minute, end_hour, end_minute]`, as python-roborock sends it; an a296 refused an object here. */
 suspend fun VacuumSession.setDndTimer(startHour: Int, startMinute: Int, endHour: Int, endMinute: Int): V1Response =
-    sendCommand("set_dnd_timer", listOf(JsonObject(mapOf(
-        "start_hour" to JsonPrimitive(startHour),
-        "start_minute" to JsonPrimitive(startMinute),
-        "end_hour" to JsonPrimitive(endHour),
-        "end_minute" to JsonPrimitive(endMinute),
-    ))))
+    sendCommand("set_dnd_timer", listOf(startHour, startMinute, endHour, endMinute).map { JsonPrimitive(it) })
+
+suspend fun VacuumSession.setMultiDndTimer(startHour: Int, startMinute: Int, endHour: Int, endMinute: Int, actions: JsonObject?): V1Response =
+    sendCommandRaw("set_multi_dnd_timer", multiDndParams(startHour, startMinute, endHour, endMinute, actions))
 suspend fun VacuumSession.closeDndTimer(): V1Response = sendCommand("close_dnd_timer")
 
 
