@@ -43,6 +43,8 @@ class DockCapabilitiesTest {
         assertEquals(listOf(10, 0, 1, 2), modes(17, 2, 15, 34))
         assertEquals(listOf(0, 1, 2), modes(17, null, 107))
         assertEquals(listOf(10, 0, 8), modes(41, null, 15, 107, 150))
+        // An a296 (bits 15, 34, 107, 144): smart washing is smart_wash_status, so no wash_mode 10.
+        assertEquals(listOf(0, 1, 2, 8), modes(17, null, 15, 34, 107, 144))
     }
 
     @Test

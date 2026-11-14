@@ -45,7 +45,9 @@ class DockCapabilities(model: String?, featureSet: String?, newFeatureSet: Strin
         if (dockType !in knownWashDockTypes) return listOf(0 to "Light")
         val simple = dockType in simpleWashDockTypes
         return buildList {
-            if (smartWash) add(10 to "Smart")
+            // With AI washing (bit 144) the official app sets "smart" through smart_wash_status, not wash_mode 10
+            // (captured on an a296); LocalRock offers that as its own switch.
+            if (smartWash && !aiWash) add(10 to "Smart")
             add(0 to "Light")
             if (!simple || aiWash) add(1 to "Balanced")
             if (!simple) add(2 to "Deep")
