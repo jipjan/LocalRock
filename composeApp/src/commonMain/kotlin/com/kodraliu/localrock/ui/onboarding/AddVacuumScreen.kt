@@ -62,6 +62,7 @@ import com.kodraliu.localrock.shared.onboarding.OnboardingInput
 import com.kodraliu.localrock.shared.onboarding.OnboardingSession
 import com.kodraliu.localrock.shared.onboarding.VacuumOnboarder
 import com.kodraliu.localrock.shared.onboarding.countryDomainFromIana
+import com.kodraliu.localrock.shared.onboarding.cameraDomainInput
 import com.kodraliu.localrock.shared.onboarding.posixTzFromIana
 import com.kodraliu.localrock.shared.onboarding.supportedIanaTimezones
 import com.kodraliu.localrock.ui.LocalAppContainer
@@ -128,7 +129,7 @@ private class AddVacuumModel(
         }
     }
 
-    fun start(adminPassword: String, ssid: String, password: String, timezone: String) {
+    fun start(adminPassword: String, ssid: String, password: String, timezone: String, cameraDomain: String = "") {
         if (_running.value) return
         val duid = _selectedDuid.value
         scope.launch {
@@ -156,6 +157,7 @@ private class AddVacuumModel(
                         timezone = timezone,
                         homeSsid = ssid,
                         homePassword = password,
+                        cameraDomain = cameraDomain,
                     )
                 )
 
@@ -272,9 +274,12 @@ fun AddVacuumScreen(onBack: () -> Unit) {
     var ssid by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var timezone by remember { mutableStateOf(DEFAULT_IANA_TZ) }
+    var cameraDomain by remember { mutableStateOf("") }
+    val cameraDomainError = runCatching { cameraDomainInput(cameraDomain) }.exceptionOrNull()?.message
 
     val canStartPairing = !running && !loadingDevices &&
-        selectedDuid != null && ssid.isNotBlank() && password.isNotBlank() && timezone.isNotBlank()
+        selectedDuid != null && ssid.isNotBlank() && password.isNotBlank() && timezone.isNotBlank() &&
+        cameraDomainError == null
 
     Scaffold(
         topBar = {
@@ -320,6 +325,9 @@ fun AddVacuumScreen(onBack: () -> Unit) {
                     ssid = ssid,
                     password = password,
                     timezone = timezone,
+                    cameraDomain = cameraDomain,
+                    cameraDomainError = cameraDomainError,
+                    onCameraDomainChange = { cameraDomain = it },
                     running = running,
                     canStartPairing = canStartPairing,
                     onSsidChange = { ssid = it },
@@ -331,6 +339,7 @@ fun AddVacuumScreen(onBack: () -> Unit) {
                             ssid = ssid.trim(),
                             password = password,
                             timezone = timezone.trim(),
+                            cameraDomain = cameraDomain.trim(),
                         )
                     },
                 )
@@ -377,6 +386,9 @@ private fun NetworkDetailsCard(
     ssid: String,
     password: String,
     timezone: String,
+    cameraDomain: String,
+    cameraDomainError: String?,
+    onCameraDomainChange: (String) -> Unit,
     running: Boolean,
     canStartPairing: Boolean,
     onSsidChange: (String) -> Unit,
@@ -429,6 +441,23 @@ private fun NetworkDetailsCard(
             )
 
             TimezonePicker(selected = timezone, onSelect = onTimezoneChange, enabled = !running)
+
+            OutlinedTextField(
+                value = cameraDomain,
+                onValueChange = onCameraDomainChange,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !running,
+                singleLine = true,
+                isError = cameraDomainError != null,
+                label = { Text("Camera domain (optional)") },
+                placeholder = { Text("rr.example.com") },
+                supportingText = {
+                    Text(
+                        cameraDomainError ?: "For remote viewing: a hostname of at most 14 characters that reaches " +
+                            "your server on 443. Leave empty to send the country code.",
+                    )
+                },
+            )
 
             Button(
                 onClick = onStartPairing,

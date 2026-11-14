@@ -34,7 +34,7 @@ class VacuumOnboarder(
                 serverStack = sanitizeStackServer(input.serverBaseUrl),
                 timezone = input.timezone,
                 posixTz = posixTzFromIana(input.timezone),
-                countryDomain = countryDomainFromIana(input.timezone),
+                countryDomain = cameraDomainInput(input.cameraDomain) ?: countryDomainFromIana(input.timezone),
                 tokenS = "S_TOKEN_" + bytesToHex(secureRandomBytes(16)),
                 tokenT = "T_TOKEN_" + bytesToHex(secureRandomBytes(16)),
             )
@@ -71,6 +71,12 @@ data class OnboardingInput(
     val homePassword: String,
     val serverBaseUrl: String,
     val timezone: String = DEFAULT_IANA_TZ,
+    /**
+     * A short hostname for the camera (remote viewing), or blank for none. Sent in place of the
+     * country code: the firmware keeps 15 characters and appends `iot.roborock.com`, so a camera
+     * domain is at most 14 characters plus `/` (local_roborock_server's camera.md).
+     */
+    val cameraDomain: String = "",
 )
 
 data class OnboardingResult(
@@ -78,3 +84,19 @@ data class OnboardingResult(
     val tokenS: String,
     val tokenT: String,
 )
+
+/**
+ * The `country_domain` value for a camera domain: the hostname with a trailing `/`, or null when blank.
+ * Throws for anything the firmware would mangle (a scheme, port, path, or more than 14 characters).
+ */
+fun cameraDomainInput(raw: String): String? {
+    val host = raw.trim().trimEnd('/')
+    if (host.isEmpty()) return null
+    require("://" !in host) { "Camera domain is a hostname only, without https://" }
+    require(':' !in host && '/' !in host && ' ' !in host) { "Camera domain is a hostname only, without port or path" }
+    require(Regex("^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$").matches(host)) {
+        "Camera domain '$host' is not a valid hostname"
+    }
+    require(host.length <= 14) { "Camera domain '$host' is ${host.length} characters; the robot keeps at most 14" }
+    return "$host/"
+}
