@@ -63,3 +63,15 @@ class CleanTimelineWordsTest {
         assertEquals("Balanced", lines[8].detail)
     }
 }
+
+class CleanRunSettingsTest {
+    @Test
+    fun kitchenAndLivingRoomAsTheOfficialAppShowedThem() {
+        // Kitchen: moon | drop 5 | standard route | ×1; living room: moon | drop 15 | standard | ×1.
+        val kitchen = CleanRunSettings(suction = 1, water = 1, route = 0, passes = 1)
+        assertEquals(listOf("Quiet", "Low", "Standard"), listOf(kitchen.suctionLabel, kitchen.waterLabel, kitchen.routeLabel))
+        assertEquals("Medium", CleanRunSettings(1, 2, 0, 1).waterLabel)
+        assertEquals("Vacuum only", CleanRunSettings(2, 0, 0, 1).mode)
+        assertEquals("Mop only", CleanRunSettings(0, 2, 0, 1).mode)
+    }
+}

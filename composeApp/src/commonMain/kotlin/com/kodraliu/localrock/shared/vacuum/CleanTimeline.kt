@@ -58,7 +58,37 @@ internal fun cleanDetailParams(begin: Long, from: Int) = JsonObject(mapOf(
 ))
 
 /** A line of a past clean's timeline, as the official app words it. */
-data class CleanTimelineEntry(val epoch: Long, val title: String, val detail: String? = null, val milestone: Boolean = false)
+data class CleanTimelineEntry(
+    val epoch: Long,
+    val title: String,
+    val detail: String? = null,
+    val milestone: Boolean = false,
+    /** How a room (or the whole clean) was cleaned, shown as the official app's row of icons. */
+    val settings: CleanRunSettings? = null,
+)
+
+/**
+ * The settings a start or room event carries: fields 3 (suction), 4 (water), 5 (route) and 6 (passes).
+ * Checked on an a296 against the official app's icons: suction 1 is quiet (moon icon); water 1 and 2
+ * showed as the drop with 5 and 15, i.e. low and medium (the plugin has water icons 0-3: off, low,
+ * medium, high); route 0 is standard. Higher suction values follow the robot's usual order.
+ */
+data class CleanRunSettings(val suction: Int?, val water: Int?, val route: Int?, val passes: Int?) {
+    val mode: String?
+        get() = when {
+            suction == null || water == null -> null
+            suction > 0 && water > 0 -> "Vacuum and mop"
+            water > 0 -> "Mop only"
+            suction > 0 -> "Vacuum only"
+            else -> null
+        }
+    val suctionLabel: String?
+        get() = when (suction) { null, 0 -> null; 1 -> "Quiet"; 2 -> "Standard"; 3 -> "Strong"; 4 -> "MAX"; 5 -> "MAX+"; else -> "Suction $suction" }
+    val waterLabel: String?
+        get() = when (water) { null, 0 -> null; 1 -> "Low"; 2 -> "Medium"; 3 -> "High"; else -> "Water $water" }
+    val routeLabel: String?
+        get() = when (route) { null -> null; 0 -> "Standard"; else -> "Route $route" }
+}
 
 /*
  * Event types, matched on an a296 (2026-11-14) against the official app's timeline of the same clean:
@@ -68,16 +98,11 @@ data class CleanTimelineEntry(val epoch: Long, val title: String, val detail: St
  */
 private fun JsonObject.int(key: String) = (this[key] as? JsonPrimitive)?.intOrNull
 
-private fun cleanMode(f: JsonObject): String? {
-    val suction = f.int("3") ?: return null
-    val water = f.int("4") ?: return null
-    return when {
-        suction > 0 && water > 0 -> "Vacuum and mop"
-        water > 0 -> "Mop only"
-        suction > 0 -> "Vacuum only"
-        else -> null
-    }
-}
+private fun runSettings(f: JsonObject): CleanRunSettings? =
+    if (f.int("3") == null && f.int("4") == null) null
+    else CleanRunSettings(f.int("3"), f.int("4"), f.int("5"), f.int("6"))
+
+private fun cleanMode(f: JsonObject): String? = runSettings(f)?.mode
 
 /**
  * The timeline of a past clean in the official app's words: start, each room, mop washes, resumes,
@@ -98,7 +123,10 @@ fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): L
                 val title = if (f.int("421") == 3) "Re-cleaning areas blocked by people or pets"
                 else "Cleaning " + (room?.let(roomName) ?: "room ${room ?: "?"}")
                 val passes = f.int("6")?.takeIf { it > 0 }?.let { "×$it" }
-                CleanTimelineEntry(e.epoch, title, listOfNotNull(cleanMode(f), passes).joinToString(" · ").ifEmpty { null }, milestone = true)
+                CleanTimelineEntry(
+                    e.epoch, title, listOfNotNull(cleanMode(f), passes).joinToString(" · ").ifEmpty { null },
+                    milestone = true, settings = runSettings(f),
+                )
             }
             52 -> {
                 val mode = if (f.int("521") == 10) "Smart" else null

@@ -1,5 +1,9 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.Bedtime
+import com.kodraliu.localrock.shared.vacuum.CleanRunSettings
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
@@ -1337,7 +1341,9 @@ private fun TimelineRow(entry: CleanTimelineEntry, first: Boolean, last: Boolean
                 entry.title,
                 style = if (entry.milestone) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
             )
-            if (entry.milestone) {
+            if (entry.milestone && entry.settings != null) {
+                RoomSettingsCard(entry.settings)
+            } else if (entry.milestone) {
                 entry.detail?.let {
                     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                         Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
@@ -1348,6 +1354,39 @@ private fun TimelineRow(entry: CleanTimelineEntry, first: Boolean, last: Boolean
                     Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Text(formatClockTime(entry.epoch), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/**
+ * How a room was cleaned, as the official app's card: the mode, then suction, water, route and passes
+ * as small icons separated by bars (quiet suction is a moon, water a drop).
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun RoomSettingsCard(settings: CleanRunSettings) {
+    val tint = MaterialTheme.colorScheme.onSurfaceVariant
+    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            settings.mode?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
+            val parts = buildList<Pair<ImageVector?, String>> {
+                settings.suctionLabel?.let { add((if (settings.suction == 1) Icons.Default.Bedtime else Icons.Default.Air) to it) }
+                settings.waterLabel?.let { add(Icons.Default.WaterDrop to it) }
+                settings.routeLabel?.let { add(Icons.Default.Route to it) }
+                settings.passes?.takeIf { it > 0 }?.let { add(null to "×$it") }
+            }
+            if (parts.isNotEmpty()) {
+                // Each icon stays with its label; a whole item moves to the next line when space runs out.
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    parts.forEachIndexed { i, (icon, label) ->
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (i > 0) Text("|", style = MaterialTheme.typography.bodySmall, color = tint.copy(alpha = 0.5f))
+                            icon?.let { Icon(it, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp)) }
+                            Text(label, style = MaterialTheme.typography.bodySmall, color = tint, maxLines = 1, softWrap = false)
+                        }
+                    }
+                }
             }
         }
     }

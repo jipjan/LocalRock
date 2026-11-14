@@ -205,4 +205,9 @@ same clean (a296, 2026-11-14):
 | 23 | Auto-empty | 231 frequency (1 balanced, 2 high) |
 | 11 | (not shown) state change | 111 from, 112 to, 1 battery |
 
+Settings fields in events 25 and 42, as the official app's room card shows them (icon + label):
+3 suction (1 Quiet, 2 Standard, 3 Strong, 4 MAX, 5 MAX+; quiet uses a moon icon, the rest a fan),
+4 water (0 off, 1 Low, 2 Medium, 3 High; water drop), 5 route (0 Standard), 6 passes (×n). With
+suction 0 the card says "Mop only", with water 0 "Vacuum only", otherwise "Vacuum and mop".
+
 Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47 (room queue), 51, 54, 61, 62.
