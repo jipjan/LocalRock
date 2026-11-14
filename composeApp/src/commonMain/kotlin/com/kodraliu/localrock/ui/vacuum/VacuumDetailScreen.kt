@@ -151,6 +151,7 @@ import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kodraliu.localrock.shared.model.Scene
+import com.kodraliu.localrock.shared.vacuum.WaterDistance
 import com.kodraliu.localrock.shared.vacuum.DockCapabilities
 import com.kodraliu.localrock.shared.vacuum.DockErrorCodes
 import com.kodraliu.localrock.shared.vacuum.DockSettings
@@ -230,6 +231,8 @@ fun VacuumDetailScreen(
     val supportsSmartPlan by viewModel.supportsSmartPlan.collectAsState()
     val supportsWaterSlide by viewModel.supportsWaterSlide.collectAsState()
     val supportsVacuumThenMop by viewModel.supportsVacuumThenMop.collectAsState()
+    val supportsCornerClean by viewModel.supportsCornerClean.collectAsState()
+    val supportsWaterDistance by viewModel.supportsWaterDistance.collectAsState()
     val parsedMap by viewModel.repository.parsedMap.collectAsState()
     val floorMaps by viewModel.repository.floorMaps.collectAsState()
     val currentFloorFlag by viewModel.repository.currentFloorFlag.collectAsState()
@@ -448,6 +451,10 @@ fun VacuumDetailScreen(
                         if (status.repeat != null && count != status.repeat) runMode { it.setCleanRepeat(count) }
                     },
                     vacuumThenMop = status.vacuumThenMop.takeIf { supportsVacuumThenMop },
+                    cornerClean = status.cornerCleanMode?.let { it == 1 }?.takeIf { supportsCornerClean },
+                    onCornerCleanChange = { on -> runMode { it.setCornerClean(on) } },
+                    waterDistance = WaterDistance.initial(status.distanceOff).takeIf { supportsWaterDistance },
+                    onWaterDistanceChange = { distance -> runMode { it.setWaterDistance(distance) } },
                     onVacuumThenMopChange = { on -> runMode { it.setVacuumThenMop(on, cleaningCount) } },
                 )
             }
@@ -1449,6 +1456,12 @@ private fun CleaningModeSheetContent(
     /** Null when the robot cannot vacuum first and mop after, or has not said which it does. */
     vacuumThenMop: Boolean? = null,
     onVacuumThenMopChange: (Boolean) -> Unit = {},
+    /** Null when the robot has no intensive corner mopping. */
+    cornerClean: Boolean? = null,
+    onCornerCleanChange: (Boolean) -> Unit = {},
+    /** The custom water flow as a distance; null when the robot cannot set one. */
+    waterDistance: Int? = null,
+    onWaterDistanceChange: (Int) -> Unit = {},
 ) {
     val initialTab = when {
         (currentWaterMode ?: WaterBoxMode.OFF) == WaterBoxMode.OFF -> 2
@@ -1544,6 +1557,7 @@ private fun CleaningModeSheetContent(
                     }
                     val water = @Composable {
                         if (waterSlide) WaterSlideSelector(currentWaterMode, !busy, onWaterModeSelected)
+                        else if (waterDistance != null) WaterDistanceSelector(currentWaterMode, waterDistance, !busy, onWaterModeSelected, onWaterDistanceChange)
                         else ModeOptionSelector("Water flow", WATER_OPTIONS.map { it.second }, WATER_OPTIONS.indexOfFirst { it.first == WaterBoxMode.normalize(currentWaterMode) }, !busy) { onWaterModeSelected(WATER_OPTIONS[it].first) }
                     }
                     val route = @Composable {
@@ -1554,8 +1568,9 @@ private fun CleaningModeSheetContent(
                         0 -> {
                             if (vacuumThenMop != null) VacuumThenMopRow(vacuumThenMop, !busy, onVacuumThenMopChange)
                             suction(); water(); CountSelector(cleaningCount, onCountChange); route()
+                            cornerClean?.let { CornerCleanRow(it, !busy, onCornerCleanChange) }
                         }
-                        1 -> { water(); CountSelector(cleaningCount, onCountChange); route() }
+                        1 -> { water(); CountSelector(cleaningCount, onCountChange); route(); cornerClean?.let { CornerCleanRow(it, !busy, onCornerCleanChange) } }
                         2 -> { suction(); CountSelector(cleaningCount, onCountChange); route() }
                     }
                 }
@@ -1699,6 +1714,47 @@ private fun VacuumThenMopRow(checked: Boolean, enabled: Boolean, onChange: (Bool
             )
         }
         Switch(checked = checked, enabled = enabled, onCheckedChange = onChange)
+    }
+}
+
+@Composable
+private fun CornerCleanRow(checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Intensive corner mopping", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text("Mops corners and edges more thoroughly", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(checked = checked, enabled = enabled, onCheckedChange = onChange)
+    }
+}
+
+/** The four water buttons plus Custom, whose amount is set with a slider ([WaterDistance]). */
+@Composable
+private fun WaterDistanceSelector(current: Int?, distance: Int, enabled: Boolean, onMode: (Int) -> Unit, onDistance: (Int) -> Unit) {
+    val options = WATER_OPTIONS + (WaterBoxMode.USER_CUSTOM to "Custom")
+    val custom = current == WaterBoxMode.USER_CUSTOM
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        ModeOptionSelector("Water flow", options.map { it.second }, options.indexOfFirst { it.first == WaterBoxMode.normalize(current) }, enabled) {
+            val code = options[it].first
+            if (code == WaterBoxMode.USER_CUSTOM) onDistance(distance) else onMode(code)
+        }
+        if (custom) {
+            val range = WaterDistance.RANGE
+            var level by remember(distance) { mutableFloatStateOf(WaterDistance.level(distance).toFloat()) }
+            val max = WaterDistance.level(range.first)
+            Text("Custom amount ${level.roundToInt()} of $max", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            Slider(
+                value = level,
+                onValueChange = { level = it },
+                // Read the state here: a tap ends before a recomposition.
+                onValueChangeFinished = {
+                    val chosen = WaterDistance.distanceFor(level.roundToInt())
+                    if (chosen != distance) onDistance(chosen)
+                },
+                valueRange = 1f..max.toFloat(),
+                enabled = enabled,
+            )
+        }
     }
 }
 

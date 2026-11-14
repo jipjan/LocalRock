@@ -425,6 +425,23 @@ class VacuumRepository(
         refreshStatus()
     }
 
+    /** Intensive corner mopping on or off (robots with [isCornerCleanSupported]). */
+    suspend fun setCornerClean(on: Boolean) {
+        session.setCornerCleanMode(on).requireOk("set_corner_clean_mode")
+        refreshStatus()
+    }
+
+    /**
+     * A custom water flow as a distance, as the official plugin sets it: the custom water mode (207)
+     * first when the robot is not in it, then the distance.
+     */
+    suspend fun setWaterDistance(distance: Int) {
+        require(distance in WaterDistance.RANGE) { "Water flow out of range" }
+        if (_status.value.waterBoxCustomMode != WaterBoxMode.USER_CUSTOM) setWaterBoxMode(WaterBoxMode.USER_CUSTOM)
+        session.setWaterBoxDistanceOff(distance).requireOk("set_water_box_distance_off")
+        refreshStatus()
+    }
+
     /** Sets how many passes a clean makes; the robot keeps it and reports it as `repeat`. */
     suspend fun setCleanRepeat(repeat: Int) {
         require(repeat in 1..3) { "Unsupported cleaning count $repeat" }

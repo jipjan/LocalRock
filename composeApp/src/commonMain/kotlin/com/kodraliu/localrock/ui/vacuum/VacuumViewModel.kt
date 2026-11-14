@@ -17,6 +17,8 @@ import com.kodraliu.localrock.shared.vacuum.VacuumErrorCodes
 import com.kodraliu.localrock.shared.vacuum.VacuumRepository
 import com.kodraliu.localrock.shared.vacuum.isSmartPlanSupported
 import com.kodraliu.localrock.shared.vacuum.isWaterSlideSupported
+import com.kodraliu.localrock.shared.vacuum.isWaterDistanceSupported
+import com.kodraliu.localrock.shared.vacuum.isCornerCleanSupported
 import com.kodraliu.localrock.shared.vacuum.supportedBetaFeatures
 import com.kodraliu.localrock.shared.vacuum.unlistedAdvertisedFeatures
 import kotlinx.coroutines.Job
@@ -63,6 +65,14 @@ class VacuumViewModel(
     val supportsVacuumThenMop: StateFlow<Boolean> = repository.robotFeatureSet
         .map { newFeatureBit(it ?: serverFeatureSet, 93) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, newFeatureBit(serverFeatureSet, 93))
+    /** Intensive corner mopping (plugin: bit 31 of the hex flags' low word). */
+    val supportsCornerClean: StateFlow<Boolean> = repository.robotFeatureSet
+        .map { isCornerCleanSupported(it ?: serverFeatureSet) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, isCornerCleanSupported(serverFeatureSet))
+    /** A custom water flow set as a distance (no water slide, bit 31 of the decimal featureSet). */
+    val supportsWaterDistance: StateFlow<Boolean> = repository.robotFeatureSet
+        .map { isWaterDistanceSupported(device.featureSet, it ?: serverFeatureSet) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, isWaterDistanceSupported(device.featureSet, serverFeatureSet))
     val status = repository.status
 
     private val errorBannerKey = "robot-error-${device.duid}"

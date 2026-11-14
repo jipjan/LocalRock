@@ -41,6 +41,10 @@ data class VacuumStatus(
     @SerialName("seq_type") val seqType: Int? = null,
     /** How many passes the next clean makes. */
     @SerialName("repeat") val repeat: Int? = null,
+    /** Intensive corner mopping, 0/1; only robots with [isCornerCleanSupported] report it. */
+    @SerialName("corner_clean_mode") val cornerCleanMode: Int? = null,
+    /** The custom water flow as a distance ([WaterDistance]); 0 when none has been set. */
+    @SerialName("distance_off") val distanceOff: Int? = null,
     /** Option bits on some models; an a296 reports them through get_offline_map_status instead (common_switch_status). */
     @SerialName("switch_status") val switchStatus: Int? = null,
 ) {
@@ -220,6 +224,9 @@ object WaterBoxMode {
     const val SMART = 209
     const val SLIDE_MEDIUM = 235
 
+    /** The custom water flow of robots with [isWaterDistanceSupported]; its amount is a [WaterDistance]. */
+    const val USER_CUSTOM = 207
+
     /**
      * Water slide robots (new feature bit 106, e.g. a296) take any water flow from 221 to 250, the
      * official app's slider. Its marks: 225 low, 235 medium, 245 high; from 248 it calls the flow extra high.
@@ -253,6 +260,26 @@ object WaterBoxMode {
     }
 }
 
+
+/**
+ * The custom water flow as `distance_off`, from the official a296 plugin: values from 60 to 205,
+ * where a larger value gives less water, so the slider runs the other way. When the robot reports
+ * none (0) the plugin starts at (60 + 205 + 5) / 2. Some models (spin mops) use 85 to 230; LocalRock
+ * cannot tell them apart and keeps to the base range, which lies within it.
+ */
+object WaterDistance {
+    val RANGE = 60..205
+    const val DEFAULT = (60 + 205 + 5) / 2
+
+    /** The distance to start from: the robot's own, or [DEFAULT] when it reports none. */
+    fun initial(reported: Int?): Int = reported?.takeIf { it in RANGE } ?: DEFAULT
+
+    /** The water level shown for a distance, 1 (least) to 146 (most). */
+    fun level(distance: Int): Int = RANGE.last - distance.coerceIn(RANGE) + 1
+
+    /** The distance for a shown level. */
+    fun distanceFor(level: Int): Int = (RANGE.last + 1 - level).coerceIn(RANGE)
+}
 
 object MopRoute {
     const val STANDARD = 300

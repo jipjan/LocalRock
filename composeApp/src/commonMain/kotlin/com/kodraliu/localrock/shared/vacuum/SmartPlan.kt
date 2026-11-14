@@ -39,6 +39,20 @@ fun isSmartPlanSupported(newFeatureSet: String?): Boolean = newFeatureBit(newFea
 /** Water slide robots use their own water codes (221-250) and may not accept 201-203. */
 fun isWaterSlideSupported(newFeatureSet: String?): Boolean = newFeatureBit(newFeatureSet, WATER_SLIDE_MODE_BIT)
 
+/**
+ * Intensive corner mopping (`set_corner_clean_mode`): bit 31 of the last eight hex digits of
+ * `new_feature_info_str`, as the official a296 plugin checks it (isCornerCleanModeSupported).
+ */
+fun isCornerCleanSupported(newFeatureSet: String?): Boolean = newFeatureBit(newFeatureSet, 31)
+
+/**
+ * A custom water flow set as a distance (`set_water_box_distance_off`): robots without the water
+ * slide whose numeric `new_feature_info` (the server's decimal `featureSet`) has bit 31, as the
+ * official a296 plugin checks it (isCustomWaterBoxDistanceSupported).
+ */
+fun isWaterDistanceSupported(featureSet: String?, newFeatureSet: String?): Boolean =
+    !isWaterSlideSupported(newFeatureSet) && ((featureSet?.toULongOrNull() ?: 0uL) and (1uL shl 31)) != 0uL
+
 /** SmartPlan is on if any of the three values is its smart code (python-roborock is_smart_mode_set). */
 fun isSmartModeSet(fanPower: Int?, waterBoxMode: Int?, mopMode: Int?): Boolean =
     fanPower == VacuumFanPower.SMART || waterBoxMode == WaterBoxMode.SMART || mopMode == MopRoute.SMART

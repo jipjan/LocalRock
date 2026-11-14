@@ -150,6 +150,11 @@ Built and checked on an a296 against the official app's values and commands:
   old `set_dnd_timer` object (`get_dnd_timer` and `close_dnd_timer` do work), and that refusal used to
   be swallowed.
 
-Not built yet: intensive corner mopping and `distance_off` water flow (this a296 has neither, so they
-can't be tested here), the camera bitmask (fill light is value 2), and linking
+Built from the plugin, gated by the robot's flags, but not checked on a robot (this a296 has neither):
+- Intensive corner mopping: a switch on the Vac & Mop and Mop tabs (`set_corner_clean_mode`).
+- Custom water flow as a distance: a Custom choice with a slider (`set_water_box_custom_mode [207]`,
+  then `set_water_box_distance_off`), range 60–205. Spin-mop models may allow 85–230; LocalRock keeps
+  to the base range.
+
+Not built: the camera bitmask (fill light is value 2), and linking
 wash mode to water temperature.
