@@ -126,6 +126,8 @@ object VacuumStateCodes {
     const val EMPTYING_BIN = 22
     const val NOT_CHARGING = 24
     const val WASHING_MOP = 23
+    /** Also washing the mop (python-roborock washing_the_mop_2): an a296 reports it at the dock before and during a clean. */
+    const val WASHING_MOP_2 = 25
     const val GOING_TO_WASH_MOP = 26
     const val DRYING_MOP = 27
     const val RETURNING_TO_DOCK_FOR_DRYING = 28
@@ -154,7 +156,7 @@ object VacuumStateCodes {
         SEGMENT_CLEANING -> "Room cleaning"
         MAPPING -> "Mapping"
         NOT_CHARGING -> "Idle"
-        WASHING_MOP -> "Washing mop"
+        WASHING_MOP, WASHING_MOP_2 -> "Washing mop"
         GOING_TO_WASH_MOP -> "Going to wash mop"
         DRYING_MOP -> "Drying mop"
         RETURNING_TO_DOCK_FOR_DRYING -> "Returning to dock"

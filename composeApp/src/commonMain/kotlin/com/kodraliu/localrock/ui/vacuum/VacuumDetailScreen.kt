@@ -2675,7 +2675,7 @@ private fun PulsingDot(color: Color, modifier: Modifier = Modifier) {
 
 @Composable
 private fun stateTint(state: Int?): Color = when (state) {
-    VacuumStateCodes.WASHING_MOP, VacuumStateCodes.GOING_TO_WASH_MOP,
+    VacuumStateCodes.WASHING_MOP, VacuumStateCodes.WASHING_MOP_2, VacuumStateCodes.GOING_TO_WASH_MOP,
     VacuumStateCodes.DRYING_MOP,
     VacuumStateCodes.RETURNING_TO_DOCK_FOR_DRYING -> MaterialTheme.colorScheme.tertiary
     VacuumStateCodes.ERROR, VacuumStateCodes.CHARGING_ERROR -> MaterialTheme.colorScheme.error
