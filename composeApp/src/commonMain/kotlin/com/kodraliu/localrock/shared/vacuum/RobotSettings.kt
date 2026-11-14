@@ -76,6 +76,8 @@ data class CleanSummary(
     val totalTimeSec: Long,
     val totalAreaMm2: Long,
     val totalCount: Int,
+    /** How often the dock has emptied the bin (`dust_collection_count`, bit 100); null when not reported. */
+    val dustCollectionCount: Int? = null,
 )
 
 data class DndSettings(

@@ -1172,6 +1172,7 @@ private fun CleanSummaryCard(summary: CleanSummary) {
                     if (totalHours > 0) "${totalHours}h ${totalMinutes}m" else "${totalMinutes}m",
                     "Total time",
                 )
+                summary.dustCollectionCount?.let { SummaryStatItem("$it", "Bin emptied") }
             }
         }
     }
@@ -1232,6 +1233,19 @@ private fun CleanRecordRow(record: CleanRecord) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                record.efficiencyM2PerMinute?.let { e ->
+                    Text(
+                        buildAnnotatedString {
+                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(oneDecimal(e)) }
+                            append(" m²/min")
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            record.detailLine?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

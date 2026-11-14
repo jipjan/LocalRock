@@ -17,6 +17,8 @@ NewFeatureStrBit table). See `robot-commands-a296.md` for the commands of everyt
 | 140 | SupportMultipleDNDTimePeriods | Do Not Disturb, up to 3 periods |
 | – | (no bit) | Obstacles → Fill light (camera bit 2) and I have pets (camera bit 32) |
 | – | (no bit) | Robot settings → Voice pack (`dnld_install_sound`, packs served by the local server) |
+| 100 | CollectDustCountShow | History → "Bin emptied" total (`get_clean_summary` → `dust_collection_count`) |
+| 108 | CleanEfficiency | History → m²/min per clean, with obstacles avoided, mop washes and bin emptied from the record |
 
 ### Handled on another page (not listed as missing)
 35/112 cleaning fluid · 41 water temperature · 42 cleaning direction · 47/51 per-room settings ·
@@ -37,8 +39,6 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | 71 | MapEraser | Erase stray bits from the map | `app_set_beautify_blocks` | map editor tool |
 | 76, 91 | CleanHistoryTimeLine, CleanTimeLine | Timeline of a clean (what happened when) in the history | `get_clean_record` details, `get_clean_record_map(_v2)` | history detail page |
 | 85 | MidwayBackToDock | Returns to the dock mid-clean to wash/empty; shown in the clean's status | not found in the capture | needs a capture during a clean |
-| 100 | CollectDustCountShow | How often the dock emptied the bin | part of the history/consumables answer | small |
-| 108 | CleanEfficiency | Efficiency figure of a clean | part of the clean record | small |
 | 122 | FloorPlanMap | Floor-plan style map view | map rendering | large |
 | 138 | Curtain | Mark curtains on the map so the robot passes under them | `app_set_curtains` | map editor tool |
 | 48, 59, 68, 74, 95, 103, 123, 126, 127 | (not in the plugin's table) | unknown | – | – |
@@ -47,7 +47,7 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 
 | Official app (Dutch label) | LocalRock |
 |---|---|
-| Geschiedenis (history) | Built. Missing: the map of a past clean (`get_clean_record_map`), timeline (bits 76/91), efficiency (108), dust collections (100). |
+| Geschiedenis (history) | Built, with efficiency, obstacles avoided, mop washes and bin emptied. Missing: the map of a past clean (`get_clean_record_map`) and its timeline (bits 76/91). |
 | Planningen (schedules) | Built (`set_timer`/`upd_timer`). |
 | Onderhoud (maintenance) | Built. |
 | Tapijtreinigingsinstelling (carpet) | Built, all options. |

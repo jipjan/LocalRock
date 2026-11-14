@@ -510,6 +510,7 @@ private val HandledElsewhereBits = setOf(
     118, // TwoGearsNoCollision: collision mode (obstacles)
     140, // SupportMultipleDNDTimePeriods: Do Not Disturb
     32, 33, 73, // TwoKeyRealTimeVideo, TwoKeyRTVInCharging, ActivateVideoChargingAndStandby: camera
+    100, 108, // CollectDustCountShow, CleanEfficiency: cleaning history
 )
 
 /**

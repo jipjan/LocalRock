@@ -592,6 +592,10 @@ class VacuumRepository(
                 areaMm2 = element["area"]?.jsonPrimitive?.longOrNull ?: 0L,
                 errorCode = element["error"]?.jsonPrimitive?.intOrNull ?: 0,
                 complete = element["complete"]?.jsonPrimitive?.intOrNull ?: 0,
+                avoidCount = (element["avoid_count"] as? JsonPrimitive)?.intOrNull,
+                washCount = (element["wash_count"] as? JsonPrimitive)?.intOrNull,
+                dustCollected = (element["dust_collection_status"] as? JsonPrimitive)?.intOrNull?.let { it == 1 },
+                passes = (element["clean_times"] as? JsonPrimitive)?.intOrNull,
             )
             else -> null
         }
@@ -1305,6 +1309,7 @@ class VacuumRepository(
                     totalTimeSec = result["clean_time"]?.jsonPrimitive?.longOrNull ?: 0L,
                     totalAreaMm2 = result["clean_area"]?.jsonPrimitive?.longOrNull ?: 0L,
                     totalCount = result["clean_count"]?.jsonPrimitive?.intOrNull ?: 0,
+                    dustCollectionCount = (result["dust_collection_count"] as? JsonPrimitive)?.intOrNull,
                 )
                 (result["records"] as? JsonArray)
                     ?.mapNotNull { (it as? JsonPrimitive)?.longOrNull }
