@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.shared.vacuum.VoicePack
 import androidx.compose.foundation.layout.statusBarsPadding
 import com.kodraliu.localrock.shared.vacuum.MAX_DND_PERIODS
 import com.kodraliu.localrock.shared.vacuum.DndPeriod
@@ -152,6 +153,7 @@ private sealed interface SettingsRoute {
     data object Valley : SettingsRoute
     data object BetaFeatures : SettingsRoute
     data object History : SettingsRoute
+    data object VoicePack : SettingsRoute
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -298,8 +300,10 @@ fun VacuumSettingsScreen(
             onLedChange = { on -> viewModel.report { it.setLed(on) } },
             features = betaFeatures.inSection(FeatureSection.ROBOT),
             onFeatureToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
+            onVoicePack = if (viewModel.voicePackBucket == null) null else ({ route = SettingsRoute.VoicePack }),
             onBack = { route = SettingsRoute.Root },
         )
+        SettingsRoute.VoicePack -> VoicePackScreen(viewModel, onBack = { route = SettingsRoute.RobotSettings })
         SettingsRoute.DndMode -> if (dndPeriods != null) MultiDndScreen(
             robotPeriods = dndPeriods.orEmpty(),
             onChange = { periods -> viewModel.report { r -> runCatching { r.setDndPeriods(periods) }.onFailure { r.fetchDndPeriods(); throw it } } },
@@ -648,6 +652,119 @@ private fun DndScreen(
                 }
             }
         }
+    }
+}
+
+/**
+ * The voices the robot can speak with, from the server's copy of Roborock's list. Choosing one tells the
+ * robot to download it from the server and install it, which takes a minute or two.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun VoicePackScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
+    val repository = viewModel.repository
+    val state by repository.voicePack.collectAsState()
+    var packs by remember { mutableStateOf<List<VoicePack>?>(null) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    var confirm by remember { mutableStateOf<VoicePack?>(null) }
+    var installing by remember { mutableStateOf<VoicePack?>(null) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        runCatching { repository.fetchVoicePack() }
+        runCatching { viewModel.loadVoicePacks() }
+            .onSuccess { packs = it }
+            .onFailure { loadError = "The server has no voice packs for this robot (${it.message})." }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Voice pack") },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+            )
+        },
+    ) { padding ->
+        CenteredContent {
+          Column(Modifier.fillMaxSize().padding(padding)) {
+            // Stays in view while the list scrolls, so a running install is never out of sight.
+            installing?.let { pack ->
+                val percent = state.progress ?: 0
+                Surface(color = MaterialTheme.colorScheme.secondaryContainer) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            if (percent in 1..99) "Downloading ${pack.title}… $percent%"
+                            else "Switching to ${pack.title}… the robot downloads it from your server and installs it",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        )
+                        if (percent in 1..99) {
+                            LinearProgressIndicator(progress = { percent / 100f }, modifier = Modifier.fillMaxWidth())
+                        } else {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
+                    }
+                }
+            }
+            LazyColumn(Modifier.fillMaxSize()) {
+                loadError?.let { item { Text(it, Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error) } }
+                if (packs == null && loadError == null) {
+                    item { Text("Reading the voice packs from the server…", Modifier.padding(16.dp)) }
+                }
+                packs?.let { list ->
+                    items(list.size) { i ->
+                        val pack = list[i]
+                        val inUse = state.inUse == pack.id
+                        val thisOne = installing?.id == pack.id
+                        Surface(
+                            onClick = { if (!inUse && installing == null) confirm = pack },
+                            enabled = installing == null,
+                            color = Color.Transparent,
+                        ) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(pack.title, style = MaterialTheme.typography.bodyLarge)
+                                    val detail = listOfNotNull(pack.subTitle?.takeIf { it != pack.title }, if (pack.voiceControl) "voice commands" else null)
+                                        .joinToString(" · ")
+                                    if (detail.isNotEmpty()) {
+                                        Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                                if (thisOne) {
+                                    Text("${state.progress ?: 0}%", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end = 8.dp))
+                                    CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+                                } else {
+                                    RadioButton(selected = inUse, onClick = null, enabled = installing == null || inUse)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+          }
+        }
+    }
+
+    confirm?.let { pack ->
+        AlertDialog(
+            onDismissRequest = { confirm = null },
+            title = { Text("Switch to ${pack.title}?") },
+            text = { Text("The robot downloads the voice from your server and installs it. This takes a minute or two; keep it on the dock.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirm = null
+                    installing = pack
+                    scope.launch {
+                        viewModel.report { it.installVoicePack(pack) }.join()
+                        installing = null
+                    }
+                }) { Text("Install") }
+            },
+            dismissButton = { TextButton(onClick = { confirm = null }) { Text("Cancel") } },
+        )
     }
 }
 
@@ -1501,6 +1618,7 @@ private fun RobotSettingsScreen(
     onLedChange: (Boolean) -> Unit,
     features: List<BetaFeatureState>,
     onFeatureToggle: (String, Int) -> Unit,
+    onVoicePack: (() -> Unit)? = null,
     onBack: () -> Unit,
 ) {
     var findTriggered by remember { mutableStateOf(false) }
@@ -1529,6 +1647,18 @@ private fun RobotSettingsScreen(
                 item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
                 item {
                     VolumeSliderRow(volume = robotSettings.volume, onVolumeChange = onVolumeChange)
+                }
+                if (onVoicePack != null) {
+                    item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
+                    item {
+                        SettingRowClickable(
+                            icon = Icons.Default.Sensors,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            title = "Voice pack",
+                            subtitle = "The language and voice the robot speaks with",
+                            onClick = onVoicePack,
+                        )
+                    }
                 }
                 item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
                 item {

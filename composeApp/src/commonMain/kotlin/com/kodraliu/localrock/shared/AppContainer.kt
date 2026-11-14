@@ -82,6 +82,10 @@ class AppContainer(
 
     private val loginApi = LoginApi(httpClient)
     private val deviceApi = DeviceApi(httpClient)
+
+    /** The voice packs the server offers for [bucket] (see [voicePackBucket]). */
+    suspend fun voicePacks(bucket: String): List<com.kodraliu.localrock.shared.vacuum.VoicePack> =
+        com.kodraliu.localrock.shared.vacuum.parseVoicePacks(deviceApi.voicePackList(bucket))
     val onboardingAdminApi: OnboardingAdminApi = OnboardingAdminApi(adminHttpClient)
 
     val authRepository: AuthRepository = AuthRepository(appSettings, loginApi)

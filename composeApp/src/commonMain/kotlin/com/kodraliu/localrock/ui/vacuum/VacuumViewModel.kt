@@ -17,6 +17,8 @@ import com.kodraliu.localrock.shared.vacuum.VacuumErrorCodes
 import com.kodraliu.localrock.shared.vacuum.VacuumRepository
 import com.kodraliu.localrock.shared.vacuum.isSmartPlanSupported
 import com.kodraliu.localrock.shared.vacuum.isWaterSlideSupported
+import com.kodraliu.localrock.shared.vacuum.VoicePack
+import com.kodraliu.localrock.shared.vacuum.voicePackBucket
 import com.kodraliu.localrock.shared.vacuum.isWaterDistanceSupported
 import com.kodraliu.localrock.shared.vacuum.isCornerCleanSupported
 import com.kodraliu.localrock.shared.vacuum.supportedBetaFeatures
@@ -74,6 +76,13 @@ class VacuumViewModel(
         .map { isWaterDistanceSupported(device.featureSet, it ?: serverFeatureSet) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, isWaterDistanceSupported(device.featureSet, serverFeatureSet))
     val status = repository.status
+
+    /** Where this model's voice packs live on the server; null when unknown, which hides the page. */
+    val voicePackBucket: String? = voicePackBucket(modelName)
+
+    /** The packs the server offers for this robot. */
+    suspend fun loadVoicePacks(): List<VoicePack> =
+        container.voicePacks(requireNotNull(voicePackBucket) { "No voice packs are known for this model" })
 
     private val errorBannerKey = "robot-error-${device.duid}"
 

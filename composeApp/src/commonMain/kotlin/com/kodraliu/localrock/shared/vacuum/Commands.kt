@@ -190,6 +190,11 @@ suspend fun VacuumSession.setCornerCleanMode(on: Boolean): V1Response =
 suspend fun VacuumSession.setWaterBoxDistanceOff(distance: Int): V1Response =
     sendCommandRaw("set_water_box_distance_off", JsonObject(mapOf("distance_off" to JsonPrimitive(distance))))
 
+suspend fun VacuumSession.getCurrentSound(): V1Response = sendCommand("get_current_sound")
+suspend fun VacuumSession.getSoundProgress(): V1Response = sendCommand("get_sound_progress")
+suspend fun VacuumSession.installSound(pack: VoicePack): V1Response =
+    sendCommandRaw("dnld_install_sound", installSoundParams(pack))
+
 /** The number of passes a clean makes, kept on the robot (the official a296 plugin's setCleanCount). */
 suspend fun VacuumSession.setCleanRepeatTimes(repeat: Int): V1Response =
     sendCommandRaw("set_clean_repeat_times", JsonObject(mapOf("repeat" to JsonPrimitive(repeat))))

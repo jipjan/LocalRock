@@ -20,6 +20,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlin.time.TimeSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -474,6 +475,45 @@ class VacuumRepository(
         if (_status.value.waterBoxCustomMode != WaterBoxMode.USER_CUSTOM) setWaterBoxMode(WaterBoxMode.USER_CUSTOM)
         session.setWaterBoxDistanceOff(distance).requireOk("set_water_box_distance_off")
         refreshStatus()
+    }
+
+    private val _voicePack = MutableStateFlow(VoicePackState())
+
+    /** The voice pack in use and any install in progress. */
+    val voicePack: StateFlow<VoicePackState> = _voicePack
+
+    suspend fun fetchVoicePack() = reading {
+        parseCurrentSound(session.getCurrentSound().requireOk("get_current_sound").result)?.let { current ->
+            _voicePack.update { it.copy(inUse = current.inUse, inUseVersion = current.inUseVersion, inProgress = current.inProgress) }
+        }
+    }
+
+    /**
+     * Tells the robot to download and install [pack], then follows `get_sound_progress` until it is done
+     * (at most [timeoutMs]), and reads back which pack is in use. Throws when the robot reports an error.
+     */
+    suspend fun installVoicePack(pack: VoicePack, timeoutMs: Long = 300_000L) {
+        session.installSound(pack).requireOk("dnld_install_sound")
+        _voicePack.update { it.copy(inProgress = pack.id, progress = 0, error = null) }
+        val started = TimeSource.Monotonic.markNow()
+        var sawProgress = false
+        while (started.elapsedNow().inWholeMilliseconds < timeoutMs) {
+            delay(2_000)
+            val p = parseSoundProgress(session.getSoundProgress().requireOk("get_sound_progress").result) ?: continue
+            _voicePack.update { it.copy(progress = p.progress, error = p.error) }
+            if ((p.error ?: 0) != 0) {
+                _voicePack.update { it.copy(inProgress = null) }
+                throw IllegalStateException("The robot could not install the voice pack (error ${p.error}).")
+            }
+            if (p.inProgress == pack.id) sawProgress = true
+            // Done when the robot no longer reports this pack in progress, after having started it or at 100%.
+            if (p.inProgress != pack.id && (sawProgress || p.progress == 100)) break
+        }
+        _voicePack.update { it.copy(inProgress = null) }
+        fetchVoicePack()
+        if (_voicePack.value.inUse != pack.id) {
+            throw IllegalStateException("The robot did not switch to ${pack.title}; it may still be installing it.")
+        }
     }
 
     /** Sets how many passes a clean makes; the robot keeps it and reports it as `repeat`. */

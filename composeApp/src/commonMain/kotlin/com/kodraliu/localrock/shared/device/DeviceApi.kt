@@ -22,6 +22,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 class DeviceApi(private val client: HttpClient) {
+    /** The voice packs for a product, from the server's mirror of Roborock's list. */
+    suspend fun voicePackList(bucket: String): JsonElement = client.get("/voice-pkg/$bucket/info").body()
+
 
 
     suspend fun ncPrepare(): JsonElement = client.get("/nc/prepare").body()
