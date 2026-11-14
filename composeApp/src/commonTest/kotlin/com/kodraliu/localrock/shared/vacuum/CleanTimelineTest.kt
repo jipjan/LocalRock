@@ -29,3 +29,37 @@ class CleanTimelineTest {
         assertEquals(73, changes[0].battery)
     }
 }
+
+class CleanTimelineWordsTest {
+    // Events of the a296 clean at 13:07, and what the official app showed for them.
+    private fun ev(t: Long, i: Int, e: String) = CleanEvent(t, i, Json.parseToJsonElement(e) as kotlinx.serialization.json.JsonObject)
+    private val events = listOf(
+        ev(1794658027, 25, """{"0":254}"""),
+        ev(1794658027, 25, """{"251":2,"252":1,"3":1,"4":1,"5":0,"6":1}"""),
+        ev(1794658027, 52, """{"521":3,"522":0,"523":1}"""),
+        ev(1794658187, 53, """{"531":0}"""),
+        ev(1794658199, 42, """{"2":1,"421":0,"3":1,"4":1,"5":0,"6":1,"422":6,"10":0,"12":0}"""),
+        ev(1794659791, 21, """{"211":1,"212":65553,"213":65569}"""),
+        ev(1794659888, 42, """{"2":36,"421":3,"3":1,"4":2,"5":0,"6":1,"10":0,"12":0}"""),
+        ev(1794660264, 52, """{"521":10,"522":1,"523":1}"""),
+        ev(1794660747, 12, """{"121":123}"""),
+        ev(1794660795, 23, """{"231":1,"232":0,"233":1,"234":2260}"""),
+        ev(1794660799, 54, """{"541":2,"542":-1}"""),
+    )
+
+    @Test
+    fun readsLikeTheOfficialApp() {
+        val lines = describeCleanEvents(events) { id -> mapOf(1 to "Kitchen")[id] }
+        assertEquals(
+            listOf(
+                "Started full clean", "Mop wash", "Resumed", "Cleaning Kitchen", "Settings changed by hand",
+                "Re-cleaning areas blocked by people or pets", "Mop wash", "Clean finished", "Auto-empty",
+            ),
+            lines.map { it.title },
+        )
+        assertEquals("from the app · Vacuum and mop", lines[0].detail)
+        assertEquals("Vacuum and mop · ×1", lines[3].detail)
+        assertEquals("Smart · Warm water", lines[6].detail)
+        assertEquals("Balanced", lines[8].detail)
+    }
+}

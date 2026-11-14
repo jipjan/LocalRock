@@ -1,5 +1,15 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
+import com.kodraliu.localrock.shared.vacuum.describeCleanEvents
+import com.kodraliu.localrock.shared.vacuum.CleanTimelineEntry
 import com.kodraliu.localrock.shared.vacuum.VacuumStateCodes
 import com.kodraliu.localrock.shared.vacuum.cleanStateChanges
 import com.kodraliu.localrock.shared.vacuum.CleanStateChange
@@ -328,6 +338,7 @@ fun VacuumSettingsScreen(
             HistoryScreen(
                 loadMap = { repository.fetchCleanRecordMap(it) },
                 loadEvents = { repository.fetchCleanEvents(it) },
+                roomName = { id -> repository.rooms.value.firstOrNull { it.id == id }?.name ?: repository.parsedMap.value?.rooms?.firstOrNull { it.id == id }?.name },
                 records = cleanHistory,
                 summary = cleanSummary,
                 onRefresh = {
@@ -396,6 +407,7 @@ fun VacuumHistoryScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
     HistoryScreen(
         loadMap = { repository.fetchCleanRecordMap(it) },
         loadEvents = { repository.fetchCleanEvents(it) },
+        roomName = { id -> repository.rooms.value.firstOrNull { it.id == id }?.name ?: repository.parsedMap.value?.rooms?.firstOrNull { it.id == id }?.name },
         records = cleanHistory,
         summary = cleanSummary,
         onRefresh = {
@@ -1117,10 +1129,11 @@ private fun HistoryScreen(
     /** The map of a past clean (by its begin time); null when the robot no longer has it. */
     loadMap: (suspend (Long) -> ParsedMap?)? = null,
     loadEvents: (suspend (Long) -> List<CleanEvent>)? = null,
+    roomName: (Int) -> String? = { null },
 ) {
     var opened by remember { mutableStateOf<CleanRecord?>(null) }
     opened?.let { record ->
-        CleanRecordDetailScreen(record, loadMap, loadEvents, onBack = { opened = null })
+        CleanRecordDetailScreen(record, loadMap, loadEvents, roomName, onBack = { opened = null })
         return
     }
     Scaffold(
@@ -1214,17 +1227,24 @@ private fun CleanRecordDetailScreen(
     record: CleanRecord,
     loadMap: (suspend (Long) -> ParsedMap?)?,
     loadEvents: (suspend (Long) -> List<CleanEvent>)?,
+    roomName: (Int) -> String?,
     onBack: () -> Unit,
 ) {
     var map by remember(record) { mutableStateOf<ParsedMap?>(null) }
     var mapLoaded by remember(record) { mutableStateOf(false) }
-    var changes by remember(record) { mutableStateOf<List<CleanStateChange>?>(null) }
+    var changes by remember(record) { mutableStateOf<List<CleanTimelineEntry>?>(null) }
     LaunchedEffect(record) {
         map = loadMap?.let { runCatching { it(record.beginEpoch) }.getOrNull() }
         mapLoaded = true
     }
     LaunchedEffect(record) {
-        changes = loadEvents?.let { runCatching { cleanStateChanges(it(record.beginEpoch)) }.getOrDefault(emptyList()) } ?: emptyList()
+        changes = loadEvents?.let { load ->
+            runCatching {
+                // The names the user gave the rooms; a past clean's map only carries placeholders ("Room 1").
+                val names = { id: Int -> roomName(id) ?: map?.rooms?.firstOrNull { it.id == id }?.name?.takeIf { it.isNotBlank() } }
+                describeCleanEvents(load(record.beginEpoch), names)
+            }.getOrDefault(emptyList())
+        } ?: emptyList()
     }
     Scaffold(
         topBar = {
@@ -1264,21 +1284,70 @@ private fun CleanRecordDetailScreen(
                         Text("No timeline for this clean.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
                     }
                     else -> items(list.size) { i ->
-                        val c = list[i]
-                        Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            Text(formatClockTime(c.epoch), style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(56.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(VacuumStateCodes.describe(c.to), style = MaterialTheme.typography.bodyMedium)
-                                c.battery?.let {
-                                    Text("Battery $it%", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-                        }
+                        TimelineRow(list[i], first = i == 0, last = i == list.lastIndex)
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * One line of a past clean's timeline, laid out as the official app does: the time on the left for a
+ * main step, a vertical line with a filled check for main steps and a small open circle for the steps
+ * in between, the main step's details in a card, and a step in between with its time under it.
+ */
+@Composable
+private fun TimelineRow(entry: CleanTimelineEntry, first: Boolean, last: Boolean) {
+    val line = MaterialTheme.colorScheme.primary
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(horizontal = 16.dp)) {
+        Text(
+            if (entry.milestone) formatClockTime(entry.epoch) else "",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(56.dp).padding(top = 14.dp),
+        )
+        Box(
+            Modifier.width(32.dp).fillMaxHeight().drawBehind {
+                val x = size.width / 2
+                val nodeY = 24.dp.toPx()
+                val stroke = 2.dp.toPx()
+                if (!first) drawLine(line, androidx.compose.ui.geometry.Offset(x, 0f), androidx.compose.ui.geometry.Offset(x, nodeY), stroke)
+                if (!last) drawLine(line, androidx.compose.ui.geometry.Offset(x, nodeY), androidx.compose.ui.geometry.Offset(x, size.height), stroke)
+            },
+            contentAlignment = Alignment.TopCenter,
+        ) {
+            if (entry.milestone) {
+                Box(
+                    Modifier.padding(top = 13.dp).size(22.dp).clip(CircleShape).background(line),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Default.Check, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onPrimary)
+                }
+            } else {
+                Box(
+                    Modifier.padding(top = 18.dp).size(12.dp).clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(2.dp, line, CircleShape),
+                )
+            }
+        }
+        Column(Modifier.weight(1f).padding(start = 8.dp, top = 10.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                entry.title,
+                style = if (entry.milestone) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+            )
+            if (entry.milestone) {
+                entry.detail?.let {
+                    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                        Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
+                    }
+                }
+            } else {
+                entry.detail?.let {
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text(formatClockTime(entry.epoch), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

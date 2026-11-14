@@ -56,3 +56,59 @@ fun cleanStateChanges(events: List<CleanEvent>): List<CleanStateChange> = events
 internal fun cleanDetailParams(begin: Long, from: Int) = JsonObject(mapOf(
     "begin" to JsonPrimitive(begin), "from" to JsonPrimitive(from), "id" to JsonPrimitive(0), "type" to JsonPrimitive(0),
 ))
+
+/** A line of a past clean's timeline, as the official app words it. */
+data class CleanTimelineEntry(val epoch: Long, val title: String, val detail: String? = null, val milestone: Boolean = false)
+
+/*
+ * Event types, matched on an a296 (2026-11-14) against the official app's timeline of the same clean:
+ * 25 start (251 source, 252 clean type), 42 cleaning a room (2 room id, 421 kind, 3 suction, 4 water,
+ * 6 passes), 52 mop wash (521 wash mode, 522 water temperature), 53 resumed after a wash, 21 settings
+ * changed by hand (211 what), 12 clean finished, 23 auto-empty (231 frequency).
+ */
+private fun JsonObject.int(key: String) = (this[key] as? JsonPrimitive)?.intOrNull
+
+private fun cleanMode(f: JsonObject): String? {
+    val suction = f.int("3") ?: return null
+    val water = f.int("4") ?: return null
+    return when {
+        suction > 0 && water > 0 -> "Vacuum and mop"
+        water > 0 -> "Mop only"
+        suction > 0 -> "Vacuum only"
+        else -> null
+    }
+}
+
+/**
+ * The timeline of a past clean in the official app's words: start, each room, mop washes, resumes,
+ * manual changes, the end and auto-emptying. Events whose meaning is unknown are left out, as the
+ * official app shows only these. [roomName] turns a room id into its name.
+ */
+fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): List<CleanTimelineEntry> =
+    events.sortedBy { it.epoch }.mapNotNull { e ->
+        val f = e.fields
+        when (e.type) {
+            25 -> if (f.int("252") == null && f.int("251") == null) null else {
+                val type = when (f.int("252")) { 1 -> "full clean"; else -> "clean" }
+                val source = when (f.int("251")) { 2 -> "from the app"; else -> null }
+                CleanTimelineEntry(e.epoch, "Started $type", listOfNotNull(source, cleanMode(f)).joinToString(" · ").ifEmpty { null }, milestone = true)
+            }
+            42 -> {
+                val room = f.int("2")
+                val title = if (f.int("421") == 3) "Re-cleaning areas blocked by people or pets"
+                else "Cleaning " + (room?.let(roomName) ?: "room ${room ?: "?"}")
+                val passes = f.int("6")?.takeIf { it > 0 }?.let { "×$it" }
+                CleanTimelineEntry(e.epoch, title, listOfNotNull(cleanMode(f), passes).joinToString(" · ").ifEmpty { null }, milestone = true)
+            }
+            52 -> {
+                val mode = if (f.int("521") == 10) "Smart" else null
+                val temp = when (f.int("522")) { 0 -> "Room temperature"; 1 -> "Warm water"; 2 -> "Hot water"; else -> null }
+                CleanTimelineEntry(e.epoch, "Mop wash", listOfNotNull(mode, if (mode != null) temp else null).joinToString(" · ").ifEmpty { null })
+            }
+            53 -> CleanTimelineEntry(e.epoch, "Resumed")
+            21 -> CleanTimelineEntry(e.epoch, "Settings changed by hand", if (f.int("211") == 1) "Water flow changed" else null)
+            12 -> CleanTimelineEntry(e.epoch, "Clean finished", milestone = true)
+            23 -> CleanTimelineEntry(e.epoch, "Auto-empty", when (f.int("231")) { 1 -> "Balanced"; 2 -> "High"; else -> null })
+            else -> null
+        }
+    }

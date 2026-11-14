@@ -188,3 +188,21 @@ table 48,2 · shoe rack 49,0 · nightstand 50,0 · wardrobe 51,0 · litter box 5
 
 The robot keeps its own copy (kind 1) of a zone the user draws, so removing a zone needs an erase
 mark (kind 2) over it, as the official app sends. Erase marks stay in the list.
+
+## Past clean timeline (`get_clean_detail`)
+
+Events `{"t": epoch, "i": type, "e": "<JSON>"}`, matched against the official app's timeline of the
+same clean (a296, 2026-11-14):
+
+| Type | Official app shows | Fields |
+|---|---|---|
+| 25 | Start (full) clean | 251 source (2 app), 252 clean type (1 full), 3 suction, 4 water, 5 route, 6 passes |
+| 42 | Cleaning <room> / re-clean areas blocked by people or pets | 2 room id, 421 kind (3 = re-clean blocked areas), 3/4/5/6 as above |
+| 52 | Mop wash | 521 wash mode (10 smart), 522 water temperature (0 room, 1 warm, 2 hot) |
+| 53 | Resume (after a wash) | |
+| 21 | Settings changed by hand | 211 what (1 water flow), 212/213 old/new |
+| 12 | Clean finished | 121 |
+| 23 | Auto-empty | 231 frequency (1 balanced, 2 high) |
+| 11 | (not shown) state change | 111 from, 112 to, 1 battery |
+
+Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47 (room queue), 51, 54, 61, 62.
