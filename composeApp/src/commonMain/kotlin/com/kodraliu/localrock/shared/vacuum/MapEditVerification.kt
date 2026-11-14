@@ -29,7 +29,7 @@ private fun zoneCorners(z: MapZone): List<Pair<Int, Int>> =
 private fun near(a: Pair<Int, Int>, b: Pair<Int, Int>): Boolean =
     abs(a.first - b.first) <= READBACK_TOLERANCE_MM && abs(a.second - b.second) <= READBACK_TOLERANCE_MM
 
-private fun zoneMatches(a: MapZone, b: MapZone): Boolean =
+internal fun zoneMatches(a: MapZone, b: MapZone): Boolean =
     zoneCorners(a).zip(zoneCorners(b)).all { (p, q) -> near(p, q) }
 
 private fun wallMatches(a: VirtualWall, b: VirtualWall): Boolean {

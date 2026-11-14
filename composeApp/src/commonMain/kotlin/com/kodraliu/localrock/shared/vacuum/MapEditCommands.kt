@@ -2,6 +2,8 @@ package com.kodraliu.localrock.shared.vacuum
 
 import com.kodraliu.localrock.shared.protocol.V1Response
 import com.kodraliu.localrock.shared.vacuum.map.MapZone
+import com.kodraliu.localrock.shared.vacuum.map.LOW_SPACE_DETECTED
+import com.kodraliu.localrock.shared.vacuum.map.LOW_SPACE_USER
 import com.kodraliu.localrock.shared.vacuum.map.NEW_RECT_CARPET_FLAGS
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
 import com.kodraliu.localrock.shared.vacuum.map.VirtualWall
@@ -311,6 +313,89 @@ internal fun encodeThresholdParams(thresholds: List<MapZone>, mapIndex: Int): Js
 
 internal const val THRESHOLD_TYPE = 2
 
+/**
+ * `app_set_curtains`: every curtain, as the official app sent them on an a296:
+ * `{"map_index":0,"zones":[[x1,y1,…,x4,y4,0,0], …]}`; `"zones":[]` removes them all.
+ */
+internal fun encodeCurtainParams(curtains: List<MapZone>, mapIndex: Int): JsonObject {
+    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    return JsonObject(mapOf(
+        "map_index" to JsonPrimitive(mapIndex),
+        "zones" to JsonArray(curtains.map { c ->
+            val tail = c.extra.takeIf { it.size == 2 } ?: listOf(0, 0)
+            JsonArray(quad(c) + tail.map { JsonPrimitive(it) })
+        }),
+    ))
+}
+
+/** A curtain strip along A-B, [CURTAIN_WIDTH_MM] wide, corners in the order the official app used. */
+fun curtainStrip(a: Pair<Int, Int>, b: Pair<Int, Int>): MapZone =
+    thresholdStrip(a, b, CURTAIN_WIDTH_MM).copy(kind = ZoneKind.CURTAIN, extra = listOf(0, 0))
+
+/** The official app drew curtains 100 mm deep (2.3 m × 0.1 m by default). */
+internal const val CURTAIN_WIDTH_MM = 100
+
+/**
+ * `app_set_low_space_zones` with the zones the user drew: `{"map_index":0,"zone_data":[[0, x1,…,y4], …]}`.
+ * The robot keeps the areas it found itself ([LOW_SPACE_DETECTED]), which the official app never sends.
+ * Erase marks ([LOW_SPACE_ERASED]) are sent back as they are, so an area the user erased stays erased.
+ */
+internal fun encodeLowSpaceParams(zones: List<MapZone>, mapIndex: Int): JsonObject {
+    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    return JsonObject(mapOf(
+        "map_index" to JsonPrimitive(mapIndex),
+        "zone_data" to JsonArray(zones.filter { it.lowSpaceKind != LOW_SPACE_DETECTED }.map { z ->
+            JsonArray(listOf(JsonPrimitive(z.lowSpaceKind ?: LOW_SPACE_USER)) + quad(z))
+        }),
+    ))
+}
+
+/**
+ * `save_furnitures` with only the changes, as the official app sends them: a new piece as
+ * `[1, -1, x1,…,y4, type, subtype, 1]`, a removed one as `[0, id]`.
+ */
+internal fun encodeFurnitureChanges(added: List<MapZone>, removedIds: List<Int>, mapIndex: Int): JsonObject {
+    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    val adds = added.map { f ->
+        JsonArray(listOf(JsonPrimitive(1), JsonPrimitive(-1)) + quad(f) + listOf(
+            JsonPrimitive(requireNotNull(f.furnitureType) { "Furniture without a type" }),
+            JsonPrimitive(f.furnitureSubtype ?: 0),
+            JsonPrimitive(1),
+        ))
+    }
+    val removes = removedIds.map { JsonArray(listOf(JsonPrimitive(0), JsonPrimitive(it))) }
+    return JsonObject(mapOf("data" to JsonArray(adds + removes), "map_flag" to JsonPrimitive(mapIndex)))
+}
+
+/**
+ * What `save_furnitures` must send to go from [before] (on the map, each with an id) to [after]: new
+ * pieces, and the ids of pieces removed. A piece that was moved, resized or changed in type is removed
+ * and added again, as the robot has no update for a piece.
+ */
+internal fun furnitureChanges(before: List<MapZone>, after: List<MapZone>): Pair<List<MapZone>, List<Int>> {
+    val beforeById = before.filter { it.furnitureId != null }.associateBy { it.furnitureId!! }
+    val kept = after.filter { a ->
+        val id = a.furnitureId ?: return@filter false
+        val b = beforeById[id] ?: return@filter false
+        b.furnitureType == a.furnitureType && b.furnitureSubtype == a.furnitureSubtype && zoneMatches(b, a)
+    }.mapNotNull { it.furnitureId }.toSet()
+    val removed = beforeById.keys.filter { it !in kept }
+    val added = after.filter { it.furnitureId == null || it.furnitureId !in kept }
+    return added to removed
+}
+
+suspend fun VacuumSession.setCurtains(curtains: List<MapZone>, mapIndex: Int): V1Response =
+    sendCommandRaw("app_set_curtains", encodeCurtainParams(curtains, mapIndex), timeoutMs = MAP_EDIT_TIMEOUT_MS)
+        .requireOk("app_set_curtains")
+
+suspend fun VacuumSession.setLowSpaceZones(zones: List<MapZone>, mapIndex: Int): V1Response =
+    sendCommandRaw("app_set_low_space_zones", encodeLowSpaceParams(zones, mapIndex), timeoutMs = MAP_EDIT_TIMEOUT_MS)
+        .requireOk("app_set_low_space_zones")
+
+suspend fun VacuumSession.saveFurnitures(added: List<MapZone>, removedIds: List<Int>, mapIndex: Int): V1Response =
+    sendCommandRaw("save_furnitures", encodeFurnitureChanges(added, removedIds, mapIndex), timeoutMs = MAP_EDIT_TIMEOUT_MS)
+        .requireOk("save_furnitures")
+
 /** Width of the threshold strips the official app drew (both captured ones measured ~114 mm). */
 internal const val THRESHOLD_WIDTH_MM = 114
 
@@ -318,12 +403,12 @@ internal const val THRESHOLD_WIDTH_MM = 114
  * A threshold strip along the line A-B, [THRESHOLD_WIDTH_MM] wide, with corners in the order the
  * official app used: A and B on one side, then B and A on the other.
  */
-fun thresholdStrip(a: Pair<Int, Int>, b: Pair<Int, Int>): MapZone {
+fun thresholdStrip(a: Pair<Int, Int>, b: Pair<Int, Int>, widthMm: Int = THRESHOLD_WIDTH_MM): MapZone {
     val dx = (b.first - a.first).toDouble()
     val dy = (b.second - a.second).toDouble()
     val len = kotlin.math.sqrt(dx * dx + dy * dy)
-    if (len == 0.0) throw MapEditException("Draw the threshold as a line across the doorway")
-    val half = THRESHOLD_WIDTH_MM / 2.0
+    if (len == 0.0) throw MapEditException("Draw the line across the doorway or window")
+    val half = widthMm / 2.0
     val nx = -dy / len * half
     val ny = dx / len * half
     fun p(x: Int, y: Int, sign: Int) =

@@ -5,9 +5,12 @@ import com.kodraliu.localrock.shared.mqtt.MqttClient
 import com.kodraliu.localrock.shared.mqtt.MqttTopics
 import com.kodraliu.localrock.shared.protocol.V1Response
 import com.kodraliu.localrock.shared.protocol.saveDebugBlob
+import com.kodraliu.localrock.shared.protocol.isDebugBuild
 import com.kodraliu.localrock.shared.vacuum.map.FloorMaterial
 import com.kodraliu.localrock.shared.vacuum.map.MapFormat
 import com.kodraliu.localrock.shared.vacuum.map.MapZone
+import com.kodraliu.localrock.shared.vacuum.map.LOW_SPACE_USER
+import com.kodraliu.localrock.shared.vacuum.map.LOW_SPACE_ERASED
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMapRoom
 import com.kodraliu.localrock.shared.vacuum.map.VirtualWall
@@ -661,6 +664,12 @@ class VacuumRepository(
         walls: List<VirtualWall>,
         carpets: List<MapZone>,
         thresholds: List<MapZone>,
+        /** All curtains, or null to leave them as they are (a map without the block). */
+        curtains: List<MapZone>? = null,
+        /** The under-furniture zones the user drew ([LOW_SPACE_USER]), or null to leave them. */
+        lowSpaceZones: List<MapZone>? = null,
+        /** All furniture: pieces with a [MapZone.furnitureId] are on the map already. Null leaves it. */
+        furniture: List<MapZone>? = null,
     ): Unit = mapEditMutex.withLock {
         val map = editableMap()
         runCatching { fetchFloorMaps() }
@@ -673,18 +682,40 @@ class VacuumRepository(
         val restrictionsChanged = !restrictionsMatch(map, noGoZones, map.noMopZones, walls)
         val carpetsChanged = !sameZones(carpets, map.carpetAreas)
         val thresholdsChanged = !sameZones(thresholds, map.thresholds)
-        if (!restrictionsChanged && !carpetsChanged && !thresholdsChanged) return@withLock
+        val curtainsChanged = curtains != null && map.curtains != null && !sameZones(curtains, map.curtains)
+        val userLowSpace = map.lowSpaceZones.orEmpty().filter { it.lowSpaceKind == LOW_SPACE_USER }
+        val lowSpaceChanged = lowSpaceZones != null && map.lowSpaceZones != null && !sameZones(lowSpaceZones, userLowSpace)
+        val furnitureChange = if (furniture != null && map.furniture != null) furnitureChanges(map.furniture, furniture) else null
+        val furnitureChanged = furnitureChange != null && (furnitureChange.first.isNotEmpty() || furnitureChange.second.isNotEmpty())
+        if (!restrictionsChanged && !carpetsChanged && !thresholdsChanged &&
+            !curtainsChanged && !lowSpaceChanged && !furnitureChanged
+        ) return@withLock
         if (restrictionsChanged) restrictionSaveBlocker(map, mapIndex)?.let { throw MapEditException(it) }
         session.inEditSession {
             if (restrictionsChanged) session.saveMap(noGoZones, walls, index)
             if (carpetsChanged) session.setCarpetAreas(carpets, index, map.carpetFlagsPresent)
             if (thresholdsChanged) session.setThresholds(thresholds, index)
+            if (curtainsChanged) session.setCurtains(curtains!!, index)
+            if (lowSpaceChanged) {
+                // Erase marks the user made in the official app stay; the robot keeps what it found itself.
+                val erased = map.lowSpaceZones.orEmpty().filter { it.lowSpaceKind == LOW_SPACE_ERASED }
+                // The robot keeps its own copy of a zone the user drew (kind 1), so a removed zone also
+                // gets an erase mark, as the official app sends it.
+                val removed = userLowSpace.filter { old -> lowSpaceZones!!.none { zoneMatches(it, old) } }
+                    .map { it.copy(extra = listOf(LOW_SPACE_ERASED)) }
+                session.setLowSpaceZones(lowSpaceZones!!.map { it.copy(extra = listOf(LOW_SPACE_USER)) } + erased + removed, index)
+            }
+            if (furnitureChanged) session.saveFurnitures(furnitureChange!!.first, furnitureChange.second, index)
         }
         awaitMap { m ->
             restrictionsMatch(m, noGoZones, map.noMopZones, walls) &&
                 sameZones(carpets, m.carpetAreas) &&
                 m.carpetAreas.count { it.isRoundCarpet } == carpets.count { it.isRoundCarpet } &&
-                sameZones(thresholds, m.thresholds)
+                sameZones(thresholds, m.thresholds) &&
+                (!curtainsChanged || sameZones(curtains!!, m.curtains.orEmpty())) &&
+                (!lowSpaceChanged || sameZones(lowSpaceZones!!, m.lowSpaceZones.orEmpty().filter { it.lowSpaceKind == LOW_SPACE_USER })) &&
+                (!furnitureChanged || (sameZones(furniture!!, m.furniture.orEmpty()) &&
+                    furniture.mapNotNull { it.furnitureType }.sorted() == m.furniture.orEmpty().mapNotNull { it.furnitureType }.sorted()))
         } ?: throw MapEditException(NOT_CONFIRMED)
     }
 
@@ -1480,6 +1511,8 @@ class VacuumRepository(
             val parsed = b01.getOrNull()
                 ?: runCatching { parseLegacyMap(resp.data) }.getOrNull()
             _parsedMap.value = parsed
+            // Debug builds keep the latest map, to work out blocks (curtains, furniture, ...) with adb.
+            if (isDebugBuild) runCatching { saveDebugBlob("map-latest.bin", resp.data) }
             if (parsed != null && parsed.rooms.isNotEmpty()) {
                 _rooms.value = parsed.rooms
             }

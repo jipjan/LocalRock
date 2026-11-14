@@ -176,3 +176,15 @@ Furniture types (type, subtype): TV cabinet 43,0 · bed double 45,2 · bed singl
 46,1 · two-seat 46,2 · multi-seat 46,3 · modular 46,5 · dining set 47,0 · coffee table 48,1 · square
 table 48,2 · shoe rack 49,0 · nightstand 50,0 · wardrobe 51,0 · litter box 52,0 · closed litter box
 53,0 · pet cage 54,0 · pet basket 55,0 · pet bowls 56,0 · floor mirror 57,0 · cat tree 58,0.
+
+### Where the map keeps them (legacy `rr` map, a296)
+
+| Block | Holds | Entry |
+|---|---|---|
+| 25 | furniture | 23 bytes: 8 × u16 corners, u16 10000, u8 type, u8 subtype, u8 1, u8 id, u8 1 |
+| 52 | under-furniture zones | 20 bytes: u32 kind (0 drawn by the user, 1 found by the robot, 2 erased by the user), 8 × u16 corners |
+| 59 | curtains | 20 bytes: 8 × u16 corners, 2 × u16 (0, 0) |
+| 39 | carpets with flags | the a296 keeps its carpets here only; block 22 stays empty |
+
+The robot keeps its own copy (kind 1) of a zone the user draws, so removing a zone needs an erase
+mark (kind 2) over it, as the official app sends. Erase marks stay in the list.

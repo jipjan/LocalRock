@@ -40,7 +40,6 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | 76, 91 | CleanHistoryTimeLine, CleanTimeLine | Timeline of a clean (what happened when) in the history | `get_clean_record` details, `get_clean_record_map(_v2)` | history detail page |
 | 85 | MidwayBackToDock | Returns to the dock mid-clean to wash/empty; shown in the clean's status | not found in the capture | needs a capture during a clean |
 | 122 | FloorPlanMap | Floor-plan style map view | map rendering | large |
-| 138 | Curtain | Mark curtains on the map so the robot passes under them | `app_set_curtains` | map editor tool |
 | 48, 59, 68, 74, 95, 103, 123, 126, 127 | (not in the plugin's table) | unknown | – | – |
 
 ## Official app compared page by page
@@ -61,9 +60,9 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Kaarten beheren (maps): save, multiple floors, backup | Built (map list, switch, backup/restore, rename). |
 | Kaart bewerken: splitsen, combineren, naam, verboden zones, type vloer, tapijt, volgorde | Built. |
 | Kaart bewerken: **Drempel** (door sills) | Built (`app_set_smart_door_sill`). The a296 app also sends `attrs [10]` and `side_heights`; not yet tried whether the a296 takes LocalRock's shorter form. |
-| Kaart bewerken: **Meubels** (furniture) | Missing in the app; commands and all 20 types captured (`save_furnitures`, see robot-commands-a296.md). Needs the furniture block of the map to show existing pieces. |
-| Kaart bewerken: **Gordijn** (curtains) | Missing in the app; command captured (`app_set_curtains`, bit 138). Needs the curtain block of the map. |
-| Kaart bewerken: **Onder meubels** (under furniture) | Missing in the app; command captured (`app_set_low_space_zones`). The low-area access setting itself is built. |
+| Kaart bewerken: **Meubels** (furniture) | Built: the map editor's Furniture tool with all 20 types (`save_furnitures`, map block 25). |
+| Kaart bewerken: **Gordijn** (curtains) | Built: the map editor's Curtain tool (`app_set_curtains`, map block 59). |
+| Kaart bewerken: **Onder meubels** (under furniture) | Built: the map editor's Under furniture tool (`app_set_low_space_zones`, map block 52). |
 | Kaart bewerken: tapijt (rectangular and round) | Built (`set_carpet_area` with flags). Ignoring a detected carpet (`set_ignore_carpet_zone`) is not in this robot's editor. |
 | Stemassistent: switch | Built (off; turning it on lets the robot process your voice). |
 | Stemassistent: Taal (voice pack) | Built, served by the local server. |

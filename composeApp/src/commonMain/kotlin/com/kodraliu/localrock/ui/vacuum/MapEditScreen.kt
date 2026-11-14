@@ -1,5 +1,8 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import androidx.compose.foundation.horizontalScroll
+import com.kodraliu.localrock.shared.vacuum.map.LOW_SPACE_USER
+import com.kodraliu.localrock.shared.vacuum.curtainStrip
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -138,12 +141,47 @@ private val SPLIT_COLOR = Color(0xffff9800)
 // Same brown as the map renderer's carpet stroke; ~4.9:1 on the dark surface, ~3.3:1 on white.
 private val CARPET_COLOR = Color(0xffa1887f)
 private val THRESHOLD_COLOR = Color(0xffffb300)
+private val CURTAIN_COLOR = Color(0xff4dd0e1)
+private val LOW_SPACE_COLOR = Color(0xff9575cd)
+private val FURNITURE_COLOR = Color(0xffbdbdbd)
+
+/**
+ * Furniture the official app offers (a296, 2026-11-14): type and subtype as `save_furnitures` takes
+ * them, and the size in mm a new piece starts at, as the official app placed it.
+ */
+private data class FurnitureChoice(val label: String, val type: Int, val subtype: Int, val widthMm: Int, val depthMm: Int)
+
+private val FURNITURE_CHOICES = listOf(
+    FurnitureChoice("Double bed", 45, 2, 2400, 2400),
+    FurnitureChoice("Single bed", 45, 1, 1200, 2400),
+    FurnitureChoice("TV cabinet", 43, 0, 2500, 800),
+    FurnitureChoice("Sofa, multi-seat", 46, 3, 3500, 1000),
+    FurnitureChoice("Sofa, two-seat", 46, 2, 2000, 1000),
+    FurnitureChoice("Armchair", 46, 1, 1000, 1000),
+    FurnitureChoice("Modular sofa", 46, 5, 4000, 1500),
+    FurnitureChoice("Dining set", 47, 0, 2400, 1500),
+    FurnitureChoice("Square table", 48, 2, 1500, 1500),
+    FurnitureChoice("Coffee table", 48, 1, 1200, 900),
+    FurnitureChoice("Shoe rack", 49, 0, 1000, 400),
+    FurnitureChoice("Wardrobe", 51, 0, 2500, 700),
+    FurnitureChoice("Nightstand", 50, 0, 600, 600),
+    FurnitureChoice("Litter box", 52, 0, 500, 700),
+    FurnitureChoice("Closed litter box", 53, 0, 500, 700),
+    FurnitureChoice("Pet cage", 54, 0, 1500, 800),
+    FurnitureChoice("Pet basket", 55, 0, 1500, 800),
+    FurnitureChoice("Pet bowls", 56, 0, 600, 300),
+    FurnitureChoice("Floor mirror", 57, 0, 800, 500),
+    FurnitureChoice("Cat tree", 58, 0, 1000, 800),
+)
+
+private fun furnitureLabel(z: MapZone?): String? =
+    FURNITURE_CHOICES.firstOrNull { it.type == z?.furnitureType && it.subtype == z.furnitureSubtype }?.label
 
 /** Shapes smaller than this (either side of a zone, or a line) are treated as accidental drags. */
 private const val MIN_SHAPE_MM = 200
 
 private enum class EditMode { RESTRICTIONS, ROOMS }
-private enum class Tool { NO_GO, WALL, CARPET, THRESHOLD }
+private enum class Tool { NO_GO, WALL, CARPET, THRESHOLD, CURTAIN, LOW_SPACE, FURNITURE }
 
 private sealed interface Selection {
     data class Zone(val index: Int) : Selection
@@ -176,7 +214,13 @@ private fun zoneColor(kind: ZoneKind) = when (kind) {
     ZoneKind.NO_MOP -> NO_MOP_COLOR
     ZoneKind.CARPET -> CARPET_COLOR
     ZoneKind.THRESHOLD -> THRESHOLD_COLOR
+    ZoneKind.CURTAIN -> CURTAIN_COLOR
+    ZoneKind.LOW_SPACE -> LOW_SPACE_COLOR
+    ZoneKind.FURNITURE -> FURNITURE_COLOR
 }
+
+/** Kinds drawn as a strip along a line (ends drag), not as a rectangle. */
+private fun ZoneKind.isStrip() = this == ZoneKind.THRESHOLD || this == ZoneKind.CURTAIN
 
 /** Zones that count towards save_map's vertex limit (carpets and thresholds have their own commands). */
 private fun List<MapZone>.restrictionZones() = filter { it.kind == ZoneKind.NO_GO || it.kind == ZoneKind.NO_MOP }
@@ -231,13 +275,17 @@ fun MapEditScreen(
     var notice by remember { mutableStateOf<Notice?>(null) }
     var showSaveConfirm by remember { mutableStateOf(false) }
     var showDiscardConfirm by remember { mutableStateOf(false) }
+    var showFurniturePicker by remember { mutableStateOf(false) }
 
     // Follow the robot's map until the user starts editing; after that local edits own the state
     // so the periodic map poll can't wipe work in progress.
     LaunchedEffect(parsedMap, dirty) {
         val pm = parsedMap
         if (!dirty && pm != null) {
-            zones = pm.noGoZones + pm.noMopZones + pm.carpetAreas + pm.thresholds
+            zones = pm.noGoZones + pm.noMopZones + pm.carpetAreas + pm.thresholds +
+                pm.curtains.orEmpty() + pm.furniture.orEmpty() +
+                // Only the zones the user drew; what the robot found itself, and erase marks, stay as they are.
+                pm.lowSpaceZones.orEmpty().filter { it.lowSpaceKind == LOW_SPACE_USER }
             walls = pm.virtualWalls
             selection = null
         }
@@ -320,13 +368,22 @@ fun MapEditScreen(
             val editable = blockedReason == null && !working
             fun toolEnabled(t: Tool) = editable && when (t) {
                 Tool.NO_GO, Tool.WALL -> saveBlocker == null
-                Tool.CARPET, Tool.THRESHOLD -> indexBlocker == null
+                Tool.CARPET, Tool.THRESHOLD, Tool.CURTAIN, Tool.LOW_SPACE, Tool.FURNITURE -> indexBlocker == null
+            }
+            // Only the tools whose block the robot's map carries (curtains 59, under furniture 52, furniture 25).
+            val availableTools = Tool.entries.filter { t ->
+                when (t) {
+                    Tool.CURTAIN -> pm.curtains != null
+                    Tool.LOW_SPACE -> pm.lowSpaceZones != null
+                    Tool.FURNITURE -> pm.furniture != null
+                    else -> true
+                }
             }
             val deleteEnabled = editable && when (val sel = selection) {
                 is Selection.Wall -> saveBlocker == null
                 is Selection.Zone -> when (zones.getOrNull(sel.index)?.kind) {
                     ZoneKind.NO_GO -> saveBlocker == null
-                    ZoneKind.CARPET, ZoneKind.THRESHOLD -> indexBlocker == null
+                    ZoneKind.CARPET, ZoneKind.THRESHOLD, ZoneKind.CURTAIN, ZoneKind.LOW_SPACE, ZoneKind.FURNITURE -> indexBlocker == null
                     ZoneKind.NO_MOP, null -> false
                 }
                 null -> false
@@ -365,6 +422,21 @@ fun MapEditScreen(
                     Tool.WALL -> {
                         walls = walls + VirtualWall(cx - half * 6 / 5, cy, cx + half * 6 / 5, cy)
                         selection = Selection.Wall(walls.lastIndex)
+                    }
+                    Tool.CURTAIN -> {
+                        // The official app starts a curtain at 2.3 m.
+                        zones = zones + curtainStrip(cx - 1150 to cy, cx + 1150 to cy)
+                        selection = Selection.Zone(zones.lastIndex)
+                    }
+                    Tool.LOW_SPACE -> {
+                        zones = zones + MapZone.rect(cx - half, cy - half, cx + half, cy + half, ZoneKind.LOW_SPACE)
+                            .copy(extra = listOf(LOW_SPACE_USER))
+                        selection = Selection.Zone(zones.lastIndex)
+                    }
+                    Tool.FURNITURE -> {
+                        // Which piece first; it is added once chosen.
+                        showFurniturePicker = true
+                        return
                     }
                 }
                 dirty = true
@@ -457,7 +529,7 @@ fun MapEditScreen(
                     EditMode.RESTRICTIONS -> {
                         val sel = selection
                         if (sel == null) {
-                            ToolDock(toolEnabled = ::toolEnabled, onAdd = ::addShape, vertices = vertices)
+                            ToolDock(tools = availableTools, toolEnabled = ::toolEnabled, onAdd = ::addShape, vertices = vertices)
                         } else {
                             val selectedZone = (sel as? Selection.Zone)?.let { zones.getOrNull(it.index) }
                             val kind = selectedZone?.kind
@@ -487,17 +559,52 @@ fun MapEditScreen(
         }
     }
 
+    if (showFurniturePicker) {
+        AlertDialog(
+            onDismissRequest = { showFurniturePicker = false },
+            title = { Text("Add furniture") },
+            text = {
+                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                    FURNITURE_CHOICES.forEach { choice ->
+                        Text(
+                            choice.label,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.fillMaxWidth().clickable {
+                                showFurniturePicker = false
+                                val map = parsedMap ?: return@clickable
+                                val (cx, cy) = viewport.centerMm(map) ?: return@clickable
+                                val hw = choice.widthMm / 2
+                                val hd = choice.depthMm / 2
+                                zones = zones + MapZone.rect(cx - hw, cy - hd, cx + hw, cy + hd, ZoneKind.FURNITURE)
+                                    .copy(extra = listOf(choice.type, choice.subtype))
+                                selection = Selection.Zone(zones.lastIndex)
+                                dirty = true
+                                notice = null
+                            }.padding(vertical = 12.dp),
+                        )
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { showFurniturePicker = false }) { Text("Cancel") } },
+        )
+    }
+
     if (showSaveConfirm) {
         val noGo = zones.count { it.kind == ZoneKind.NO_GO }
         val carpets = zones.count { it.kind == ZoneKind.CARPET }
         val thresholds = zones.count { it.kind == ZoneKind.THRESHOLD }
+        val extras = listOfNotNull(
+            zones.count { it.kind == ZoneKind.CURTAIN }.takeIf { pm?.curtains != null }?.let { "$it curtain(s)" },
+            zones.count { it.kind == ZoneKind.LOW_SPACE }.takeIf { pm?.lowSpaceZones != null }?.let { "$it under-furniture zone(s)" },
+            zones.count { it.kind == ZoneKind.FURNITURE }.takeIf { pm?.furniture != null }?.let { "$it piece(s) of furniture" },
+        ).joinToString(", ").let { if (it.isEmpty()) "" else ", $it" }
         AlertDialog(
             onDismissRequest = { showSaveConfirm = false },
             title = { Text("Save to robot?") },
             text = {
                 Text(
                     "The robot will keep exactly these: $noGo no-go zone(s), ${walls.size} wall(s), " +
-                        "$carpets carpet area(s) and $thresholds threshold(s). Anything removed here is " +
+                        "$carpets carpet area(s), $thresholds threshold(s)$extras. Anything removed here is " +
                         "removed from the robot."
                 )
             },
@@ -508,8 +615,12 @@ fun MapEditScreen(
                     val carpetAreas = zones.filter { it.kind == ZoneKind.CARPET }
                     val thresholdStrips = zones.filter { it.kind == ZoneKind.THRESHOLD }
                     val savedWalls = walls
+                    val m = parsedMap
+                    val curtains = zones.filter { it.kind == ZoneKind.CURTAIN }.takeIf { m?.curtains != null }
+                    val lowSpace = zones.filter { it.kind == ZoneKind.LOW_SPACE }.takeIf { m?.lowSpaceZones != null }
+                    val furniture = zones.filter { it.kind == ZoneKind.FURNITURE }.takeIf { m?.furniture != null }
                     runEdit("Saved. The robot's map shows the changes.") {
-                        repository.saveMapEdits(noGoZones, savedWalls, carpetAreas, thresholdStrips)
+                        repository.saveMapEdits(noGoZones, savedWalls, carpetAreas, thresholdStrips, curtains, lowSpace, furniture)
                         dirty = false
                         selection = null
                         null
@@ -720,7 +831,7 @@ private fun EditorCanvas(
                             currentZones.indexOfLast { z ->
                                 z.contains(xMm, yMm) ||
                                     // Threshold strips are ~2 map pixels wide; accept taps near the centre line.
-                                    (z.kind == ZoneKind.THRESHOLD && distanceToSegmentMm(
+                                    (z.kind.isStrip() && distanceToSegmentMm(
                                         xMm, yMm,
                                         (z.x0 + z.x3) / 2, (z.y0 + z.y3) / 2,
                                         (z.x1 + z.x2) / 2, (z.y1 + z.y2) / 2,
@@ -1021,6 +1132,9 @@ private val TOOL_SPECS = listOf(
     ToolSpec(Tool.WALL, "Wall", Icons.Default.HorizontalRule, WALL_COLOR),
     ToolSpec(Tool.CARPET, "Carpet", Icons.Default.Texture, CARPET_COLOR),
     ToolSpec(Tool.THRESHOLD, "Threshold", Icons.Default.MeetingRoom, THRESHOLD_COLOR),
+    ToolSpec(Tool.CURTAIN, "Curtain", Icons.Default.Texture, CURTAIN_COLOR),
+    ToolSpec(Tool.LOW_SPACE, "Under furniture", Icons.Default.Block, LOW_SPACE_COLOR),
+    ToolSpec(Tool.FURNITURE, "Furniture", Icons.Default.MeetingRoom, FURNITURE_COLOR),
 )
 
 /**
@@ -1028,7 +1142,7 @@ private val TOOL_SPECS = listOf(
  * the dock doubles as the map's key.
  */
 @Composable
-private fun ToolDock(toolEnabled: (Tool) -> Boolean, onAdd: (Tool) -> Unit, vertices: Int) {
+private fun ToolDock(tools: List<Tool>, toolEnabled: (Tool) -> Boolean, onAdd: (Tool) -> Unit, vertices: Int) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Add to map", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
@@ -1039,8 +1153,13 @@ private fun ToolDock(toolEnabled: (Tool) -> Boolean, onAdd: (Tool) -> Unit, vert
                 else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            TOOL_SPECS.forEach { spec ->
+        val specs = TOOL_SPECS.filter { it.tool in tools }
+        // Four tools fit across; more scroll sideways.
+        Row(
+            Modifier.fillMaxWidth().then(if (specs.size > 4) Modifier.horizontalScroll(rememberScrollState()) else Modifier),
+            horizontalArrangement = if (specs.size > 4) Arrangement.spacedBy(4.dp) else Arrangement.SpaceBetween,
+        ) {
+            specs.forEach { spec ->
                 ToolTile(spec, enabled = toolEnabled(spec.tool), onClick = { onAdd(spec.tool) })
             }
         }
@@ -1079,6 +1198,9 @@ private fun kindTitle(kind: ZoneKind?, round: Boolean = false) = when (kind) {
     ZoneKind.NO_MOP -> "No-mop zone"
     ZoneKind.CARPET -> if (round) "Round carpet" else "Carpet"
     ZoneKind.THRESHOLD -> "Threshold"
+    ZoneKind.CURTAIN -> "Curtain"
+    ZoneKind.LOW_SPACE -> "Under furniture"
+    ZoneKind.FURNITURE -> "Furniture"
 }
 
 private fun kindHelp(kind: ZoneKind?, round: Boolean = false) = when {
@@ -1088,6 +1210,9 @@ private fun kindHelp(kind: ZoneKind?, round: Boolean = false) = when {
 
 private fun kindHelpFor(kind: ZoneKind?) = when (kind) {
     null, ZoneKind.THRESHOLD -> "Drag to move, drag the ends to reshape."
+    ZoneKind.CURTAIN -> "The robot cleans behind it. Drag to move, drag the ends to reshape."
+    ZoneKind.LOW_SPACE -> "A low space the robot cleans under. Drag to move. Corners resize, the knob rotates."
+    ZoneKind.FURNITURE -> "Drag to move. Corners resize, the knob rotates."
     ZoneKind.NO_GO, ZoneKind.CARPET -> "Drag to move. Corners resize, the knob rotates."
     ZoneKind.NO_MOP -> "Set in the Roborock app. LocalRock can't change it yet."
 }
@@ -1344,7 +1469,8 @@ private val ROTATE_HANDLE_DISTANCE = 36.dp
  * makes of a stretched or rotated one has not been captured.
  */
 private fun canRotateOrResize(zone: MapZone) =
-    zone.kind == ZoneKind.NO_GO || (zone.kind == ZoneKind.CARPET && !zone.isRoundCarpet)
+    zone.kind == ZoneKind.NO_GO || zone.kind == ZoneKind.LOW_SPACE || zone.kind == ZoneKind.FURNITURE ||
+        (zone.kind == ZoneKind.CARPET && !zone.isRoundCarpet)
 
 /** Screen positions of the selected shape's handles. */
 private fun dragHandles(
@@ -1366,7 +1492,7 @@ private fun dragHandles(
         is Selection.Zone -> {
             val z = zones.getOrNull(sel.index) ?: return emptyList()
             when {
-                z.kind == ZoneKind.THRESHOLD -> {
+                z.kind.isStrip() -> {
                     val (a, b) = z.thresholdCenterLine()
                     listOf(DragTarget.LineEnd(0) to screen(a.first, a.second), DragTarget.LineEnd(1) to screen(b.first, b.second))
                 }
@@ -1411,7 +1537,7 @@ private fun hitDragTarget(
             distanceToSegmentMm(xMm, yMm, it.x0, it.y0, it.x1, it.y1) <= slopMm
         } ?: false
         is Selection.Zone -> zones.getOrNull(sel.index)?.let { z ->
-            if (z.kind == ZoneKind.THRESHOLD) {
+            if (z.kind.isStrip()) {
                 val (a, b) = z.thresholdCenterLine()
                 distanceToSegmentMm(xMm, yMm, a.first, a.second, b.first, b.second) <= slopMm
             } else z.contains(xMm, yMm)
@@ -1466,12 +1592,12 @@ private fun applyEdit(
                     z.rotated(after - before)
                 }
                 is DragTarget.LineEnd -> {
-                    if (z.kind != ZoneKind.THRESHOLD) return
+                    if (!z.kind.isStrip()) return
                     val (a, b) = z.thresholdCenterLine()
                     val na = if (target.end == 0) (a.first + dx) to (a.second + dy) else a
                     val nb = if (target.end == 1) (b.first + dx) to (b.second + dy) else b
                     if (hypot((nb.first - na.first).toFloat(), (nb.second - na.second).toFloat()) < MIN_SHAPE_MM) return
-                    thresholdStrip(na, nb)
+                    if (z.kind == ZoneKind.CURTAIN) curtainStrip(na, nb).copy(extra = z.extra) else thresholdStrip(na, nb)
                 }
             }
             onZone(sel.index, moved)

@@ -19,6 +19,9 @@ fun initVacLocalAndroidContext(context: Context) {
 
 fun appContextOrNull(): Context? = appContext
 
+actual val isDebugBuild: Boolean
+    get() = appContext?.let { (it.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0 } == true
+
 actual fun saveDebugBlob(name: String, bytes: ByteArray): String? {
     val ctx = appContext ?: return null
     val dir = ctx.getExternalFilesDir(null) ?: ctx.filesDir

@@ -27,6 +27,9 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
     var segmentMaterialDirections: Map<Int, Int> = emptyMap()
     val unmodeledRestrictionBlocks = mutableSetOf<Int>()
     val obstacles = mutableListOf<MapObstacle>()
+    var curtains: List<MapZone>? = null
+    var lowSpaceZones: List<MapZone>? = null
+    var furniture: List<MapZone>? = null
 
     var off = headerLen
     while (off + 8 <= bytes.size) {
@@ -100,6 +103,9 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
                 flaggedCarpets = parseFlaggedCarpets(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_THRESHOLDS ->
                 thresholds = parseQuadZones(bytes, off, blockHeaderLen, blockDataLen, ZoneKind.THRESHOLD)
+            BLOCK_CURTAINS -> curtains = parseCurtains(bytes, off, blockHeaderLen, blockDataLen)
+            BLOCK_LOW_SPACE_ZONES -> lowSpaceZones = parseLowSpaceZones(bytes, off, blockHeaderLen, blockDataLen)
+            BLOCK_FURNITURE -> furniture = parseFurniture(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_SEGMENT_MATERIALS -> {
                 // One byte per segment id, indexed from 0 (on the S8 Pro Ultra, segment 21 read 4
                 // and 24 read 3 right after the official app set them to tile and wood).
@@ -131,9 +137,11 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         off += blockHeaderLen + blockDataLen
     }
 
-    // Block 39 repeats block 22's corners and adds each carpet's flags. Use it only when the two
-    // agree on the count, so a map where they differ can never lose carpets.
-    val carpetsFromFlags = flaggedCarpets?.takeIf { it.size == carpetAreas.size }
+    // Block 39 repeats block 22's corners and adds each carpet's flags. Use it when the two agree on
+    // the count, so a map where they differ can never lose carpets — or when block 22 is empty: an
+    // a296 keeps its carpets in block 39 only (3 carpets there, none in 22, 2026-11-14), and ignoring
+    // them would let a carpet edit send set_carpet_area without them and delete them.
+    val carpetsFromFlags = flaggedCarpets?.takeIf { it.size == carpetAreas.size || carpetAreas.isEmpty() }
     if (carpetsFromFlags != null) carpetAreas = carpetsFromFlags
 
     val pixels = imagePixels ?: throw MapParseException("Legacy map has no IMAGE block")
@@ -191,8 +199,54 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         carpetFlagsPresent = carpetsFromFlags != null,
         thresholds = thresholds,
         obstacles = obstacles,
+        curtains = curtains,
+        lowSpaceZones = lowSpaceZones,
+        furniture = furniture,
         originalGrid = pixels,
     )
+}
+
+private fun quadAt(bytes: ByteArray, p: Int, kind: ZoneKind, extra: List<Int>) = MapZone(
+    x0 = u16(bytes, p), y0 = u16(bytes, p + 2),
+    x1 = u16(bytes, p + 4), y1 = u16(bytes, p + 6),
+    x2 = u16(bytes, p + 8), y2 = u16(bytes, p + 10),
+    x3 = u16(bytes, p + 12), y3 = u16(bytes, p + 14),
+    kind = kind, extra = extra,
+)
+
+/** Block 59: per curtain eight u16 corners and two u16 values (0, 0 as the official app sent them). */
+internal fun parseCurtains(bytes: ByteArray, off: Int, headerLen: Int, dataLen: Int): List<MapZone> {
+    val count = minOf(entryCount(bytes, off, headerLen, dataLen), dataLen / 20)
+    val body = off + headerLen
+    return List(count) { i ->
+        val p = body + i * 20
+        quadAt(bytes, p, ZoneKind.CURTAIN, listOf(u16(bytes, p + 16), u16(bytes, p + 18)))
+    }
+}
+
+/** Block 52: per zone a u32 kind ([LOW_SPACE_USER] and so on) and eight u16 corners. */
+internal fun parseLowSpaceZones(bytes: ByteArray, off: Int, headerLen: Int, dataLen: Int): List<MapZone> {
+    val count = minOf(entryCount(bytes, off, headerLen, dataLen), dataLen / 20)
+    val body = off + headerLen
+    return List(count) { i ->
+        val p = body + i * 20
+        quadAt(bytes, p + 4, ZoneKind.LOW_SPACE, listOf(u32(bytes, p)))
+    }
+}
+
+/**
+ * Block 25: per piece eight u16 corners, a u16 (10000 on an a296), u8 type, u8 subtype, a u8 1,
+ * the u8 id `save_furnitures` deletes by, and a final u8 1 (two pieces read `…2e 02 01 01 01` and
+ * `…2b 00 01 02 01`).
+ */
+internal fun parseFurniture(bytes: ByteArray, off: Int, headerLen: Int, dataLen: Int): List<MapZone> {
+    val count = minOf(entryCount(bytes, off, headerLen, dataLen), dataLen / 23)
+    val body = off + headerLen
+    return List(count) { i ->
+        val p = body + i * 23
+        fun b(k: Int) = bytes[p + k].toInt() and 0xff
+        quadAt(bytes, p, ZoneKind.FURNITURE, listOf(b(18), b(19), b(21)))
+    }
 }
 
 /**
@@ -279,6 +333,12 @@ private const val BLOCK_SEGMENT_MATERIAL_DIRECTIONS = 32
 // Found 2026-09-29 by saving a round and a rectangular carpet with the official app: block 22 got
 // the corners, block 39 the same corners plus one u32 of flags per carpet.
 private const val BLOCK_CARPETS_WITH_FLAGS = 39
+
+// Found 2026-11-14 on an a296 by adding one of each with the official app and reading the map:
+// 25 furniture (23 bytes each), 52 under-furniture zones (20 bytes), 59 curtains (20 bytes).
+private const val BLOCK_FURNITURE = 25
+private const val BLOCK_LOW_SPACE_ZONES = 52
+private const val BLOCK_CURTAINS = 59
 
 /**
  * Restriction blocks that are not parsed: 19 no-carpet areas, 23 no-vacuum areas, 30 cliff areas,

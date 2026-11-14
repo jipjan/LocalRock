@@ -114,6 +114,12 @@ data class ParsedMap(
     val thresholds: List<MapZone> = emptyList(),
     /** Obstacles the robot recognised (legacy blocks 13-16). Shown, not edited. */
     val obstacles: List<MapObstacle> = emptyList(),
+    /** Curtains the robot passes under (legacy block 59, `app_set_curtains`); null when the map has no such block. */
+    val curtains: List<MapZone>? = null,
+    /** Under-furniture zones (legacy block 52, `app_set_low_space_zones`) of every kind; null when absent. */
+    val lowSpaceZones: List<MapZone>? = null,
+    /** Furniture placed on the map (legacy block 25, `save_furnitures`); null when absent. */
+    val furniture: List<MapZone>? = null,
 
     val originalGrid: ByteArray? = null,
 ) {
@@ -133,7 +139,8 @@ data class ParsedMap(
             other.format == format &&
             other.carpetAreas == carpetAreas &&
             other.thresholds == thresholds &&
-            other.obstacles == obstacles
+            other.obstacles == obstacles &&
+            other.curtains == curtains && other.lowSpaceZones == lowSpaceZones && other.furniture == furniture
 
     override fun hashCode(): Int {
         var r = width
@@ -153,6 +160,9 @@ data class ParsedMap(
         r = 31 * r + carpetAreas.hashCode()
         r = 31 * r + thresholds.hashCode()
         r = 31 * r + obstacles.hashCode()
+        r = 31 * r + curtains.hashCode()
+        r = 31 * r + lowSpaceZones.hashCode()
+        r = 31 * r + furniture.hashCode()
         return r
     }
 }
@@ -184,12 +194,17 @@ data class VirtualWall(
     val x1: Int, val y1: Int,
 )
 
-enum class ZoneKind { NO_GO, NO_MOP, CARPET, THRESHOLD }
+enum class ZoneKind { NO_GO, NO_MOP, CARPET, THRESHOLD, CURTAIN, LOW_SPACE, FURNITURE }
 
 /*
  * Carpet flags, captured 2026-09-29 on an S8 Pro Ultra: the official app sent 0x06338000 for a new
  * round carpet and 0x02338000 for a new rectangular one. Only the round bit is interpreted.
  */
+/** Under-furniture zone kinds in block 52: drawn by the user, found by the robot, and erased by the user. */
+const val LOW_SPACE_USER = 0
+const val LOW_SPACE_DETECTED = 1
+const val LOW_SPACE_ERASED = 2
+
 const val CARPET_FLAG_ROUND = 0x04000000L
 const val NEW_ROUND_CARPET_FLAGS = 0x06338000L
 const val NEW_RECT_CARPET_FLAGS = 0x02338000L
@@ -215,7 +230,21 @@ data class MapZone(
      * low bits itself (0x06338000 sent was stored as 0x0633E700), so they must not be rebuilt.
      */
     val flags: Long? = null,
+    /**
+     * Extra values the robot stores with the shape, sent back unchanged: for a curtain the two values
+     * after its corners (0, 0 on an a296); for an under-furniture zone its kind ([LOW_SPACE_USER],
+     * [LOW_SPACE_DETECTED] or [LOW_SPACE_ERASED]); for furniture its type, subtype and id.
+     */
+    val extra: List<Int> = emptyList(),
 ) {
+    /** Furniture type (a296: 43 TV cabinet … 58 cat tree), subtype and the robot's id; null for other kinds. */
+    val furnitureType: Int? get() = extra.getOrNull(0)?.takeIf { kind == ZoneKind.FURNITURE }
+    val furnitureSubtype: Int? get() = extra.getOrNull(1)?.takeIf { kind == ZoneKind.FURNITURE }
+    val furnitureId: Int? get() = extra.getOrNull(2)?.takeIf { kind == ZoneKind.FURNITURE }
+
+    /** Under-furniture zone kind; null for other kinds. */
+    val lowSpaceKind: Int? get() = extra.getOrNull(0)?.takeIf { kind == ZoneKind.LOW_SPACE }
+
     /** A round carpet: stored as its bounding square with [CARPET_FLAG_ROUND] set. */
     val isRoundCarpet: Boolean
         get() = kind == ZoneKind.CARPET && flags != null && (flags and CARPET_FLAG_ROUND) != 0L

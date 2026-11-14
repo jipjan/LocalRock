@@ -26,6 +26,8 @@ internal actual fun secureRandomBytes(size: Int): ByteArray {
     return buf
 }
 
+actual val isDebugBuild: Boolean = false
+
 actual fun saveDebugBlob(name: String, bytes: ByteArray): String? {
     val paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
     val dir = paths.firstOrNull() as? String ?: return null
