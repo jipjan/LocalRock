@@ -16,6 +16,7 @@ import com.kodraliu.localrock.shared.vacuum.isSmartPlanSupported
 import com.kodraliu.localrock.shared.vacuum.isWaterSlideSupported
 import com.kodraliu.localrock.shared.vacuum.supportedBetaFeatures
 import com.kodraliu.localrock.shared.vacuum.unlistedAdvertisedFeatures
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -228,8 +229,9 @@ class VacuumViewModel(
      * Runs a settings change and shows the error if the robot refuses it. Unlike [run] it neither
      * marks the screen busy nor reads the status back, which would be too heavy for a slider; the
      * settings are read again on a failure so the screen goes back to what the robot really holds.
+     * The returned job ends after that read, so a slider can hold its position until then.
      */
-    fun report(action: suspend (VacuumRepository) -> Unit) {
+    fun report(action: suspend (VacuumRepository) -> Unit): Job =
         viewModelScope.launch {
             try {
                 action(repository)
@@ -238,7 +240,6 @@ class VacuumViewModel(
                 runCatching { repository.fetchRobotSettings() }
             }
         }
-    }
 
     /**
      * Runs [action] with the screen marked busy and reads the status back. A failure goes to

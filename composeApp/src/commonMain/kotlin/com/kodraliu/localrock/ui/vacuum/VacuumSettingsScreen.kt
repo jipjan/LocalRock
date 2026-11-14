@@ -49,6 +49,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Thermostat
+import androidx.compose.material.icons.automirrored.filled.VolumeMute
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WaterDrop
@@ -66,6 +68,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -114,13 +118,14 @@ import com.kodraliu.localrock.shared.vacuum.ValleySettings
 import com.kodraliu.localrock.shared.vacuum.dryTimeLabel
 import com.kodraliu.localrock.shared.vacuum.labelFor
 import com.kodraliu.localrock.shared.vacuum.RobotSettings
-import com.kodraliu.localrock.shared.vacuum.VolumeLevels
+import com.kodraliu.localrock.shared.vacuum.VolumeRange
+import com.kodraliu.localrock.shared.vacuum.volumeFromSlider
 import com.kodraliu.localrock.shared.vacuum.volumeLabel
-import com.kodraliu.localrock.shared.vacuum.volumeLevelIndex
 import com.kodraliu.localrock.shared.vacuum.washFrequencyLabel
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
 import com.kodraliu.localrock.ui.AppColors
 import com.kodraliu.localrock.ui.adaptive.CenteredContent
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
@@ -1317,7 +1322,7 @@ private fun SimplePickerDialog(
 private fun RobotSettingsScreen(
     robotSettings: RobotSettings,
     onFindRobot: () -> Unit,
-    onVolumeChange: (Int) -> Unit,
+    onVolumeChange: (Int) -> Job,
     onChildLockChange: (Boolean) -> Unit,
     onLedChange: (Boolean) -> Unit,
     features: List<BetaFeatureState>,
@@ -1325,9 +1330,6 @@ private fun RobotSettingsScreen(
     onBack: () -> Unit,
 ) {
     var findTriggered by remember { mutableStateOf(false) }
-    var showVolumeDialog by remember { mutableStateOf(false) }
-
-    val volumeLabel = volumeLabel(robotSettings.volume)
 
     Scaffold(
         topBar = {
@@ -1352,13 +1354,7 @@ private fun RobotSettingsScreen(
                 }
                 item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
                 item {
-                    SettingRowClickable(
-                        icon = Icons.AutoMirrored.Filled.VolumeUp,
-                        iconTint = AppColors.Water,
-                        title = "Volume",
-                        subtitle = volumeLabel,
-                        onClick = { showVolumeDialog = true },
-                    )
+                    VolumeSliderRow(volume = robotSettings.volume, onVolumeChange = onVolumeChange)
                 }
                 item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
                 item {
@@ -1389,15 +1385,72 @@ private fun RobotSettingsScreen(
             }
         }
     }
+}
 
-    if (showVolumeDialog) {
-        SimplePickerDialog(
-            title = "Volume",
-            options = VolumeLevels.map { it.second },
-            selected = volumeLevelIndex(robotSettings.volume),
-            onSelect = { onVolumeChange(VolumeLevels[it].first); showVolumeDialog = false },
-            onDismiss = { showVolumeDialog = false },
-        )
+/**
+ * The robot's volume as a 0-100 slider, like the official app's. The value is only sent when the
+ * thumb is let go, so a drag is one command rather than one per step. Until that command has been
+ * answered the thumb stays where it was let go; after that it follows what the robot holds, which
+ * after a refused change is the value read back from the robot.
+ */
+@Composable
+private fun VolumeSliderRow(volume: Int, onVolumeChange: (Int) -> Job) {
+    // The position while dragging, or while the let-go value is being sent; null shows the robot's.
+    var heldPosition by remember { mutableStateOf<Float?>(null) }
+    var dragging by remember { mutableStateOf(false) }
+    // Only the last change sent may let go of the thumb, so an earlier answer cannot move it mid-drag.
+    var lastSent by remember { mutableStateOf<Job?>(null) }
+    val position = heldPosition ?: volume.coerceIn(VolumeRange).toFloat()
+    val shown = volumeFromSlider(position)
+
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Surface(shape = RoundedCornerShape(12.dp), color = AppColors.Water.copy(alpha = 0.12f), modifier = Modifier.size(44.dp)) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        if (shown == 0) Icons.AutoMirrored.Filled.VolumeOff else Icons.AutoMirrored.Filled.VolumeUp,
+                        null,
+                        Modifier.size(22.dp),
+                        AppColors.Water,
+                    )
+                }
+            }
+            Text("Volume", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Text(volumeLabel(shown), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Row(
+            // Lined up with the title, past the 44dp icon and the 16dp gap.
+            modifier = Modifier.fillMaxWidth().padding(start = 60.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Icon(Icons.AutoMirrored.Filled.VolumeMute, null, Modifier.size(18.dp), MaterialTheme.colorScheme.onSurfaceVariant)
+            Slider(
+                value = position,
+                onValueChange = { dragging = true; heldPosition = it },
+                onValueChangeFinished = {
+                    dragging = false
+                    heldPosition?.let { held ->
+                        val target = volumeFromSlider(held)
+                        if (target == volume) {
+                            lastSent = null
+                            heldPosition = null
+                        } else {
+                            heldPosition = target.toFloat()
+                            val job = onVolumeChange(target)
+                            lastSent = job
+                            job.invokeOnCompletion {
+                                if (lastSent === job && !dragging) heldPosition = null
+                            }
+                        }
+                    }
+                },
+                valueRange = VolumeRange.first.toFloat()..VolumeRange.last.toFloat(),
+                colors = SliderDefaults.colors(thumbColor = AppColors.Water, activeTrackColor = AppColors.Water),
+                modifier = Modifier.weight(1f),
+            )
+            Icon(Icons.AutoMirrored.Filled.VolumeUp, null, Modifier.size(18.dp), MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 

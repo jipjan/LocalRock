@@ -4,7 +4,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
-import kotlin.math.abs
+import kotlin.math.roundToInt
 
 data class RobotSettings(
     val volume: Int = 50,
@@ -13,20 +13,16 @@ data class RobotSettings(
     val carpetMode: Int = 1, // 0=avoid, 1=standard, 2=boost
 )
 
-/** The levels the volume picker offers, as change_sound_volume values (0-100). */
-val VolumeLevels = listOf(0 to "Off", 30 to "Low", 60 to "Medium", 100 to "High")
+/** The range the volume slider covers, as change_sound_volume values, like the official app's slider. */
+val VolumeRange = 0..100
 
-/**
- * The picker level for a volume the robot reports. Only 0 is Off: a robot set to 10 elsewhere still
- * speaks, so it is Low, not the nearer Off.
- */
-fun volumeLevelIndex(volume: Int): Int =
-    if (volume <= 0) 0 else (1 until VolumeLevels.size).minBy { abs(VolumeLevels[it].first - volume) }
+/** The volume for a slider position: a whole value the robot accepts, kept within [VolumeRange]. */
+fun volumeFromSlider(position: Float): Int = position.roundToInt().coerceIn(VolumeRange)
 
-/** The level's name, with the robot's own value when it is between levels, e.g. "Low (10%)". */
+/** "Off" only at 0, as a robot at 10 still speaks; any other volume as its percentage, e.g. "45%". */
 fun volumeLabel(volume: Int): String {
-    val (level, name) = VolumeLevels[volumeLevelIndex(volume)]
-    return if (volume == level) name else "$name ($volume%)"
+    val clamped = volume.coerceIn(VolumeRange)
+    return if (clamped == 0) "Off" else "$clamped%"
 }
 
 data class DockSettings(
