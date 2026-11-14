@@ -170,7 +170,14 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
             val r = room(x, y)
             val inner = listOf(x - 1 to y, x + 1 to y, x to y - 1, x to y + 1)
                 .all { (nx, ny) -> kind(nx, ny) == 128 && room(nx, ny) == r }
-            if (inner) {
+            val borderRoom = raw != null && (-1..1).any { dy -> (-1..1).any { dx ->
+                kind(x + dx, y + dy) == 128 && room(x + dx, y + dy) != r
+            } }
+            if (borderRoom) {
+                // Where two rooms meet, colour each sub-pixel by the room with the most weight among
+                // the cells around it, so the boundary curves instead of stepping cell by cell.
+                drawRoomBoundaryCell(canvas, x, y, drawY, s, ::kind, ::room) { palette.rooms[it % palette.rooms.size] }
+            } else if (inner) {
                 canvas.drawRect(Rect(x.toFloat(), drawY, x + 1f, drawY + 1f), fill)
             } else {
                 canvas.drawRect(Rect(x + 0.15f, drawY + 0.15f, x + 0.85f, drawY + 0.85f), fill)
@@ -218,6 +225,51 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
     map.chargerMm?.let { drawMarker(canvas, map, it, palette.charger, palette.markerRing, square = true) }
     map.robotMm?.let { drawMarker(canvas, map, it, palette.robot, palette.markerRing, square = false) }
     return bitmap
+}
+
+/** Cells within this distance (in cells) of a sub-pixel vote on its room, weighted by closeness. */
+private const val ROOM_SMOOTH_RADIUS = 1.6f
+
+/**
+ * Draws one floor cell on a room boundary as [s]×[s] sub-pixels. Each takes the room with the most
+ * weight among floor cells whose centres lie within [ROOM_SMOOTH_RADIUS], weight falling off linearly
+ * with distance. A straight boundary stays straight; a staircase becomes a smooth diagonal or curve.
+ */
+private inline fun drawRoomBoundaryCell(
+    canvas: Canvas,
+    x: Int,
+    y: Int,
+    drawY: Float,
+    s: Int,
+    kind: (Int, Int) -> Int,
+    room: (Int, Int) -> Int,
+    color: (Int) -> Color,
+) {
+    val paint = Paint()
+    val step = 1f / s
+    val weights = HashMap<Int, Float>(4)
+    for (sy in 0 until s) {
+        for (sx in 0 until s) {
+            // Sub-pixel centre in map cell space (y grows upwards in the map).
+            val px = x + (sx + 0.5f) * step
+            val py = y + 1f - (sy + 0.5f) * step
+            weights.clear()
+            for (dy in -2..2) for (dx in -2..2) {
+                val cx = x + dx
+                val cy = y + dy
+                if (kind(cx, cy) != 128) continue
+                val ddx = px - (cx + 0.5f)
+                val ddy = py - (cy + 0.5f)
+                val d = kotlin.math.sqrt(ddx * ddx + ddy * ddy)
+                if (d >= ROOM_SMOOTH_RADIUS) continue
+                val id = room(cx, cy)
+                weights[id] = (weights[id] ?: 0f) + (ROOM_SMOOTH_RADIUS - d)
+            }
+            val best = weights.maxByOrNull { it.value }?.key ?: room(x, y)
+            paint.color = color(best)
+            canvas.drawRect(Rect(x + sx * step, drawY + sy * step, x + (sx + 1) * step, drawY + (sy + 1) * step), paint)
+        }
+    }
 }
 
 /**
