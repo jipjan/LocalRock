@@ -201,8 +201,16 @@ suspend fun VacuumSession.appSetDryerStatus(on: Boolean): V1Response =
     sendCommandRaw("app_set_dryer_status", JsonObject(mapOf("status" to JsonPrimitive(if (on) 1 else 0))))
 
 suspend fun VacuumSession.getCarpetCleanMode(): V1Response = sendCommand("get_carpet_clean_mode")
+internal fun carpetCleanModeParams(mode: Int): JsonObject = JsonObject(mapOf("carpet_clean_mode" to JsonPrimitive(mode)))
+
+// A bare object, as the official app sends it: an a296 answers the wrapped `[{"carpet_clean_mode":3}]`
+// with -10005 "param is not an object".
 suspend fun VacuumSession.setCarpetCleanMode(mode: Int): V1Response =
-    sendCommand("set_carpet_clean_mode", listOf(JsonObject(mapOf("carpet_clean_mode" to JsonPrimitive(mode)))))
+    sendCommandRaw("set_carpet_clean_mode", carpetCleanModeParams(mode))
+
+/** The wrapped form LocalRock used to send, kept for robots that refuse the bare object. */
+suspend fun VacuumSession.setCarpetCleanModeWrapped(mode: Int): V1Response =
+    sendCommand("set_carpet_clean_mode", listOf(carpetCleanModeParams(mode)))
 
 
 suspend fun VacuumSession.getWashTowelMode(): V1Response = sendCommand("get_wash_towel_mode")

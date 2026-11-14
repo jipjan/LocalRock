@@ -977,7 +977,11 @@ class VacuumRepository(
     }
 
     suspend fun setCarpetMode(mode: Int) {
-        session.setCarpetCleanMode(mode).requireOk("set_carpet_clean_mode")
+        var answer = session.setCarpetCleanMode(mode)
+        if (answer.error?.get("code")?.jsonPrimitive?.intOrNull in BetaShapeRefusalCodes) {
+            answer = session.setCarpetCleanModeWrapped(mode)
+        }
+        answer.requireOk("set_carpet_clean_mode")
         _robotSettings.update { it.copy(carpetMode = mode) }
     }
 
