@@ -38,7 +38,7 @@ Parameters are shown exactly as sent. Most are a bare JSON object, not wrapped i
 |---|---|---|---|---|
 | Vacuum then mop | `get_status` → `seq_type`, `repeat` | `app_set_clean_sequence_type {"type":1,"repeat":1,"fan_power":101,"mop_mode":300,"water_box_mode":235}` | type 1 = vacuum then mop, 0 = together; current suction/mop/water are sent along | Captured |
 | Room order | `get_clean_sequence` | `set_clean_sequence {"data":[3,2,1],"need_retry":1}` | room ids in order; the app had to retry once (`retry_request`) | Captured |
-| Re-mop dirty spots | `get_status` → `switch_status` bit 4 (16) | `app_set_dirty_replenish_clean_status {"status":0/1}` | 0/1; not sent while cleaning | Captured |
+| Re-mop dirty spots | `get_offline_map_status` → `common_switch_status` bit 4 (16) | `app_set_dirty_replenish_clean_status {"status":0/1}` | 0/1; not sent while cleaning | Captured |
 | Cleaning direction | `app_get_robot_setting {"name":"clean_direction_status"}` | `app_set_robot_setting {"name":"clean_direction_status","status":n}` | 0 smart, 1 along floor direction, 2 crosswise | Captured |
 | Low-area access (under furniture) | robot setting `restrict_low_area_access_status` | `app_set_robot_setting {...,"status":n}` | 2 off, 1 safe clearance, 0 extreme clearance | Captured |
 | Arm for high door sills / carpets | robot setting `enable_sway_arm_for_high_door_sill_carpet` | `app_set_robot_setting {...,"status":0/1}` | 0/1 | Captured |
@@ -62,7 +62,7 @@ Parameters are shown exactly as sent. Most are a bare JSON object, not wrapped i
 | Avoid carpet | `set_carpet_clean_mode {"carpet_clean_mode":0}` + cross `0` |
 | Cross carpet | `app_set_cross_carpet_cleaning_status {"status":1}` |
 | Vacuum and mop | `set_carpet_clean_mode {"carpet_clean_mode":2}` + cross `0` |
-| Carpets first | `app_set_priority_carpet_cleaning_status {"status":0/1}` (also `get_status` → `switch_status` bit 3) |
+| Carpets first | `app_set_priority_carpet_cleaning_status {"status":0/1}`; read `get_offline_map_status` → `common_switch_status` bit 3 |
 | Adaptive lift (high-pile, needs carpets first) | `app_set_robot_setting {"name":"long_haired_carpet_clean_status","status":0/1}` |
 | Carpet boost | `set_carpet_mode [{"enable":1}]` (only `enable`; the read answers more fields) |
 | Deep carpet clean | `app_set_carpet_deep_clean_status {"status":0/1}` |
@@ -117,9 +117,32 @@ robot settings `long_haired_carpet_clean_status` and `nearbycarpet_detecting_wir
 - Destructive: `reset_map`, `del_map`, backup-file commands, `app_delete_wifi`, `update_dock`.
 - Hardware this robot lacks: `app_arm_*`, `app_set_clean_mop_type`, `app_set_clean_mop_power`.
 
-## Fixes this calls for in LocalRock
+## The option bitmask
 
-1. Collision avoidance: offer 1 large coverage / 2 less collision on robots with bit 118, not 0/1.
-2. Cleaning fluid (0/1/3) and auto empty (0/1/2) are pickers, not switches.
-3. Wash mode 8 is missing.
-4. Send parameters as a bare object first; that is what the robot gets from the official app.
+`get_offline_map_status` answers `{"common_switch_status": n}`, one bitmask of options: bit 0 offline
+map, bit 1 cleaning-fluid module, bit 3 carpets first, bit 4 re-mop dirty spots, bit 5 cross carpets.
+An a296 answered 10 with carpets first on. Its `get_status` has no `switch_status` field.
+
+## Labels the official app shows (Dutch app, a296)
+
+- Cleaning fluid dosing: 0 None, 1 Standard, 3 High volume.
+- Auto-empty frequency (`set_dust_collection_switch_status`): 0 Off, 1 Balanced, 2 High (also returns
+  to empty during a clean).
+- Empty mode (`set_dust_collection_mode`): Smart, Light, Balanced, Maximum (0, 1, 2, 4).
+- Wash mode: "Smart" is `smart_wash_status` 1; "Custom" is `wash_mode` plus the water temperature.
+
+## Status in LocalRock (branch feat/volume-slider)
+
+Built and checked on an a296 against the official app's values and commands:
+- Every robot-setting switch and picker above (floor, carpet, obstacle, dock), read and written
+  with the same commands and parameters as the official app.
+- Collision mode picker (1/2), cleaning fluid and auto-empty frequency pickers.
+- Carpets first, re-mop dirty spots and cross carpets, from the option bitmask.
+- Carpet mode with the official choices (0 avoid, 3 vacuum only, 2 vacuum and mop).
+- Vacuum then mop (`app_set_clean_sequence_type`, byte for byte as captured).
+- Mop drying Off / After cleaning / At a set time (`status` 0/1/2 with a daily cron).
+- Smart mop washing as `smart_wash_status`; wash mode 10 is no longer offered on AI-wash robots.
+
+Not built yet (plugin-only, or bits not fully understood): repeat count stored on the robot
+(`set_clean_repeat_times`), intensive corner mopping, custom water flow (`distance_off`), the camera
+bitmask (fill light is value 2), several DND periods, and linking wash mode to water temperature.
