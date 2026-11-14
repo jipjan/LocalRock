@@ -1,0 +1,125 @@
+# Robot commands: Saros 20 Neo (roborock.vacuum.a296)
+
+The settings the official Roborock app can change on this robot, with the exact commands and
+parameters it sends, so LocalRock can offer all of them.
+
+**Sources**
+- **Captured**: commands the official Roborock app (Android 4.60.06, plugin 7052) sent to a
+  Saros 20 Neo on firmware 02.32.54 through local_roborock_server, on 2026-11-14. Each setting
+  was changed in the app and the command read from the server's MQTT log. Highest confidence.
+- **Plugin**: names, parameter shapes and value meanings read from the official a296 device
+  plugin (version 7052, product id 257), with the owner's permission. No plugin code is copied
+  here. Used where the capture did not cover a setting.
+
+Parameters are shown exactly as sent. Most are a bare JSON object, not wrapped in an array.
+
+## How the official app behaves
+
+- **The carpet page saves when you leave it.** Changing options there sends nothing; leaving the
+  page sends every carpet command at once (mode, cross, priority, long-haired, boost, deep clean,
+  wire detection).
+- **The carpet mode resets the carpet sub-options.** Choosing "avoid", "cross" or "vacuum and mop"
+  and coming back to "vacuum only" saved *Carpets first*, *Deep clean* and *Wire detection* as off.
+- **One switch can be several commands.** *AI environment recognition* sends three commands
+  (ground material, furniture, room).
+- **Mop wash mode and water temperature go together.** Changing the wash mode also sends a matching
+  `set_wash_water_temperature`.
+- **Some changes need consent or confirmation**: obstacle photos (privacy consent), switching off
+  reactive avoidance (it also switches off obstacle photos and *I have pets*), switching off the fill
+  light (warns that object recognition gets worse).
+- **On first login the app also sends**: `set_user_privacy {"agree":1,"owner":1}`,
+  `enable_log_upload [9,3]`, `set_fds_endpoint [...]` (a Roborock log-upload host),
+  `set_app_timezone ["Europe/Amsterdam",2]`, `set_voice_service_switch {"data":0}`, and the DND timer.
+  LocalRock must not send the privacy, log-upload or endpoint ones.
+
+## Cleaning
+
+| Setting | Read | Write | Values | Source |
+|---|---|---|---|---|
+| Vacuum then mop | `get_status` → `seq_type`, `repeat` | `app_set_clean_sequence_type {"type":1,"repeat":1,"fan_power":101,"mop_mode":300,"water_box_mode":235}` | type 1 = vacuum then mop, 0 = together; current suction/mop/water are sent along | Captured |
+| Room order | `get_clean_sequence` | `set_clean_sequence {"data":[3,2,1],"need_retry":1}` | room ids in order; the app had to retry once (`retry_request`) | Captured |
+| Re-mop dirty spots | `get_status` → `switch_status` bit 4 (16) | `app_set_dirty_replenish_clean_status {"status":0/1}` | 0/1; not sent while cleaning | Captured |
+| Cleaning direction | `app_get_robot_setting {"name":"clean_direction_status"}` | `app_set_robot_setting {"name":"clean_direction_status","status":n}` | 0 smart, 1 along floor direction, 2 crosswise | Captured |
+| Low-area access (under furniture) | robot setting `restrict_low_area_access_status` | `app_set_robot_setting {...,"status":n}` | 2 off, 1 safe clearance, 0 extreme clearance | Captured |
+| Arm for high door sills / carpets | robot setting `enable_sway_arm_for_high_door_sill_carpet` | `app_set_robot_setting {...,"status":0/1}` | 0/1 | Captured |
+| Gap deep clean | `get_gap_deep_clean_status` | `set_gap_deep_clean_status {"status":0/1}` | already in LocalRock | Captured |
+| Dirty object detection | `get_dirty_object_detect_status` | `set_dirty_object_detect_status {"status":0/1}` | already in LocalRock | Captured |
+| Pet supplies deep clean | `get_pet_supplies_deep_clean_status` | `set_pet_supplies_deep_clean_status {"status":0/1}` | already in LocalRock | Captured |
+| Re-clean areas blocked by people/pets | robot setting `dynamic_obstacle_replenish_status` | `app_set_robot_setting {...,"status":0/1}` | 0/1 | Captured |
+| Auto-detach mops | robot setting `enable_remove_mop_status` | `app_set_robot_setting {...,"status":0/1}` | 0/1 | Captured |
+| Repeat count | `get_status` → `repeat` | `set_clean_repeat_times {"repeat":n}` | passes | Plugin |
+| Intensive corner mopping | `get_status` → `corner_clean_mode` | `set_corner_clean_mode {"status":0/1}` | one run only | Plugin |
+| Custom water flow | `get_status` → `distance_off` | `set_water_box_custom_mode 207`, then `set_water_box_distance_off {"distance_off":n}` | see plugin notes | Plugin |
+| Uncleaned-area reminder | robot setting `enable_omission_area_clean_status` | `app_set_robot_setting` | 0/1 | Plugin |
+| LiDAR lowering | robot setting `lds_lifting_switch` | `app_set_robot_setting` | 0/1 | Plugin |
+| Skip current area | – | `app_skip_current_cleaning_area {"source":2}` | | Plugin |
+
+## Carpet (saved together when leaving the page)
+
+| App option | Commands |
+|---|---|
+| Vacuum only (don't wet carpet) | `set_carpet_clean_mode {"carpet_clean_mode":3}` + `app_set_cross_carpet_cleaning_status {"status":0}` |
+| Avoid carpet | `set_carpet_clean_mode {"carpet_clean_mode":0}` + cross `0` |
+| Cross carpet | `app_set_cross_carpet_cleaning_status {"status":1}` |
+| Vacuum and mop | `set_carpet_clean_mode {"carpet_clean_mode":2}` + cross `0` |
+| Carpets first | `app_set_priority_carpet_cleaning_status {"status":0/1}` (also `get_status` → `switch_status` bit 3) |
+| Adaptive lift (high-pile, needs carpets first) | `app_set_robot_setting {"name":"long_haired_carpet_clean_status","status":0/1}` |
+| Carpet boost | `set_carpet_mode [{"enable":1}]` (only `enable`; the read answers more fields) |
+| Deep carpet clean | `app_set_carpet_deep_clean_status {"status":0/1}` |
+| Avoid wires at carpet edges | `app_set_robot_setting {"name":"nearbycarpet_detecting_wire_status","status":0/1}` |
+
+Reads on opening the page: `get_carpet_clean_mode`, `get_carpet_mode`, `app_get_carpet_deep_clean_status`,
+robot settings `long_haired_carpet_clean_status` and `nearbycarpet_detecting_wire_status`.
+
+## Obstacles and camera
+
+| Setting | Write | Values | Source |
+|---|---|---|---|
+| Collision mode | `set_collision_avoid_status {"status":n}` | **1 large coverage, 2 less collision** (LocalRock's 0/1 switch is wrong for this robot) | Captured |
+| AI environment recognition | `set_identify_ground_material_status {"status":0/1}` + `set_identify_furniture_status {"status":0/1}` + `app_set_robot_setting {"name":"identify_room_status","status":0/1}` | one switch, three commands | Captured |
+| Camera functions | `set_camera_status [n]` | bitmask; 387 = 256+128+2+1. Value 2 = fill light automatic (385 ↔ 387). 32 and 4096 = pet camera options. Others unknown | Captured |
+| Image watermark | `switch_water_mark {"waterMark":"OFF"}` | | Captured |
+
+## Dock
+
+| Setting | Write | Values | Source |
+|---|---|---|---|
+| Mop wash interval | `set_smart_wash_params {"smart_wash":n,"wash_interval":s}` | smart_wash 0 = by time (600–1500 s), 1 = per room, 2 = smart | Captured |
+| AI mop washing | `app_set_robot_setting {"name":"smart_wash_status","status":0/1}` | | Captured |
+| Wash mode | `set_wash_towel_mode {"wash_mode":n}` | 0, 1, 2, 8 (8 not in LocalRock; probably soak) | Captured |
+| Wash water temperature | `set_wash_water_temperature {"values":n}` | 0, 1, 2 | Captured |
+| Cleaning fluid | `set_auto_delivery_cleaning_fluid {"status":n}` | **0, 1, 3** (not just on/off) | Captured |
+| Auto empty | `set_dust_collection_switch_status {"status":n}` | **0, 1, 2** (not just on/off) | Captured |
+| Empty intensity | `set_dust_collection_mode {"mode":n}` | 0, 1, 2, 4 | Captured |
+| Drying | `app_set_dryer_setting {"status":n,"on":{"dry_time":s},"cron":"M H * * *"}` | status 0 off, 1 automatic, 2 scheduled (`cron` set); dry_time 7200/10800/14400 | Captured |
+| Dock cooling fan | `app_switch_dock_cool_fan {"status":n}` | | Plugin |
+
+## Robot
+
+| Setting | Write | Values | Source |
+|---|---|---|---|
+| Child lock | `set_child_lock_status {"lock_status":0/1}` | already in LocalRock | Captured |
+| Do not disturb | `set_multi_dnd_timer [{"actions":{"dry":0,"dust":0,"led":1,"resume":1,"vol":1},"dnd":[22,0,8,0],"enabled":1}]` | several periods possible (bit 140) | Captured |
+| Voice assistant | `set_voice_service_switch {"data":0/1}` | | Captured |
+| Map save reminder | `save_map_remind {"map_index":0,"remind":1}` | | Captured |
+| Offline map | `set_offline_map_status {"status":0/1}`; read `get_offline_map_status` → `common_switch_status` bit 0 | | Plugin |
+| Data-sharing consent | robot settings `product_experience_status`, `voice_experience_status` | 0/1 | Plugin |
+
+## Do not send
+
+- `set_map_beautification_status`: a debug bitmask of map layers, not a user setting (65535 = all on).
+- Debug and calibration: `set_wash_debug_params`, `set_mop_reverse_pwm_values`, `set_debug_voxel_map`,
+  `upload_data_for_debug_mode`, `set_lab_status`, `set_fan_motor_work_timeout`.
+- Endpoints, config, firmware: `app_set_dynamic_config`, `set_fds_endpoint`, OTA commands,
+  `enable_log_upload`, `set_user_privacy`.
+- Factory, test and demo: `app_amethyst_self_check`, `app_amethyst_drain_all_water`, the `test_*` voice
+  commands (except `test_sound_volume`), `set_ces_action`, `app_exhibition_*`.
+- Destructive: `reset_map`, `del_map`, backup-file commands, `app_delete_wifi`, `update_dock`.
+- Hardware this robot lacks: `app_arm_*`, `app_set_clean_mop_type`, `app_set_clean_mop_power`.
+
+## Fixes this calls for in LocalRock
+
+1. Collision avoidance: offer 1 large coverage / 2 less collision on robots with bit 118, not 0/1.
+2. Cleaning fluid (0/1/3) and auto empty (0/1/2) are pickers, not switches.
+3. Wash mode 8 is missing.
+4. Send parameters as a bare object first; that is what the robot gets from the official app.
