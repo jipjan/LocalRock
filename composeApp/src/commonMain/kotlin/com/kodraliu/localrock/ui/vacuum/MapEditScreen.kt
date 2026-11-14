@@ -946,7 +946,7 @@ private fun EditorCanvas(
                     srcSize = IntSize(bitmap.width, bitmap.height),
                     dstOffset = IntOffset.Zero,
                     dstSize = IntSize(w.toInt(), h.toInt()),
-                    filterQuality = FilterQuality.None,
+                    filterQuality = FilterQuality.Low,
                 )
                 val stroke = (2.dp.toPx() / scale).coerceAtLeast(1f)
                 val dimmed = mode == EditMode.ROOMS

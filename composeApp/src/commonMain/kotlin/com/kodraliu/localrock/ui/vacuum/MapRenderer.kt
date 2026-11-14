@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.luminance
+import com.kodraliu.localrock.shared.vacuum.map.FloorMaterial
 import com.kodraliu.localrock.shared.vacuum.map.MapZone
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMapPoint
@@ -43,6 +44,8 @@ private class MapPalette(
     val robot: Color,
     /** Drawn behind both markers so they stay readable on any room tint. */
     val markerRing: Color,
+    /** Plank and tile lines: a faint shade that shows on the room tints of this palette. */
+    val texture: Color,
 )
 
 // Light is NOT the dark palette inverted: the rooms have to sit *above* their container, so the
@@ -60,6 +63,7 @@ private val LightPalette = MapPalette(
     charger = Color(0xFF1565C0),
     robot = Color(0xFF00595A),
     markerRing = Color(0xFFFFFFFF),
+    texture = Color(0x14000000),
 )
 
 private val DarkPalette = MapPalette(
@@ -73,6 +77,7 @@ private val DarkPalette = MapPalette(
     charger = Color(0xFF64B5F6),
     robot = Color(0xFF4CDADA),
     markerRing = Color(0xFF0B1112),
+    texture = Color(0x1AFFFFFF),
 )
 
 /**
@@ -125,38 +130,80 @@ fun ParsedMap.contentBoundsNorm(): MapContentBounds {
     )
 }
 
+/**
+ * Pixels per map cell (a cell is 50 mm). The map used to be drawn one pixel per cell and stretched,
+ * which made every edge a staircase and the 1-cell cleaning path a thick band. Drawing at several
+ * pixels per cell gives room for round edges, a thin path and floor textures, as the official app
+ * shows them. Capped so the bitmap stays near 2048 px on its long side.
+ */
+internal fun mapRenderScale(map: ParsedMap): Int =
+    (MAX_MAP_BITMAP_PX / maxOf(map.width, map.height, 1)).coerceIn(1, MAX_RENDER_SCALE)
+
+private const val MAX_RENDER_SCALE = 4
+private const val MAX_MAP_BITMAP_PX = 2048
+
 /** [drawRestrictions] is false for the editor, which draws the shapes it is editing itself. */
 private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boolean): ImageBitmap {
-    val bitmap = ImageBitmap(map.width, map.height)
+    val s = mapRenderScale(map)
+    val bitmap = ImageBitmap(map.width * s, map.height * s)
     val canvas = Canvas(bitmap)
-    val wallPaint = Paint().apply { color = palette.wall }
-    val floorPaint = Paint().apply { color = palette.floor }
-    val roomPaint = Paint()
+    // Everything below is drawn in cell units; the scale turns them into pixels.
+    canvas.scale(s.toFloat(), s.toFloat())
     val w = map.width
     val h = map.height
     val grid = map.grid
     val raw = map.originalGrid
+
+    fun kind(x: Int, y: Int): Int = if (x in 0 until w && y in 0 until h) grid[y * w + x].toInt() and 0xff else 0
+    fun room(x: Int, y: Int): Int = if (raw != null) (raw[y * w + x].toInt() ushr 3) and 0x1f else -1
+    fun floorColor(x: Int, y: Int): Color =
+        if (raw != null) palette.rooms[room(x, y) % palette.rooms.size] else palette.floor
+
+    val fill = Paint().apply { isAntiAlias = true }
+    // Floor: a cell surrounded by the same room is a plain square; an edge cell is drawn as a round
+    // dot a little larger than the cell, so outlines come out rounded rather than stepped.
     for (y in 0 until h) {
-        val rowOff = y * w
-        // Flip Y so the map reads with origin at the top (matches the Roborock app).
         val drawY = (h - 1 - y).toFloat()
         for (x in 0 until w) {
-            val gv = grid[rowOff + x].toInt() and 0xff
-            val paint = when (gv) {
-                127 -> wallPaint
-                128 -> {
-                    if (raw != null) {
-                        val roomId = (raw[rowOff + x].toInt() ushr 3) and 0x1f
-                        roomPaint.color = palette.rooms[roomId % palette.rooms.size]
-                        roomPaint
-                    } else floorPaint
-                }
-                else -> continue
+            if (kind(x, y) != 128) continue
+            fill.color = floorColor(x, y)
+            val r = room(x, y)
+            val inner = listOf(x - 1 to y, x + 1 to y, x to y - 1, x to y + 1)
+                .all { (nx, ny) -> kind(nx, ny) == 128 && room(nx, ny) == r }
+            if (inner) {
+                canvas.drawRect(Rect(x.toFloat(), drawY, x + 1f, drawY + 1f), fill)
+            } else {
+                canvas.drawRect(Rect(x + 0.15f, drawY + 0.15f, x + 0.85f, drawY + 0.85f), fill)
+                canvas.drawCircle(Offset(x + 0.5f, drawY + 0.5f), 0.62f, fill)
             }
-            canvas.drawRect(
-                Rect(left = x.toFloat(), top = drawY, right = (x + 1).toFloat(), bottom = drawY + 1f),
-                paint,
-            )
+        }
+    }
+    drawFloorTextures(canvas, map, palette)
+    // Walls as one stroke through neighbouring wall cells (round caps and joins), so a wall reads as a
+    // smooth line rather than a row of blocks or beads.
+    val wallStroke = Paint().apply {
+        color = palette.wall
+        style = PaintingStyle.Stroke
+        strokeWidth = 0.9f
+        strokeCap = StrokeCap.Round
+        isAntiAlias = true
+    }
+    fill.color = palette.wall
+    for (y in 0 until h) {
+        val drawY = (h - 1 - y).toFloat()
+        for (x in 0 until w) {
+            if (kind(x, y) != 127) continue
+            val c = Offset(x + 0.5f, drawY + 0.5f)
+            var joined = false
+            // Right, up and both diagonals, so every pair of touching wall cells is joined once.
+            for ((dx, dy) in listOf(1 to 0, 0 to 1, 1 to 1, 1 to -1)) {
+                if (kind(x + dx, y + dy) != 127) continue
+                // A diagonal only where no straight neighbour already makes the corner.
+                if (dx != 0 && dy != 0 && (kind(x + dx, y) == 127 || kind(x, y + dy) == 127)) continue
+                canvas.drawLine(c, Offset(c.x + dx, c.y - dy), wallStroke)
+                joined = true
+            }
+            if (!joined) canvas.drawCircle(c, 0.45f, fill)
         }
     }
     if (map.pathMm.size >= 2) drawPath(canvas, map, palette)
@@ -171,6 +218,54 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
     map.chargerMm?.let { drawMarker(canvas, map, it, palette.charger, palette.markerRing, square = true) }
     map.robotMm?.let { drawMarker(canvas, map, it, palette.robot, palette.markerRing, square = false) }
     return bitmap
+}
+
+/**
+ * Faint plank lines on wood floors, in the direction the robot stores (block 32: 0 runs along x, 90
+ * along y), and a grid on tiles, as the official app draws them. Only cells of that room are touched.
+ */
+private fun drawFloorTextures(canvas: Canvas, map: ParsedMap, palette: MapPalette) {
+    val raw = map.originalGrid ?: return
+    if (map.segmentMaterials.isEmpty()) return
+    val w = map.width
+    val h = map.height
+    val line = Paint().apply {
+        color = palette.texture
+        style = PaintingStyle.Stroke
+        strokeWidth = 0.12f
+        isAntiAlias = true
+    }
+    val plankCells = 4   // 20 cm boards
+    val boardLengthCells = 24
+    for (y in 0 until h) {
+        val drawY = (h - 1 - y).toFloat()
+        for (x in 0 until w) {
+            val i = y * w + x
+            if ((map.grid[i].toInt() and 0xff) != 128) continue
+            val room = (raw[i].toInt() ushr 3) and 0x1f
+            val material = map.segmentMaterials[room] ?: continue
+            val alongY = map.segmentMaterialDirections[room] == 90
+            when (material) {
+                FloorMaterial.WOOD.id -> {
+                    // Long seams between boards, and staggered end joints.
+                    val across = if (alongY) x else y
+                    val along = if (alongY) y else x
+                    if (across % plankCells == 0) {
+                        if (alongY) canvas.drawLine(Offset(x + 0f, drawY), Offset(x + 0f, drawY + 1f), line)
+                        else canvas.drawLine(Offset(x + 0f, drawY + 1f), Offset(x + 1f, drawY + 1f), line)
+                    }
+                    if ((along + (across / plankCells) * 9) % boardLengthCells == 0) {
+                        if (alongY) canvas.drawLine(Offset(x + 0f, drawY + 1f), Offset(x + 1f, drawY + 1f), line)
+                        else canvas.drawLine(Offset(x + 0f, drawY), Offset(x + 0f, drawY + 1f), line)
+                    }
+                }
+                FloorMaterial.TILE.id -> {
+                    if (x % 12 == 0) canvas.drawLine(Offset(x + 0f, drawY), Offset(x + 0f, drawY + 1f), line)
+                    if (y % 12 == 0) canvas.drawLine(Offset(x + 0f, drawY + 1f), Offset(x + 1f, drawY + 1f), line)
+                }
+            }
+        }
+    }
 }
 
 private fun drawZone(canvas: Canvas, map: ParsedMap, zone: MapZone, fill: Color, stroke: Color) {
@@ -191,7 +286,7 @@ private fun drawZone(canvas: Canvas, map: ParsedMap, zone: MapZone, fill: Color,
     canvas.drawPath(path, Paint().apply {
         color = stroke
         style = PaintingStyle.Stroke
-        strokeWidth = 1f
+        strokeWidth = 0.4f
     })
 }
 
@@ -200,7 +295,7 @@ private fun drawWall(canvas: Canvas, map: ParsedMap, wall: VirtualWall) {
     val b = map.mmToCell(wall.x1, wall.y1)
     canvas.drawLine(a, b, Paint().apply {
         color = WALL_STROKE
-        strokeWidth = 1.5f
+        strokeWidth = 0.7f
         strokeCap = StrokeCap.Round
     })
 }
@@ -223,11 +318,14 @@ private fun drawPath(canvas: Canvas, map: ParsedMap, palette: MapPalette) {
             gfxPath.lineTo(cellX, cellY)
         }
     }
+    // About 15 mm wide and half see-through, so the rooms show through the path as in the official app.
     val pathPaint = Paint().apply {
-        color = palette.path
+        color = palette.path.copy(alpha = 0.7f)
         style = PaintingStyle.Stroke
-        strokeWidth = 1f
+        strokeWidth = 0.3f
         strokeCap = StrokeCap.Round
+        strokeJoin = androidx.compose.ui.graphics.StrokeJoin.Round
+        isAntiAlias = true
     }
     canvas.drawPath(gfxPath, pathPaint)
 }

@@ -965,7 +965,7 @@ private fun VacuumMapImage(
                     srcSize = IntSize(bitmap.width, bitmap.height),
                     dstOffset = IntOffset.Zero,
                     dstSize = IntSize(content.width.toInt(), content.height.toInt()),
-                    filterQuality = FilterQuality.None,
+                    filterQuality = FilterQuality.Low,
                 )
             }
 

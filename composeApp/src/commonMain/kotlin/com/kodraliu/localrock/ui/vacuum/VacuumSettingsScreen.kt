@@ -2310,7 +2310,7 @@ private fun PinGoScreen(
                             srcSize = IntSize(bitmap.width, bitmap.height),
                             dstOffset = IntOffset.Zero,
                             dstSize = IntSize(size.width.toInt(), size.height.toInt()),
-                            filterQuality = FilterQuality.None,
+                            filterQuality = FilterQuality.Low,
                         )
                         tapPoint?.let { tp ->
                             drawCircle(color = AppColors.AccentRed.copy(alpha = 0.85f), radius = 22f, center = tp)

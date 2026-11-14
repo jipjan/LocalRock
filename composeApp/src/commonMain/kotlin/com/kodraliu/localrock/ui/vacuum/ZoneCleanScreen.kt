@@ -196,7 +196,7 @@ fun ZoneCleanScreen(
                                 srcSize = IntSize(bitmap.width, bitmap.height),
                                 dstOffset = IntOffset.Zero,
                                 dstSize = IntSize(content.width.toInt(), content.height.toInt()),
-                                filterQuality = FilterQuality.None,
+                                filterQuality = FilterQuality.Low,
                             )
 
                             val strokePx = (2.dp.toPx() / mapScale).coerceAtLeast(1f)
