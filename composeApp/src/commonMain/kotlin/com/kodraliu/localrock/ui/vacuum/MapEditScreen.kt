@@ -1,6 +1,7 @@
 package com.kodraliu.localrock.ui.vacuum
 
 import androidx.compose.foundation.horizontalScroll
+import com.kodraliu.localrock.shared.vacuum.map.ERASER_USER
 import com.kodraliu.localrock.shared.vacuum.map.LOW_SPACE_USER
 import com.kodraliu.localrock.shared.vacuum.curtainStrip
 import androidx.compose.foundation.Canvas
@@ -144,6 +145,7 @@ private val THRESHOLD_COLOR = Color(0xffffb300)
 private val CURTAIN_COLOR = Color(0xff4dd0e1)
 private val LOW_SPACE_COLOR = Color(0xff9575cd)
 private val FURNITURE_COLOR = Color(0xffbdbdbd)
+private val ERASER_COLOR = Color(0xfff06292)
 
 /**
  * Furniture the official app offers (a296, 2026-11-14): type and subtype as `save_furnitures` takes
@@ -181,7 +183,7 @@ private fun furnitureLabel(z: MapZone?): String? =
 private const val MIN_SHAPE_MM = 200
 
 private enum class EditMode { RESTRICTIONS, ROOMS }
-private enum class Tool { NO_GO, WALL, CARPET, THRESHOLD, CURTAIN, LOW_SPACE, FURNITURE }
+private enum class Tool { NO_GO, WALL, CARPET, THRESHOLD, CURTAIN, LOW_SPACE, FURNITURE, ERASER }
 
 private sealed interface Selection {
     data class Zone(val index: Int) : Selection
@@ -217,6 +219,7 @@ private fun zoneColor(kind: ZoneKind) = when (kind) {
     ZoneKind.CURTAIN -> CURTAIN_COLOR
     ZoneKind.LOW_SPACE -> LOW_SPACE_COLOR
     ZoneKind.FURNITURE -> FURNITURE_COLOR
+    ZoneKind.ERASER -> ERASER_COLOR
 }
 
 /** Kinds drawn as a strip along a line (ends drag), not as a rectangle. */
@@ -283,7 +286,7 @@ fun MapEditScreen(
         val pm = parsedMap
         if (!dirty && pm != null) {
             zones = pm.noGoZones + pm.noMopZones + pm.carpetAreas + pm.thresholds +
-                pm.curtains.orEmpty() + pm.furniture.orEmpty() +
+                pm.curtains.orEmpty() + pm.furniture.orEmpty() + pm.eraserZones.orEmpty() +
                 // Only the zones the user drew; what the robot found itself, and erase marks, stay as they are.
                 pm.lowSpaceZones.orEmpty().filter { it.lowSpaceKind == LOW_SPACE_USER }
             walls = pm.virtualWalls
@@ -368,7 +371,7 @@ fun MapEditScreen(
             val editable = blockedReason == null && !working
             fun toolEnabled(t: Tool) = editable && when (t) {
                 Tool.NO_GO, Tool.WALL -> saveBlocker == null
-                Tool.CARPET, Tool.THRESHOLD, Tool.CURTAIN, Tool.LOW_SPACE, Tool.FURNITURE -> indexBlocker == null
+                Tool.CARPET, Tool.THRESHOLD, Tool.CURTAIN, Tool.LOW_SPACE, Tool.FURNITURE, Tool.ERASER -> indexBlocker == null
             }
             // Only the tools whose block the robot's map carries (curtains 59, under furniture 52, furniture 25).
             val availableTools = Tool.entries.filter { t ->
@@ -376,6 +379,7 @@ fun MapEditScreen(
                     Tool.CURTAIN -> pm.curtains != null
                     Tool.LOW_SPACE -> pm.lowSpaceZones != null
                     Tool.FURNITURE -> pm.furniture != null
+                    Tool.ERASER -> pm.eraserZones != null
                     else -> true
                 }
             }
@@ -383,7 +387,7 @@ fun MapEditScreen(
                 is Selection.Wall -> saveBlocker == null
                 is Selection.Zone -> when (zones.getOrNull(sel.index)?.kind) {
                     ZoneKind.NO_GO -> saveBlocker == null
-                    ZoneKind.CARPET, ZoneKind.THRESHOLD, ZoneKind.CURTAIN, ZoneKind.LOW_SPACE, ZoneKind.FURNITURE -> indexBlocker == null
+                    ZoneKind.CARPET, ZoneKind.THRESHOLD, ZoneKind.CURTAIN, ZoneKind.LOW_SPACE, ZoneKind.FURNITURE, ZoneKind.ERASER -> indexBlocker == null
                     ZoneKind.NO_MOP, null -> false
                 }
                 null -> false
@@ -431,6 +435,11 @@ fun MapEditScreen(
                     Tool.LOW_SPACE -> {
                         zones = zones + MapZone.rect(cx - half, cy - half, cx + half, cy + half, ZoneKind.LOW_SPACE)
                             .copy(extra = listOf(LOW_SPACE_USER))
+                        selection = Selection.Zone(zones.lastIndex)
+                    }
+                    Tool.ERASER -> {
+                        zones = zones + MapZone.rect(cx - half, cy - half, cx + half, cy + half, ZoneKind.ERASER)
+                            .copy(extra = listOf(ERASER_USER))
                         selection = Selection.Zone(zones.lastIndex)
                     }
                     Tool.FURNITURE -> {
@@ -597,6 +606,7 @@ fun MapEditScreen(
             zones.count { it.kind == ZoneKind.CURTAIN }.takeIf { pm?.curtains != null }?.let { "$it curtain(s)" },
             zones.count { it.kind == ZoneKind.LOW_SPACE }.takeIf { pm?.lowSpaceZones != null }?.let { "$it under-furniture zone(s)" },
             zones.count { it.kind == ZoneKind.FURNITURE }.takeIf { pm?.furniture != null }?.let { "$it piece(s) of furniture" },
+            zones.count { it.kind == ZoneKind.ERASER }.takeIf { pm?.eraserZones != null }?.let { "$it erased area(s)" },
         ).joinToString(", ").let { if (it.isEmpty()) "" else ", $it" }
         AlertDialog(
             onDismissRequest = { showSaveConfirm = false },
@@ -619,8 +629,9 @@ fun MapEditScreen(
                     val curtains = zones.filter { it.kind == ZoneKind.CURTAIN }.takeIf { m?.curtains != null }
                     val lowSpace = zones.filter { it.kind == ZoneKind.LOW_SPACE }.takeIf { m?.lowSpaceZones != null }
                     val furniture = zones.filter { it.kind == ZoneKind.FURNITURE }.takeIf { m?.furniture != null }
+                    val eraser = zones.filter { it.kind == ZoneKind.ERASER }.takeIf { m?.eraserZones != null }
                     runEdit("Saved. The robot's map shows the changes.") {
-                        repository.saveMapEdits(noGoZones, savedWalls, carpetAreas, thresholdStrips, curtains, lowSpace, furniture)
+                        repository.saveMapEdits(noGoZones, savedWalls, carpetAreas, thresholdStrips, curtains, lowSpace, furniture, eraser)
                         dirty = false
                         selection = null
                         null
@@ -1135,6 +1146,7 @@ private val TOOL_SPECS = listOf(
     ToolSpec(Tool.CURTAIN, "Curtain", Icons.Default.Texture, CURTAIN_COLOR),
     ToolSpec(Tool.LOW_SPACE, "Under furniture", Icons.Default.Block, LOW_SPACE_COLOR),
     ToolSpec(Tool.FURNITURE, "Furniture", Icons.Default.MeetingRoom, FURNITURE_COLOR),
+    ToolSpec(Tool.ERASER, "Eraser", Icons.Default.Block, ERASER_COLOR),
 )
 
 /**
@@ -1201,6 +1213,7 @@ private fun kindTitle(kind: ZoneKind?, round: Boolean = false) = when (kind) {
     ZoneKind.CURTAIN -> "Curtain"
     ZoneKind.LOW_SPACE -> "Under furniture"
     ZoneKind.FURNITURE -> "Furniture"
+    ZoneKind.ERASER -> "Erased area"
 }
 
 private fun kindHelp(kind: ZoneKind?, round: Boolean = false) = when {
@@ -1213,6 +1226,7 @@ private fun kindHelpFor(kind: ZoneKind?) = when (kind) {
     ZoneKind.CURTAIN -> "The robot cleans behind it. Drag to move, drag the ends to reshape."
     ZoneKind.LOW_SPACE -> "A low space the robot cleans under. Drag to move. Corners resize, the knob rotates."
     ZoneKind.FURNITURE -> "Drag to move. Corners resize, the knob rotates."
+    ZoneKind.ERASER -> "Hides stray bits of map inside it. Drag to move. Corners resize, the knob rotates."
     ZoneKind.NO_GO, ZoneKind.CARPET -> "Drag to move. Corners resize, the knob rotates."
     ZoneKind.NO_MOP -> "Set in the Roborock app. LocalRock can't change it yet."
 }
@@ -1469,7 +1483,7 @@ private val ROTATE_HANDLE_DISTANCE = 36.dp
  * makes of a stretched or rotated one has not been captured.
  */
 private fun canRotateOrResize(zone: MapZone) =
-    zone.kind == ZoneKind.NO_GO || zone.kind == ZoneKind.LOW_SPACE || zone.kind == ZoneKind.FURNITURE ||
+    zone.kind == ZoneKind.NO_GO || zone.kind == ZoneKind.LOW_SPACE || zone.kind == ZoneKind.FURNITURE || zone.kind == ZoneKind.ERASER ||
         (zone.kind == ZoneKind.CARPET && !zone.isRoundCarpet)
 
 /** Screen positions of the selected shape's handles. */

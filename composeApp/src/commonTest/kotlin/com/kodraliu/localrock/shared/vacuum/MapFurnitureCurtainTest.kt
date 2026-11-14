@@ -6,6 +6,7 @@ import com.kodraliu.localrock.shared.vacuum.map.LOW_SPACE_USER
 import com.kodraliu.localrock.shared.vacuum.map.MapZone
 import com.kodraliu.localrock.shared.vacuum.map.ZoneKind
 import com.kodraliu.localrock.shared.vacuum.map.parseCurtains
+import com.kodraliu.localrock.shared.vacuum.map.parseEraserZones
 import com.kodraliu.localrock.shared.vacuum.map.parseFurniture
 import com.kodraliu.localrock.shared.vacuum.map.parseLowSpaceZones
 import kotlin.test.Test
@@ -50,6 +51,20 @@ class MapFurnitureCurtainTest {
         val z = parseLowSpaceZones(b, 0, 12, b.size - 12)
         assertEquals(listOf(LOW_SPACE_USER, LOW_SPACE_DETECTED, LOW_SPACE_ERASED), z.map { it.lowSpaceKind })
         assertEquals(24776, z[0].x0)
+    }
+
+    @Test
+    fun eraserAreasAreReadAndSentWithTheirType() {
+        // Block 47 has the same layout as block 52: a u32 type, then eight u16 corners.
+        val b = block(47, 3, lowSpaceBody)
+        val z = parseEraserZones(b, 0, 12, b.size - 12)
+        assertEquals(listOf(ZoneKind.ERASER), z.map { it.kind }.distinct())
+        assertEquals(
+            """{"map_index":0,"data":[[0,24776,30524,27074,30524,27074,28227,24776,28227],""" +
+                """[1,28125,30025,28475,30025,28475,30625,28125,30625],[2,24775,30525,27075,30525,27075,28025,24775,28025]]}""",
+            encodeEraserParams(z, 0).toString(),
+        )
+        assertEquals("""{"map_index":0,"data":[]}""", encodeEraserParams(emptyList(), 0).toString())
     }
 
     @Test

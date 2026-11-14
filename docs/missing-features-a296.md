@@ -18,6 +18,7 @@ NewFeatureStrBit table). See `robot-commands-a296.md` for the commands of everyt
 | – | (no bit) | Obstacles → Fill light (camera bit 2) and I have pets (camera bit 32) |
 | – | (no bit) | Robot settings → Voice pack (`dnld_install_sound`, packs served by the local server) |
 | 100 | CollectDustCountShow | History → "Bin emptied" total (`get_clean_summary` → `dust_collection_count`) |
+| 71 | MapEraser | Map editor → Eraser (`app_set_beautify_blocks`, map block 47) |
 | 108 | CleanEfficiency | History → m²/min per clean, with obstacles avoided, mop washes and bin emptied from the record |
 
 ### Handled on another page (not listed as missing)
@@ -36,7 +37,6 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 ### Still missing (listed on the Beta page)
 | Bit | Plugin name | What it is | Commands (plugin) | Effort |
 |---|---|---|---|---|
-| 71 | MapEraser | Erase stray bits from the map | `app_set_beautify_blocks` | map editor tool |
 | 85 | MidwayBackToDock | Returns to the dock mid-clean to wash/empty; shown in the clean's status | not found in the capture | needs a capture during a clean |
 | 122 | FloorPlanMap | Floor-plan style map view | map rendering | large |
 | 48, 59, 68, 74, 95, 103, 123, 126, 127 | (not in the plugin's table) | unknown | – | – |

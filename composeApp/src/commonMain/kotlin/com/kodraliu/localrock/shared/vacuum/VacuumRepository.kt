@@ -670,6 +670,8 @@ class VacuumRepository(
         lowSpaceZones: List<MapZone>? = null,
         /** All furniture: pieces with a [MapZone.furnitureId] are on the map already. Null leaves it. */
         furniture: List<MapZone>? = null,
+        /** All map eraser areas, or null to leave them. */
+        eraserZones: List<MapZone>? = null,
     ): Unit = mapEditMutex.withLock {
         val map = editableMap()
         runCatching { fetchFloorMaps() }
@@ -687,8 +689,9 @@ class VacuumRepository(
         val lowSpaceChanged = lowSpaceZones != null && map.lowSpaceZones != null && !sameZones(lowSpaceZones, userLowSpace)
         val furnitureChange = if (furniture != null && map.furniture != null) furnitureChanges(map.furniture, furniture) else null
         val furnitureChanged = furnitureChange != null && (furnitureChange.first.isNotEmpty() || furnitureChange.second.isNotEmpty())
+        val eraserChanged = eraserZones != null && map.eraserZones != null && !sameZones(eraserZones, map.eraserZones)
         if (!restrictionsChanged && !carpetsChanged && !thresholdsChanged &&
-            !curtainsChanged && !lowSpaceChanged && !furnitureChanged
+            !curtainsChanged && !lowSpaceChanged && !furnitureChanged && !eraserChanged
         ) return@withLock
         if (restrictionsChanged) restrictionSaveBlocker(map, mapIndex)?.let { throw MapEditException(it) }
         session.inEditSession {
@@ -706,6 +709,7 @@ class VacuumRepository(
                 session.setLowSpaceZones(lowSpaceZones!!.map { it.copy(extra = listOf(LOW_SPACE_USER)) } + erased + removed, index)
             }
             if (furnitureChanged) session.saveFurnitures(furnitureChange!!.first, furnitureChange.second, index)
+            if (eraserChanged) session.setEraserZones(eraserZones!!, index)
         }
         awaitMap { m ->
             restrictionsMatch(m, noGoZones, map.noMopZones, walls) &&
@@ -713,6 +717,7 @@ class VacuumRepository(
                 m.carpetAreas.count { it.isRoundCarpet } == carpets.count { it.isRoundCarpet } &&
                 sameZones(thresholds, m.thresholds) &&
                 (!curtainsChanged || sameZones(curtains!!, m.curtains.orEmpty())) &&
+                (!eraserChanged || sameZones(eraserZones!!, m.eraserZones.orEmpty())) &&
                 (!lowSpaceChanged || sameZones(lowSpaceZones!!, m.lowSpaceZones.orEmpty().filter { it.lowSpaceKind == LOW_SPACE_USER })) &&
                 (!furnitureChanged || (sameZones(furniture!!, m.furniture.orEmpty()) &&
                     furniture.mapNotNull { it.furnitureType }.sorted() == m.furniture.orEmpty().mapNotNull { it.furnitureType }.sorted()))

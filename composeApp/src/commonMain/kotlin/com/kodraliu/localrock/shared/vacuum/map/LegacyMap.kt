@@ -29,6 +29,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
     val obstacles = mutableListOf<MapObstacle>()
     var curtains: List<MapZone>? = null
     var lowSpaceZones: List<MapZone>? = null
+    var eraserZones: List<MapZone>? = null
     var furniture: List<MapZone>? = null
 
     var off = headerLen
@@ -105,6 +106,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
                 thresholds = parseQuadZones(bytes, off, blockHeaderLen, blockDataLen, ZoneKind.THRESHOLD)
             BLOCK_CURTAINS -> curtains = parseCurtains(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_LOW_SPACE_ZONES -> lowSpaceZones = parseLowSpaceZones(bytes, off, blockHeaderLen, blockDataLen)
+            BLOCK_ERASER_ZONES -> eraserZones = parseEraserZones(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_FURNITURE -> furniture = parseFurniture(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_SEGMENT_MATERIALS -> {
                 // One byte per segment id, indexed from 0 (on the S8 Pro Ultra, segment 21 read 4
@@ -201,6 +203,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         obstacles = obstacles,
         curtains = curtains,
         lowSpaceZones = lowSpaceZones,
+        eraserZones = eraserZones,
         furniture = furniture,
         originalGrid = pixels,
     )
@@ -231,6 +234,16 @@ internal fun parseLowSpaceZones(bytes: ByteArray, off: Int, headerLen: Int, data
     return List(count) { i ->
         val p = body + i * 20
         quadAt(bytes, p + 4, ZoneKind.LOW_SPACE, listOf(u32(bytes, p)))
+    }
+}
+
+/** Block 47: per map-eraser area a u32 type (0 drawn by the user, others suggested by the robot) and eight u16 corners. */
+internal fun parseEraserZones(bytes: ByteArray, off: Int, headerLen: Int, dataLen: Int): List<MapZone> {
+    val count = minOf(entryCount(bytes, off, headerLen, dataLen), dataLen / 20)
+    val body = off + headerLen
+    return List(count) { i ->
+        val p = body + i * 20
+        quadAt(bytes, p + 4, ZoneKind.ERASER, listOf(u32(bytes, p)))
     }
 }
 
@@ -339,6 +352,9 @@ private const val BLOCK_CARPETS_WITH_FLAGS = 39
 private const val BLOCK_FURNITURE = 25
 private const val BLOCK_LOW_SPACE_ZONES = 52
 private const val BLOCK_CURTAINS = 59
+
+// From the a296 plugin's map block table (`eraserZone`, saved with `app_set_beautify_blocks`).
+private const val BLOCK_ERASER_ZONES = 47
 
 /**
  * Restriction blocks that are not parsed: 19 no-carpet areas, 23 no-vacuum areas, 30 cliff areas,

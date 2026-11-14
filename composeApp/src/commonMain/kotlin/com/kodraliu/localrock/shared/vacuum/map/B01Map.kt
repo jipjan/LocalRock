@@ -118,6 +118,8 @@ data class ParsedMap(
     val curtains: List<MapZone>? = null,
     /** Under-furniture zones (legacy block 52, `app_set_low_space_zones`) of every kind; null when absent. */
     val lowSpaceZones: List<MapZone>? = null,
+    /** Map eraser areas (legacy block 47, `app_set_beautify_blocks`): parts of the map hidden as stray bits; null when absent. */
+    val eraserZones: List<MapZone>? = null,
     /** Furniture placed on the map (legacy block 25, `save_furnitures`); null when absent. */
     val furniture: List<MapZone>? = null,
 
@@ -140,7 +142,8 @@ data class ParsedMap(
             other.carpetAreas == carpetAreas &&
             other.thresholds == thresholds &&
             other.obstacles == obstacles &&
-            other.curtains == curtains && other.lowSpaceZones == lowSpaceZones && other.furniture == furniture
+            other.curtains == curtains && other.lowSpaceZones == lowSpaceZones && other.furniture == furniture &&
+            other.eraserZones == eraserZones
 
     override fun hashCode(): Int {
         var r = width
@@ -163,6 +166,7 @@ data class ParsedMap(
         r = 31 * r + curtains.hashCode()
         r = 31 * r + lowSpaceZones.hashCode()
         r = 31 * r + furniture.hashCode()
+        r = 31 * r + eraserZones.hashCode()
         return r
     }
 }
@@ -194,7 +198,7 @@ data class VirtualWall(
     val x1: Int, val y1: Int,
 )
 
-enum class ZoneKind { NO_GO, NO_MOP, CARPET, THRESHOLD, CURTAIN, LOW_SPACE, FURNITURE }
+enum class ZoneKind { NO_GO, NO_MOP, CARPET, THRESHOLD, CURTAIN, LOW_SPACE, FURNITURE, ERASER }
 
 /*
  * Carpet flags, captured 2026-09-29 on an S8 Pro Ultra: the official app sent 0x06338000 for a new
@@ -204,6 +208,9 @@ enum class ZoneKind { NO_GO, NO_MOP, CARPET, THRESHOLD, CURTAIN, LOW_SPACE, FURN
 const val LOW_SPACE_USER = 0
 const val LOW_SPACE_DETECTED = 1
 const val LOW_SPACE_ERASED = 2
+
+/** Map eraser area drawn by the user; the robot's own suggestions carry other types. */
+const val ERASER_USER = 0
 
 const val CARPET_FLAG_ROUND = 0x04000000L
 const val NEW_ROUND_CARPET_FLAGS = 0x06338000L

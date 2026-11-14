@@ -2,6 +2,7 @@ package com.kodraliu.localrock.shared.vacuum
 
 import com.kodraliu.localrock.shared.protocol.V1Response
 import com.kodraliu.localrock.shared.vacuum.map.MapZone
+import com.kodraliu.localrock.shared.vacuum.map.ERASER_USER
 import com.kodraliu.localrock.shared.vacuum.map.LOW_SPACE_DETECTED
 import com.kodraliu.localrock.shared.vacuum.map.LOW_SPACE_USER
 import com.kodraliu.localrock.shared.vacuum.map.NEW_RECT_CARPET_FLAGS
@@ -351,6 +352,19 @@ internal fun encodeLowSpaceParams(zones: List<MapZone>, mapIndex: Int): JsonObje
 }
 
 /**
+ * `app_set_beautify_blocks` with every map eraser area, as the official app sends it (a296 plugin
+ * `saveEraserZone`): `{"map_index":0,"data":[[type, x1,…,y4], …]}`. Areas the robot suggested keep
+ * their type; one left out is removed.
+ */
+internal fun encodeEraserParams(zones: List<MapZone>, mapIndex: Int): JsonObject {
+    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    return JsonObject(mapOf(
+        "map_index" to JsonPrimitive(mapIndex),
+        "data" to JsonArray(zones.map { z -> JsonArray(listOf(JsonPrimitive(z.extra.getOrNull(0) ?: ERASER_USER)) + quad(z)) }),
+    ))
+}
+
+/**
  * `save_furnitures` with only the changes, as the official app sends them: a new piece as
  * `[1, -1, x1,…,y4, type, subtype, 1]`, a removed one as `[0, id]`.
  */
@@ -391,6 +405,10 @@ suspend fun VacuumSession.setCurtains(curtains: List<MapZone>, mapIndex: Int): V
 suspend fun VacuumSession.setLowSpaceZones(zones: List<MapZone>, mapIndex: Int): V1Response =
     sendCommandRaw("app_set_low_space_zones", encodeLowSpaceParams(zones, mapIndex), timeoutMs = MAP_EDIT_TIMEOUT_MS)
         .requireOk("app_set_low_space_zones")
+
+suspend fun VacuumSession.setEraserZones(zones: List<MapZone>, mapIndex: Int): V1Response =
+    sendCommandRaw("app_set_beautify_blocks", encodeEraserParams(zones, mapIndex), timeoutMs = MAP_EDIT_TIMEOUT_MS)
+        .requireOk("app_set_beautify_blocks")
 
 suspend fun VacuumSession.saveFurnitures(added: List<MapZone>, removedIds: List<Int>, mapIndex: Int): V1Response =
     sendCommandRaw("save_furnitures", encodeFurnitureChanges(added, removedIds, mapIndex), timeoutMs = MAP_EDIT_TIMEOUT_MS)

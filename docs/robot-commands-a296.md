@@ -169,6 +169,7 @@ four corners per shape (x1,y1,x2,y2,x3,y3,x4,y4).
 | Gordijn (curtain) | `app_set_curtains {"map_index":0,"zones":[[x1,y1,…,x4,y4,0,0], …]}` | the whole list each time; `"zones":[]` removes all. A 2.3 m × 0.1 m strip by default |
 | Drempel (door sill) | `app_set_smart_door_sill {"attrs":[10],"map_index":0,"side_heights":[[0,0,0,0]],"sides_infos":[[0,0,0,0]],"zones":[[2,x1,y1,…,y4]]}` | whole list; all lists empty removes all. LocalRock sends the S8 form without `attrs`/`side_heights` (not yet tried on an a296) |
 | Meubels (furniture) | `save_furnitures {"data":[[op,id,x1,y1,…,y4,type,subtype,1], …],"map_flag":0}` | changes only: op 1 = add (id -1), op 0 = delete (`[0,id]`). Types below |
+| Gum (map eraser, bit 71) | `app_set_beautify_blocks {"map_index":0,"data":[[type,x1,y1,…,y4], …]}` | the full list each time (type 0 = drawn by the user; the robot's suggestions keep their type); `"data":[]` removes them all. The robot itself blanks the map pixels inside, and puts them back when the area is removed. Tested by LocalRock 2026-11-14 |
 | Onder meubels (under furniture) | `app_set_low_space_zones {"map_index":0,"zone_data":[[op,x1,y1,…,y4], …]}` | op 0 = add, op 2 = delete that zone; the map shows the change after a reload |
 | Tapijt → rond (round carpet) | `set_carpet_area {"flags":[…],"map_index":0,"type":1,"zone_data":[[…], …]}` | whole list with one flag per carpet; round carpet `0x04330000` (round bit `0x04000000`); detected carpets keep their own flags (e.g. `0x331c7e`). Already built in LocalRock |
 
@@ -183,6 +184,7 @@ table 48,2 · shoe rack 49,0 · nightstand 50,0 · wardrobe 51,0 · litter box 5
 |---|---|---|
 | 25 | furniture | 23 bytes: 8 × u16 corners, u16 10000, u8 type, u8 subtype, u8 1, u8 id, u8 1 |
 | 52 | under-furniture zones | 20 bytes: u32 kind (0 drawn by the user, 1 found by the robot, 2 erased by the user), 8 × u16 corners |
+| 47 | map eraser areas | 20 bytes: u32 type, 8 × u16 corners |
 | 59 | curtains | 20 bytes: 8 × u16 corners, 2 × u16 (0, 0) |
 | 39 | carpets with flags | the a296 keeps its carpets here only; block 22 stays empty |
 
