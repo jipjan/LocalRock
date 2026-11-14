@@ -167,6 +167,23 @@ suspend fun VacuumSession.setLedStatus(enabled: Boolean): V1Response =
 suspend fun VacuumSession.getMopMode(): V1Response = sendCommand("get_mop_mode")
 suspend fun VacuumSession.setMopMode(mode: Int): V1Response =
     sendCommand("set_mop_mode", listOf(JsonPrimitive(mode)))
+/**
+ * Vacuum then mop, or both together. The official app sends the current suction, water and route along,
+ * and `repeat` only when vacuuming first (captured on an a296:
+ * `{"fan_power":101,"mop_mode":300,"repeat":1,"type":1,"water_box_mode":235}`).
+ */
+internal fun cleanSequenceTypeParams(type: Int, fanPower: Int, waterBoxMode: Int, mopMode: Int, repeat: Int?): JsonObject =
+    JsonObject(buildMap {
+        put("fan_power", JsonPrimitive(fanPower))
+        put("mop_mode", JsonPrimitive(mopMode))
+        if (type == SEQ_TYPE_VACUUM_THEN_MOP && repeat != null) put("repeat", JsonPrimitive(repeat))
+        put("type", JsonPrimitive(type))
+        put("water_box_mode", JsonPrimitive(waterBoxMode))
+    })
+
+suspend fun VacuumSession.setCleanSequenceType(type: Int, fanPower: Int, waterBoxMode: Int, mopMode: Int, repeat: Int?): V1Response =
+    sendCommandRaw("app_set_clean_sequence_type", cleanSequenceTypeParams(type, fanPower, waterBoxMode, mopMode, repeat))
+
 suspend fun VacuumSession.setCleanMotorMode(fanPower: Int, waterBoxMode: Int, mopMode: Int): V1Response =
     sendCommandRaw("set_clean_motor_mode", encodeCleanMotorModeParams(fanPower, waterBoxMode, mopMode))
 

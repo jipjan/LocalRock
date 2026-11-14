@@ -17,6 +17,9 @@ class DockCapabilities(model: String?, featureSet: String?, newFeatureSet: Strin
     private val soakWash = newFeatureBit(newFeatureSet, 107)
     private val aiWash = newFeatureBit(newFeatureSet, 144)
 
+    /** Bit 83 (DryIntervalTimer): drying can start at a set time each day, not only after cleaning. */
+    val dryerSchedule = newFeatureBit(newFeatureSet, 83)
+
     val washIntervals: List<Int> = if (model?.substringAfterLast('.') in legacyWashModels) {
         (10..50 step 5).toList()
     } else {

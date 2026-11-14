@@ -7,6 +7,7 @@ import com.kodraliu.localrock.shared.messages.MessageSeverity
 import com.kodraliu.localrock.shared.model.Scene
 import com.kodraliu.localrock.shared.model.SceneRunResult
 import com.kodraliu.localrock.shared.model.namesAVersion
+import com.kodraliu.localrock.shared.vacuum.newFeatureBit
 import com.kodraliu.localrock.shared.vacuum.DockCapabilities
 import com.kodraliu.localrock.shared.vacuum.FeatureSection
 import com.kodraliu.localrock.shared.vacuum.MapEditException
@@ -56,6 +57,10 @@ class VacuumViewModel(
     val supportsWaterSlide: StateFlow<Boolean> = repository.robotFeatureSet
         .map { isWaterSlideSupported(it ?: serverFeatureSet) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, isWaterSlideSupported(serverFeatureSet))
+    /** Bit 93 (CleanThenMopMode): the robot can vacuum first and mop after. */
+    val supportsVacuumThenMop: StateFlow<Boolean> = repository.robotFeatureSet
+        .map { newFeatureBit(it ?: serverFeatureSet, 93) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, newFeatureBit(serverFeatureSet, 93))
     val status = repository.status
 
     private val errorBannerKey = "robot-error-${device.duid}"

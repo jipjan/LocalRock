@@ -408,6 +408,23 @@ class VacuumRepository(
         _mopMode.value = mode
     }
 
+    /**
+     * Vacuum first and mop after, or both together, with the suction, water and route the robot holds
+     * now, as the official app sends them. The status is read back so the screen shows what the robot took.
+     */
+    suspend fun setVacuumThenMop(enabled: Boolean, repeat: Int) {
+        val current = _status.value
+        val type = if (enabled) SEQ_TYPE_VACUUM_THEN_MOP else SEQ_TYPE_TOGETHER
+        session.setCleanSequenceType(
+            type = type,
+            fanPower = current.fanPower ?: throw IllegalStateException("The robot's suction is unknown"),
+            waterBoxMode = current.waterBoxCustomMode ?: throw IllegalStateException("The robot's water flow is unknown"),
+            mopMode = _mopMode.value ?: throw IllegalStateException("The robot's route is unknown"),
+            repeat = repeat,
+        ).requireOk("app_set_clean_sequence_type")
+        refreshStatus()
+    }
+
     /** Switches suction, water and route in one command, the only way in or out of SmartPlan. */
     suspend fun setCleanMotorMode(fanPower: Int, waterBoxMode: Int, mopMode: Int) {
         session.setCleanMotorMode(fanPower, waterBoxMode, mopMode).requireOk("set_clean_motor_mode")
@@ -1010,7 +1027,14 @@ class VacuumRepository(
         val dryer = runCatching { session.getDryerSetting().requireOk("app_get_dryer_setting").result as? JsonObject }.getOrNull()
         (dryer?.get("status") as? JsonPrimitive)?.intOrNull?.let { status ->
             val seconds = ((dryer["on"] as? JsonObject)?.get("dry_time") as? JsonPrimitive)?.intOrNull
-            _dockSettings.update { it.copy(mopDrying = status == 1, dryTimeSeconds = seconds, dryerAnswer = dryer) }
+            val schedule = parseDailyCron((dryer["cron"] as? JsonPrimitive)?.contentOrNull)
+            _dockSettings.update {
+                it.copy(
+                    // A scheduled start (2) still dries the mops; only 0 leaves them wet.
+                    mopDrying = status != DRY_START_OFF, dryTimeSeconds = seconds, dryerAnswer = dryer,
+                    dryStart = status, dryScheduleHour = schedule?.first, dryScheduleMinute = schedule?.second,
+                )
+            }
         }
         // The read answers {"wash_water_temperature": n}, where the setter takes {"values": n}.
         val temperature = runCatching { session.getWashWaterTemperature().requireOk("get_wash_water_temperature").result as? JsonObject }.getOrNull()
@@ -1023,6 +1047,20 @@ class VacuumRepository(
         val body = dryerSettingBody(reported, enabled, if (reported == null) _dockSettings.value.dryTimeSeconds else null)
         session.setDryerSetting(body).requireOk("app_set_dryer_setting")
         _dockSettings.update { it.copy(mopDrying = enabled, dryerAnswer = body) }
+    }
+
+    /** Off, after each clean, or daily at [hour]:[minute]; read back so the screen shows what the robot holds. */
+    suspend fun setDryStart(start: Int, hour: Int? = null, minute: Int? = null) {
+        val current = _dockSettings.value
+        val body = dryerStartBody(current.dryerAnswer, start, hour, minute, current.dryTimeSeconds)
+        session.setDryerSetting(body).requireOk("app_set_dryer_setting")
+        _dockSettings.update {
+            it.copy(
+                mopDrying = start != DRY_START_OFF, dryerAnswer = body, dryStart = start,
+                dryScheduleHour = if (start == DRY_START_SCHEDULED) hour else it.dryScheduleHour,
+                dryScheduleMinute = if (start == DRY_START_SCHEDULED) minute else it.dryScheduleMinute,
+            )
+        }
     }
 
     suspend fun setDryTime(seconds: Int) {

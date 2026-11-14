@@ -226,6 +226,7 @@ fun VacuumDetailScreen(
     val busy by viewModel.busy.collectAsState()
     val supportsSmartPlan by viewModel.supportsSmartPlan.collectAsState()
     val supportsWaterSlide by viewModel.supportsWaterSlide.collectAsState()
+    val supportsVacuumThenMop by viewModel.supportsVacuumThenMop.collectAsState()
     val parsedMap by viewModel.repository.parsedMap.collectAsState()
     val floorMaps by viewModel.repository.floorMaps.collectAsState()
     val currentFloorFlag by viewModel.repository.currentFloorFlag.collectAsState()
@@ -436,6 +437,8 @@ fun VacuumDetailScreen(
                     onWaterModeSelected = { level -> runMode { it.setWaterBoxMode(level) } },
                     onRouteSelected = { mode -> runMode { it.setMopMode(mode) } },
                     onCountChange = { cleaningCount = it },
+                    vacuumThenMop = status.vacuumThenMop.takeIf { supportsVacuumThenMop },
+                    onVacuumThenMopChange = { on -> runMode { it.setVacuumThenMop(on, cleaningCount) } },
                 )
             }
 
@@ -1431,6 +1434,9 @@ private fun CleaningModeSheetContent(
     onWaterModeSelected: (Int) -> Unit,
     onRouteSelected: (Int) -> Unit,
     onCountChange: (Int) -> Unit,
+    /** Null when the robot cannot vacuum first and mop after, or has not said which it does. */
+    vacuumThenMop: Boolean? = null,
+    onVacuumThenMopChange: (Boolean) -> Unit = {},
 ) {
     val initialTab = when {
         (currentWaterMode ?: WaterBoxMode.OFF) == WaterBoxMode.OFF -> 2
@@ -1532,7 +1538,10 @@ private fun CleaningModeSheetContent(
                     }
 
                     when (selectedTab) {
-                        0 -> { suction(); water(); CountSelector(cleaningCount, onCountChange); route() }
+                        0 -> {
+                            if (vacuumThenMop != null) VacuumThenMopRow(vacuumThenMop, !busy, onVacuumThenMopChange)
+                            suction(); water(); CountSelector(cleaningCount, onCountChange); route()
+                        }
                         1 -> { water(); CountSelector(cleaningCount, onCountChange); route() }
                         2 -> { suction(); CountSelector(cleaningCount, onCountChange); route() }
                     }
@@ -1661,6 +1670,22 @@ private fun ModeOptionSelector(label: String, options: List<String>, selectedInd
                 }
             }
         }
+    }
+}
+
+/** Vacuum the whole area first, then mop it, as the official app's "Vacuum, then mop". */
+@Composable
+private fun VacuumThenMopRow(checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text("Vacuum first, then mop", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(
+                "Vacuums everything before it starts mopping",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(checked = checked, enabled = enabled, onCheckedChange = onChange)
     }
 }
 

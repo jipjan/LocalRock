@@ -79,6 +79,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -113,6 +114,9 @@ import com.kodraliu.localrock.shared.vacuum.DockCapabilities
 import com.kodraliu.localrock.shared.vacuum.FeatureSection
 import com.kodraliu.localrock.shared.vacuum.inSection
 import com.kodraliu.localrock.shared.vacuum.DockOptions
+import com.kodraliu.localrock.shared.vacuum.DRY_START_AFTER_CLEANING
+import com.kodraliu.localrock.shared.vacuum.DRY_START_OFF
+import com.kodraliu.localrock.shared.vacuum.DRY_START_SCHEDULED
 import com.kodraliu.localrock.shared.vacuum.DockSettings
 import com.kodraliu.localrock.shared.vacuum.ValleySettings
 import com.kodraliu.localrock.shared.vacuum.dryTimeLabel
@@ -262,6 +266,7 @@ fun VacuumSettingsScreen(
             onFeatureToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
             valleySettings = valleySettings,
             onMopDryingChange = { on -> viewModel.run { it.setMopDrying(on) } },
+            onDryStartChange = { start, hour, minute -> viewModel.run { it.setDryStart(start, hour, minute) } },
             onDryTimeChange = { seconds -> viewModel.run { it.setDryTime(seconds) } },
             onWashWaterTemperatureChange = { value -> viewModel.run { it.setWashWaterTemperature(value) } },
             onOpenValley = { route = SettingsRoute.Valley },
@@ -1019,6 +1024,7 @@ private fun DockSettingsScreen(
     onFeatureToggle: (String, Int) -> Unit,
     valleySettings: ValleySettings?,
     onMopDryingChange: (Boolean) -> Unit,
+    onDryStartChange: (start: Int, hour: Int?, minute: Int?) -> Unit = { _, _, _ -> },
     onDryTimeChange: (Int) -> Unit,
     onWashWaterTemperatureChange: (Int) -> Unit,
     onOpenValley: () -> Unit,
@@ -1089,15 +1095,27 @@ private fun DockSettingsScreen(
                 dockSettings.mopDrying?.let { drying ->
                     item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
                     item {
-                        SettingRowSwitch(
-                            icon = Icons.Default.Air,
-                            iconTint = AppColors.AccentCyan,
-                            title = "Mop drying",
-                            subtitle = if (drying) "Dries the mops on the dock after cleaning" else "Mops are left wet on the dock",
-                            checked = drying,
-                            enabled = !busy,
-                            onCheckedChange = onMopDryingChange,
-                        )
+                        if (dockCapabilities.dryerSchedule && dockSettings.dryStart != null) {
+                            // Off, after each clean, or daily at a set time (captured status 0 / 1 / 2 on an a296).
+                            SettingRowClickable(
+                                icon = Icons.Default.Air,
+                                iconTint = AppColors.AccentCyan,
+                                title = "Mop drying",
+                                subtitle = dryStartLabel(dockSettings),
+                                enabled = !busy,
+                                onClick = { dialogTarget = "dry_start" },
+                            )
+                        } else {
+                            SettingRowSwitch(
+                                icon = Icons.Default.Air,
+                                iconTint = AppColors.AccentCyan,
+                                title = "Mop drying",
+                                subtitle = if (drying) "Dries the mops on the dock after cleaning" else "Mops are left wet on the dock",
+                                checked = drying,
+                                enabled = !busy,
+                                onCheckedChange = onMopDryingChange,
+                            )
+                        }
                     }
                     dockSettings.dryTimeSeconds?.let { seconds ->
                         item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
@@ -1197,6 +1215,23 @@ private fun DockSettingsScreen(
             enabled = !busy,
             onDismiss = { dialogTarget = null },
         )
+        "dry_start" -> SimplePickerDialog(
+            title = "Mop drying",
+            options = listOf("Off", "After cleaning", "At a set time"),
+            selected = dockSettings.dryStart ?: -1,
+            onSelect = {
+                if (it == DRY_START_SCHEDULED) dialogTarget = "dry_schedule"
+                else { onDryStartChange(it, null, null); dialogTarget = null }
+            },
+            enabled = !busy,
+            onDismiss = { dialogTarget = null },
+        )
+        "dry_schedule" -> DryScheduleDialog(
+            hour = dockSettings.dryScheduleHour ?: 17,
+            minute = dockSettings.dryScheduleMinute ?: 0,
+            onSave = { hour, minute -> onDryStartChange(DRY_START_SCHEDULED, hour, minute); dialogTarget = null },
+            onDismiss = { dialogTarget = null },
+        )
         "dry_time" -> SimplePickerDialog(
             title = "Drying time",
             options = DockOptions.dryTime.map { it.label },
@@ -1281,6 +1316,30 @@ private fun ValleyScreen(
             }
         }
     }
+}
+
+private fun dryStartLabel(dock: DockSettings): String = when (dock.dryStart) {
+    DRY_START_OFF -> "Off"
+    DRY_START_AFTER_CLEANING -> "After cleaning"
+    DRY_START_SCHEDULED -> {
+        val h = dock.dryScheduleHour; val m = dock.dryScheduleMinute
+        if (h != null && m != null) "Daily at ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}" else "At a set time"
+    }
+    else -> "Unknown (${dock.dryStart})"
+}
+
+/** The time the dock starts drying the mops each day. */
+@Composable
+private fun DryScheduleDialog(hour: Int, minute: Int, onSave: (Int, Int) -> Unit, onDismiss: () -> Unit) {
+    var h by remember { mutableIntStateOf(hour) }
+    var m by remember { mutableIntStateOf(minute) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Dry the mops at") },
+        text = { ClockStepper(h, m, onHourChange = { h = it }, onMinuteChange = { m = it }) },
+        confirmButton = { TextButton(onClick = { onSave(h, m) }) { Text("Save") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
 
 @Composable

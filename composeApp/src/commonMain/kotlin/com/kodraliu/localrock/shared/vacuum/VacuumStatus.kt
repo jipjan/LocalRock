@@ -37,7 +37,15 @@ data class VacuumStatus(
     @SerialName("in_cleaning") val inCleaning: Int? = null,
     /** How far through the current job the robot says it is, 0..100. */
     @SerialName("clean_percent") val cleanPercent: Int? = null,
+    /** 1 when the robot vacuums first and mops after (captured from the official app on an a296), 0 for together. */
+    @SerialName("seq_type") val seqType: Int? = null,
+    /** How many passes the next clean makes. */
+    @SerialName("repeat") val repeat: Int? = null,
+    /** Option bits: 3 carpets first, 4 re-mop dirty spots, 5 cross carpets (a296 plugin, confirmed by captures). */
+    @SerialName("switch_status") val switchStatus: Int? = null,
 ) {
+    val vacuumThenMop: Boolean? get() = seqType?.let { it == SEQ_TYPE_VACUUM_THEN_MOP }
+
     val multiLevelEnabled: Boolean? get() = labStatus?.let { it and LAB_STATUS_MULTI_LEVEL != 0 }
 
     /** False on a robot that will not store a map: it refuses manual_segment_map (issue #17). */
@@ -57,6 +65,8 @@ data class VacuumStatus(
         get() = loadedMapFlag == UNSAVED_MAP_FLAG && mapStatus?.and(MAP_STATUS_PRESENT) != 0
 }
 
+const val SEQ_TYPE_TOGETHER = 0
+const val SEQ_TYPE_VACUUM_THEN_MOP = 1
 const val LAB_STATUS_MAP_SAVING = 1
 const val LAB_STATUS_MULTI_LEVEL = 2
 const val SWITCH_MAP_MODE_SMART = 0

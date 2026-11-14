@@ -32,6 +32,11 @@ data class DockSettings(
     val mopDrying: Boolean? = null,
     val dryTimeSeconds: Int? = null,
     val dryerAnswer: JsonObject? = null, // the whole answer, so a write can send back every field it held
+    /** How drying starts: [DRY_START_OFF], [DRY_START_AFTER_CLEANING] or [DRY_START_SCHEDULED] (captured on an a296). */
+    val dryStart: Int? = null,
+    /** The time a scheduled drying starts, from the answer's `cron` ("M H * * *"). */
+    val dryScheduleHour: Int? = null,
+    val dryScheduleMinute: Int? = null,
     val washWaterTemperature: Int? = null,
 )
 
@@ -93,6 +98,40 @@ internal fun dryerSettingBody(reported: JsonObject?, enabled: Boolean, dryTimeSe
         val on = ((reported?.get("on") as? JsonObject) ?: JsonObject(emptyMap())).toMutableMap()
         on["dry_time"] = JsonPrimitive(dryTimeSeconds)
         body["on"] = JsonObject(on)
+    }
+    return JsonObject(body)
+}
+
+const val DRY_START_OFF = 0
+const val DRY_START_AFTER_CLEANING = 1
+const val DRY_START_SCHEDULED = 2
+
+/** The hour and minute of a daily `"M H * * *"` cron, or null for anything else. */
+internal fun parseDailyCron(cron: String?): Pair<Int, Int>? {
+    val parts = cron?.trim()?.split(Regex("\\s+")) ?: return null
+    if (parts.size != 5 || parts.drop(2).any { it != "*" }) return null
+    val minute = parts[0].toIntOrNull()?.takeIf { it in 0..59 } ?: return null
+    val hour = parts[1].toIntOrNull()?.takeIf { it in 0..23 } ?: return null
+    return hour to minute
+}
+
+/**
+ * The body for `app_set_dryer_setting` that changes how drying starts. As [dryerSettingBody], every
+ * field the robot reported is sent back; `status` and `cron` change. Captured from the official app:
+ * `{"cron":"0 17 * * *","on":{"dry_time":10800},"status":2}` for a scheduled start, `"cron":""` otherwise.
+ */
+internal fun dryerStartBody(reported: JsonObject?, start: Int, hour: Int?, minute: Int?, dryTimeSeconds: Int?): JsonObject {
+    require(start in DRY_START_OFF..DRY_START_SCHEDULED) { "Unknown drying start $start" }
+    val body = (reported ?: JsonObject(emptyMap())).toMutableMap()
+    body["status"] = JsonPrimitive(start)
+    body["cron"] = JsonPrimitive(
+        if (start == DRY_START_SCHEDULED) {
+            requireNotNull(hour); requireNotNull(minute)
+            "$minute $hour * * *"
+        } else "",
+    )
+    if (body["on"] == null && dryTimeSeconds != null) {
+        body["on"] = JsonObject(mapOf("dry_time" to JsonPrimitive(dryTimeSeconds)))
     }
     return JsonObject(body)
 }
