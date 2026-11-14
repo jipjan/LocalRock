@@ -18,6 +18,8 @@ class RobotSettingCommandsTest {
         assertEquals("change_sound_volume", CHANGE_SOUND_VOLUME)
         assertEquals("get_child_lock_status", GET_CHILD_LOCK_STATUS)
         assertEquals("set_child_lock_status", SET_CHILD_LOCK_STATUS)
+        // The sample played after a change, so the new level can be heard (a Saros 20 Neo answers ["ok"]).
+        assertEquals("test_sound_volume", TEST_SOUND_VOLUME)
     }
 
     @Test

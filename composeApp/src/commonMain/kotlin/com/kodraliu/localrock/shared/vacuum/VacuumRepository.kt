@@ -914,9 +914,12 @@ class VacuumRepository(
 
     // The screen only changes once the robot has said ok, so a refused change is not shown as if it
     // had been applied (#32).
+    // After the ok the robot plays a sample, so the new level can be heard. The sample is a courtesy:
+    // a robot that does not know test_sound_volume, or does not answer it, still has the new volume.
     suspend fun setVolume(volume: Int) {
         session.setSoundVolume(volume).requireOk(CHANGE_SOUND_VOLUME)
         _robotSettings.update { it.copy(volume = volume) }
+        if (volume > 0) runCatching { session.testSoundVolume() }
     }
 
     // Read back after the ok, so the switch shows what the robot holds; the tapped value stands in if

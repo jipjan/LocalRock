@@ -137,12 +137,15 @@ suspend fun VacuumSession.updTimer(id: String, enabled: Boolean): V1Response =
 // change_sound_volume, and python-roborock names the child lock calls *_child_lock_status.
 internal const val GET_SOUND_VOLUME = "get_sound_volume"
 internal const val CHANGE_SOUND_VOLUME = "change_sound_volume"
+// Plays a voice sample at the robot's current volume, as python-roborock's TEST_SOUND_VOLUME does.
+internal const val TEST_SOUND_VOLUME = "test_sound_volume"
 internal const val GET_CHILD_LOCK_STATUS = "get_child_lock_status"
 internal const val SET_CHILD_LOCK_STATUS = "set_child_lock_status"
 
 suspend fun VacuumSession.getSoundVolume(): V1Response = sendCommand(GET_SOUND_VOLUME)
 suspend fun VacuumSession.setSoundVolume(volume: Int): V1Response =
     sendCommand(CHANGE_SOUND_VOLUME, listOf(JsonPrimitive(volume)))
+suspend fun VacuumSession.testSoundVolume(): V1Response = sendCommand(TEST_SOUND_VOLUME)
 
 suspend fun VacuumSession.getChildLock(): V1Response = sendCommand(GET_CHILD_LOCK_STATUS)
 // The lock is the bare object `{"lock_status": 1}`, not a one-item list: a Qrevo Pro answers the list
