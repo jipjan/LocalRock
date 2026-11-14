@@ -13,7 +13,8 @@ import kotlinx.serialization.json.longOrNull
 data class CleanEvent(val epoch: Long, val type: Int, val fields: JsonObject)
 
 /** A page of `get_clean_detail`: its events, and whether the robot has more after them. */
-data class CleanEventPage(val events: List<CleanEvent>, val more: Boolean)
+/** [rawCount] counts every entry the robot sent, including ones not read, so the next page starts after them. */
+data class CleanEventPage(val events: List<CleanEvent>, val more: Boolean, val rawCount: Int = events.size)
 
 /** The robot changed state during the clean: event 11, fields 111 (from), 112 (to) and 1 (battery %). */
 data class CleanStateChange(val epoch: Long, val from: Int, val to: Int, val battery: Int?)
@@ -27,7 +28,8 @@ const val CLEAN_EVENT_STATE_CHANGE = 11
  */
 fun parseCleanEventPage(result: JsonElement?): CleanEventPage? {
     val obj = (if (result is JsonArray) result.firstOrNull() else result) as? JsonObject ?: return null
-    val events = (obj["events"] as? JsonArray).orEmpty().mapNotNull { item ->
+    val raw = (obj["events"] as? JsonArray).orEmpty()
+    val events = raw.mapNotNull { item ->
         val ev = item as? JsonObject ?: return@mapNotNull null
         val t = (ev["t"] as? JsonPrimitive)?.longOrNull ?: return@mapNotNull null
         val i = (ev["i"] as? JsonPrimitive)?.intOrNull ?: return@mapNotNull null
@@ -38,7 +40,7 @@ fun parseCleanEventPage(result: JsonElement?): CleanEventPage? {
         } ?: JsonObject(emptyMap())
         CleanEvent(t, i, fields)
     }
-    return CleanEventPage(events, (obj["more"] as? JsonPrimitive)?.intOrNull == 1)
+    return CleanEventPage(events, (obj["more"] as? JsonPrimitive)?.intOrNull == 1, raw.size)
 }
 
 /** The state changes among [events], in time order; repeats of the same state are left out. */

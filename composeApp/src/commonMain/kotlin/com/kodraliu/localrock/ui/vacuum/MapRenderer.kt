@@ -3,6 +3,12 @@ package com.kodraliu.localrock.ui.vacuum
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Canvas
@@ -88,9 +94,19 @@ private val DarkPalette = MapPalette(
 @Composable
 fun rememberMapBitmap(map: ParsedMap, drawRestrictions: Boolean = true): ImageBitmap {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    return remember(map, dark, drawRestrictions) {
-        renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions)
+    // The first bitmap is drawn at once so there is something to show; later ones (a map poll every few
+    // seconds while cleaning) are drawn off the main thread, and the previous one stays until it is ready.
+    val first = remember { renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions) }
+    val firstKey = remember { Triple(map, dark, drawRestrictions) }
+    var shown by remember { mutableStateOf(first) }
+    LaunchedEffect(map, dark, drawRestrictions) {
+        if (Triple(map, dark, drawRestrictions) == firstKey) {
+            shown = first
+            return@LaunchedEffect
+        }
+        shown = withContext(Dispatchers.Default) { renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions) }
     }
+    return shown
 }
 
 /**
@@ -161,10 +177,12 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
         if (raw != null) palette.rooms[room(x, y) % palette.rooms.size] else palette.floor
 
     val fill = Paint().apply { isAntiAlias = true }
+    val boundaryPaint = Paint()
+    val roomWeights = FloatArray(ROOM_ID_COUNT)
     // Rooms with a floor-plan outline (block 55) are drawn as that polygon, the way the official app
     // draws them: straight walls and sharp corners instead of the robot's pixel edges.
     val plan = if (raw != null) floorPlanPolygons(map) else emptyList()
-    val planRooms = plan.map { it.roomId }.toSet()
+    val planRooms = BooleanArray(ROOM_ID_COUNT).also { has -> plan.forEach { has[it.roomId and (ROOM_ID_COUNT - 1)] = true } }
     val inPlan = planCells(plan, w, h)
     fun inside(x: Int, y: Int) = x in 0 until w && y in 0 until h && inPlan[y * w + x] >= 0
     fun nearPlan(x: Int, y: Int) = (-2..2).any { dy -> (-2..2).any { dx -> inside(x + dx, y + dy) } }
@@ -188,20 +206,20 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
                     continue
                 }
                 // The robot's pixel fringe along an outline; floor further out (newly explored) still shows.
-                if (kind(x, y) == 128 && room(x, y) in planRooms && nearPlan(x, y)) continue
+                if (kind(x, y) == 128 && planRooms[room(x, y) and (ROOM_ID_COUNT - 1)] && nearPlan(x, y)) continue
             }
             if (kind(x, y) != 128) continue
             fill.color = floorColor(x, y)
             val r = room(x, y)
-            val inner = listOf(x - 1 to y, x + 1 to y, x to y - 1, x to y + 1)
-                .all { (nx, ny) -> kind(nx, ny) == 128 && room(nx, ny) == r }
+            val inner = (kind(x - 1, y) == 128 && room(x - 1, y) == r) && (kind(x + 1, y) == 128 && room(x + 1, y) == r) &&
+                (kind(x, y - 1) == 128 && room(x, y - 1) == r) && (kind(x, y + 1) == 128 && room(x, y + 1) == r)
             val borderRoom = raw != null && (-1..1).any { dy -> (-1..1).any { dx ->
                 kind(x + dx, y + dy) == 128 && room(x + dx, y + dy) != r
             } }
             if (borderRoom) {
                 // Where two rooms meet, colour each sub-pixel by the room with the most weight among
                 // the cells around it, so the boundary curves instead of stepping cell by cell.
-                drawRoomBoundaryCell(canvas, x, y, drawY, s, ::kind, ::room) { palette.rooms[it % palette.rooms.size] }
+                drawRoomBoundaryCell(canvas, x, y, drawY, s, ::kind, ::room, boundaryPaint, roomWeights) { palette.rooms[it % palette.rooms.size] }
             } else if (inner) {
                 canvas.drawRect(Rect(x.toFloat(), drawY, x + 1f, drawY + 1f), fill)
             } else {
@@ -229,8 +247,9 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
             if (plan.isNotEmpty() && nearPlan(x, y)) continue
             val c = Offset(x + 0.5f, drawY + 0.5f)
             var joined = false
-            // Right, up and both diagonals, so every pair of touching wall cells is joined once.
-            for ((dx, dy) in listOf(1 to 0, 0 to 1, 1 to 1, 1 to -1)) {
+            for (n in 0 until 4) {
+                val dx = WALL_DX[n]
+                val dy = WALL_DY[n]
                 if (kind(x + dx, y + dy) != 127) continue
                 // A diagonal only where no straight neighbour already makes the corner.
                 if (dx != 0 && dy != 0 && (kind(x + dx, y) == 127 || kind(x, y + dy) == 127)) continue
@@ -268,6 +287,11 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
 private val PLAN_UNASSIGNED = Color(0xffb0b0b0)
 
 internal class PlanPolygon(val roomId: Int, val corners: List<Offset>) {
+    val minX = corners.minOf { it.x }
+    val maxX = corners.maxOf { it.x }
+    val minY = corners.minOf { it.y }
+    val maxY = corners.maxOf { it.y }
+
     val path: Path by lazy {
         Path().apply {
             moveTo(corners[0].x, corners[0].y)
@@ -293,6 +317,7 @@ internal fun planCells(plan: List<PlanPolygon>, w: Int, h: Int): IntArray {
         for (x in 0 until w) {
             val cx = x + 0.5f
             for (room in plan) {
+                if (cx < room.minX || cx > room.maxX || cy < room.minY || cy > room.maxY) continue
                 if (pointInPolygon(cx, cy, room.corners)) { out[y * w + x] = room.roomId; break }
             }
         }
@@ -312,6 +337,13 @@ private fun pointInPolygon(px: Float, py: Float, pts: List<Offset>): Boolean {
     return inside
 }
 
+/** Room ids are the pixel's top five bits. */
+private const val ROOM_ID_COUNT = 32
+
+/** Right, up and both diagonals, so every pair of touching wall cells is joined once. */
+private val WALL_DX = intArrayOf(1, 0, 1, 1)
+private val WALL_DY = intArrayOf(0, 1, 1, -1)
+
 /** Cells within this distance (in cells) of a sub-pixel vote on its room, weighted by closeness. */
 private const val ROOM_SMOOTH_RADIUS = 1.6f
 
@@ -328,17 +360,17 @@ private inline fun drawRoomBoundaryCell(
     s: Int,
     kind: (Int, Int) -> Int,
     room: (Int, Int) -> Int,
+    paint: Paint,
+    weights: FloatArray,
     color: (Int) -> Color,
 ) {
-    val paint = Paint()
     val step = 1f / s
-    val weights = HashMap<Int, Float>(4)
     for (sy in 0 until s) {
         for (sx in 0 until s) {
             // Sub-pixel centre in map cell space (y grows upwards in the map).
             val px = x + (sx + 0.5f) * step
             val py = y + 1f - (sy + 0.5f) * step
-            weights.clear()
+            weights.fill(0f)
             for (dy in -2..2) for (dx in -2..2) {
                 val cx = x + dx
                 val cy = y + dy
@@ -347,10 +379,11 @@ private inline fun drawRoomBoundaryCell(
                 val ddy = py - (cy + 0.5f)
                 val d = kotlin.math.sqrt(ddx * ddx + ddy * ddy)
                 if (d >= ROOM_SMOOTH_RADIUS) continue
-                val id = room(cx, cy)
-                weights[id] = (weights[id] ?: 0f) + (ROOM_SMOOTH_RADIUS - d)
+                val id = room(cx, cy) and (ROOM_ID_COUNT - 1)
+                weights[id] += ROOM_SMOOTH_RADIUS - d
             }
-            val best = weights.maxByOrNull { it.value }?.key ?: room(x, y)
+            var best = room(x, y) and (ROOM_ID_COUNT - 1)
+            for (id in weights.indices) if (weights[id] > weights[best]) best = id
             paint.color = color(best)
             canvas.drawRect(Rect(x + sx * step, drawY + sy * step, x + (sx + 1) * step, drawY + (sy + 1) * step), paint)
         }

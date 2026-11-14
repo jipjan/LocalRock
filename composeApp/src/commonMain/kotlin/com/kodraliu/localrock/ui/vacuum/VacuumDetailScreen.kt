@@ -1703,30 +1703,23 @@ private fun ModeOptionSelector(label: String, options: List<String>, selectedInd
 
 /** Vacuum the whole area first, then mop it, as the official app's "Vacuum, then mop". */
 @Composable
-private fun VacuumThenMopRow(checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
+private fun LabeledSwitchRow(title: String, subtitle: String, checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text("Vacuum first, then mop", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-            Text(
-                "Vacuums everything before it starts mopping",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(checked = checked, enabled = enabled, onCheckedChange = onChange)
     }
 }
 
 @Composable
-private fun CornerCleanRow(checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text("Intensive corner mopping", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-            Text("Mops corners and edges more thoroughly", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Switch(checked = checked, enabled = enabled, onCheckedChange = onChange)
-    }
-}
+private fun VacuumThenMopRow(checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) =
+    LabeledSwitchRow("Vacuum first, then mop", "Vacuums everything before it starts mopping", checked, enabled, onChange)
+
+@Composable
+private fun CornerCleanRow(checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) =
+    LabeledSwitchRow("Intensive corner mopping", "Mops corners and edges more thoroughly", checked, enabled, onChange)
 
 /** The four water buttons plus Custom, whose amount is set with a slider ([WaterDistance]). */
 @Composable

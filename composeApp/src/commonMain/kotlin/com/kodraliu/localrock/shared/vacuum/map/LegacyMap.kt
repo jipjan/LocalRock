@@ -231,12 +231,16 @@ internal fun parseCurtains(bytes: ByteArray, off: Int, headerLen: Int, dataLen: 
 }
 
 /** Block 52: per zone a u32 kind ([LOW_SPACE_USER] and so on) and eight u16 corners. */
-internal fun parseLowSpaceZones(bytes: ByteArray, off: Int, headerLen: Int, dataLen: Int): List<MapZone> {
+internal fun parseLowSpaceZones(bytes: ByteArray, off: Int, headerLen: Int, dataLen: Int): List<MapZone> =
+    parseTypedQuads(bytes, off, headerLen, dataLen, ZoneKind.LOW_SPACE)
+
+/** Entries of a u32 type followed by eight u16 corners (blocks 47 and 52); the type is kept in [MapZone.extra]. */
+private fun parseTypedQuads(bytes: ByteArray, off: Int, headerLen: Int, dataLen: Int, kind: ZoneKind): List<MapZone> {
     val count = minOf(entryCount(bytes, off, headerLen, dataLen), dataLen / 20)
     val body = off + headerLen
     return List(count) { i ->
         val p = body + i * 20
-        quadAt(bytes, p + 4, ZoneKind.LOW_SPACE, listOf(u32(bytes, p)))
+        quadAt(bytes, p + 4, kind, listOf(u32(bytes, p)))
     }
 }
 
@@ -256,7 +260,7 @@ internal fun parseFloorPlan(bytes: ByteArray, off: Int, headerLen: Int, dataLen:
         val id = u16(bytes, p)
         val n = u16(bytes, p + 2)
         val size = u16(bytes, p + 4)
-        if (size < 4 || p + 6 + n * size > end) return rooms
+        if (size !in 4..64 || p.toLong() + 6 + n.toLong() * size > end) return rooms
         val points = List(n) { i -> u16(bytes, p + 6 + i * size) to u16(bytes, p + 8 + i * size) }
         val flags = List(n) { i -> if (size >= 6) u16(bytes, p + 10 + i * size) else 0 }
         if (n >= 3) rooms += FloorPlanRoom(id, points, flags)
@@ -266,14 +270,8 @@ internal fun parseFloorPlan(bytes: ByteArray, off: Int, headerLen: Int, dataLen:
 }
 
 /** Block 47: per map-eraser area a u32 type (0 drawn by the user, others suggested by the robot) and eight u16 corners. */
-internal fun parseEraserZones(bytes: ByteArray, off: Int, headerLen: Int, dataLen: Int): List<MapZone> {
-    val count = minOf(entryCount(bytes, off, headerLen, dataLen), dataLen / 20)
-    val body = off + headerLen
-    return List(count) { i ->
-        val p = body + i * 20
-        quadAt(bytes, p + 4, ZoneKind.ERASER, listOf(u32(bytes, p)))
-    }
-}
+internal fun parseEraserZones(bytes: ByteArray, off: Int, headerLen: Int, dataLen: Int): List<MapZone> =
+    parseTypedQuads(bytes, off, headerLen, dataLen, ZoneKind.ERASER)
 
 /**
  * Block 25: per piece eight u16 corners, a u16 (10000 on an a296), u8 type, u8 subtype, a u8 1,

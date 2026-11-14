@@ -176,6 +176,7 @@ private val FURNITURE_CHOICES = listOf(
     FurnitureChoice("Cat tree", 58, 0, 1000, 800),
 )
 
+/** A furniture piece's name ("Sofa"), for the bar shown while it is selected. */
 private fun furnitureLabel(z: MapZone?): String? =
     FURNITURE_CHOICES.firstOrNull { it.type == z?.furnitureType && it.subtype == z.furnitureSubtype }?.label
 
@@ -545,6 +546,7 @@ fun MapEditScreen(
                             ShapeBar(
                                 kind = kind,
                                 round = selectedZone?.isRoundCarpet == true,
+                                title = furnitureLabel(selectedZone),
                                 canEdit = deleteEnabled,
                                 onDelete = {
                                     when (sel) {
@@ -1233,12 +1235,12 @@ private fun kindHelpFor(kind: ZoneKind?) = when (kind) {
 
 /** Replaces the tool dock while a shape is selected: what it is, and what can be done to it. */
 @Composable
-private fun ShapeBar(kind: ZoneKind?, round: Boolean, canEdit: Boolean, onDelete: () -> Unit, onDone: () -> Unit) {
+private fun ShapeBar(kind: ZoneKind?, round: Boolean, title: String? = null, canEdit: Boolean, onDelete: () -> Unit, onDone: () -> Unit) {
     val color = kind?.let { zoneColor(it) } ?: WALL_COLOR
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(Modifier.size(14.dp).clip(CircleShape).background(color))
         Column(Modifier.weight(1f)) {
-            Text(kindTitle(kind, round), style = MaterialTheme.typography.titleSmall)
+            Text(title ?: kindTitle(kind, round), style = MaterialTheme.typography.titleSmall)
             Text(
                 if (canEdit || kind == ZoneKind.NO_MOP) kindHelp(kind, round) else "Can't be changed right now.",
                 style = MaterialTheme.typography.bodySmall,

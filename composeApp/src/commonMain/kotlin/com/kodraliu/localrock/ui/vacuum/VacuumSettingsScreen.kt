@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.IntrinsicSize
 import com.kodraliu.localrock.shared.vacuum.describeCleanEvents
 import com.kodraliu.localrock.shared.vacuum.CleanTimelineEntry
-import com.kodraliu.localrock.shared.vacuum.VacuumStateCodes
-import com.kodraliu.localrock.shared.vacuum.cleanStateChanges
-import com.kodraliu.localrock.shared.vacuum.CleanStateChange
 import com.kodraliu.localrock.shared.vacuum.CleanEvent
 import com.kodraliu.localrock.shared.vacuum.VoicePack
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -198,8 +195,6 @@ fun VacuumSettingsScreen(
     val dndSettings by repository.dndSettings.collectAsState()
     val dndPeriods by repository.dndPeriods.collectAsState()
     val valleySettings by repository.valleySettings.collectAsState()
-    val cleanHistory by repository.cleanHistory.collectAsState()
-    val cleanSummary by repository.cleanSummary.collectAsState()
     val firmwareUpdate by viewModel.firmwareUpdate.collectAsState()
     val betaFeatures by repository.betaFeatures.collectAsState()
     val betaFeaturesLoading by repository.betaFeaturesLoading.collectAsState()
@@ -334,27 +329,7 @@ fun VacuumSettingsScreen(
             onDisable = { viewModel.report { r -> runCatching { r.disableDnd() }.onFailure { r.fetchDndSettings(); throw it } } },
             onBack = { route = SettingsRoute.Root },
         )
-        SettingsRoute.History -> {
-
-            LaunchedEffect(Unit) {
-                runCatching { repository.fetchCleanHistory() }
-                runCatching { repository.fetchCleanSummary() }
-            }
-            HistoryScreen(
-                loadMap = { repository.fetchCleanRecordMap(it) },
-                loadEvents = { repository.fetchCleanEvents(it) },
-                roomName = { id -> repository.rooms.value.firstOrNull { it.id == id }?.name ?: repository.parsedMap.value?.rooms?.firstOrNull { it.id == id }?.name },
-                records = cleanHistory,
-                summary = cleanSummary,
-                onRefresh = {
-                    scope.launch {
-                        runCatching { repository.fetchCleanHistory() }
-                        runCatching { repository.fetchCleanSummary() }
-                    }
-                },
-                onBack = { route = SettingsRoute.Root },
-            )
-        }
+        SettingsRoute.History -> VacuumHistoryScreen(viewModel, onBack = { route = SettingsRoute.Root })
     }
     // A thin bar under the top bar while the robot is being asked; the values below are the last known.
     if (reading) {
@@ -1241,7 +1216,8 @@ private fun SummaryStatItem(value: String, label: String) {
 
 /**
  * One past clean: its map with the path the robot took (`get_clean_record_map`), the figures of the
- * record, and a timeline of the robot's state changes during it (`get_clean_detail` event 11).
+ * record, and its timeline (`get_clean_detail` events: start, rooms with their settings, mop washes,
+ * auto-empty, settings changed by hand, finish), laid out like the official app's.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1254,19 +1230,20 @@ private fun CleanRecordDetailScreen(
 ) {
     var map by remember(record) { mutableStateOf<ParsedMap?>(null) }
     var mapLoaded by remember(record) { mutableStateOf(false) }
-    var changes by remember(record) { mutableStateOf<List<CleanTimelineEntry>?>(null) }
+    var events by remember(record) { mutableStateOf<List<CleanEvent>?>(null) }
     LaunchedEffect(record) {
         map = loadMap?.let { runCatching { it(record.beginEpoch) }.getOrNull() }
         mapLoaded = true
     }
     LaunchedEffect(record) {
-        changes = loadEvents?.let { load ->
-            runCatching {
-                // The names the user gave the rooms; a past clean's map only carries placeholders ("Room 1").
-                val names = { id: Int -> roomName(id) ?: map?.rooms?.firstOrNull { it.id == id }?.name?.takeIf { it.isNotBlank() } }
-                describeCleanEvents(load(record.beginEpoch), names)
-            }.getOrDefault(emptyList())
-        } ?: emptyList()
+        events = loadEvents?.let { load -> runCatching { load(record.beginEpoch) }.getOrDefault(emptyList()) } ?: emptyList()
+    }
+    // Described again once the map arrives, whichever of the two loads first.
+    val changes = remember(events, map) {
+        events?.let { list ->
+            // The names the user gave the rooms; a past clean's map only carries placeholders ("Room 1").
+            describeCleanEvents(list) { id -> roomName(id) ?: map?.rooms?.firstOrNull { it.id == id }?.name?.takeIf { it.isNotBlank() } }
+        }
     }
     Scaffold(
         topBar = {

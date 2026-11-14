@@ -203,10 +203,6 @@ data class VirtualWall(
 
 enum class ZoneKind { NO_GO, NO_MOP, CARPET, THRESHOLD, CURTAIN, LOW_SPACE, FURNITURE, ERASER }
 
-/*
- * Carpet flags, captured 2026-09-29 on an S8 Pro Ultra: the official app sent 0x06338000 for a new
- * round carpet and 0x02338000 for a new rectangular one. Only the round bit is interpreted.
- */
 /** Under-furniture zone kinds in block 52: drawn by the user, found by the robot, and erased by the user. */
 const val LOW_SPACE_USER = 0
 const val LOW_SPACE_DETECTED = 1
@@ -215,6 +211,10 @@ const val LOW_SPACE_ERASED = 2
 /** Map eraser area drawn by the user; the robot's own suggestions carry other types. */
 const val ERASER_USER = 0
 
+/*
+ * Carpet flags, captured 2026-09-29 on an S8 Pro Ultra: the official app sent 0x06338000 for a new
+ * round carpet and 0x02338000 for a new rectangular one. Only the round bit is interpreted.
+ */
 const val CARPET_FLAG_ROUND = 0x04000000L
 const val NEW_ROUND_CARPET_FLAGS = 0x06338000L
 const val NEW_RECT_CARPET_FLAGS = 0x02338000L

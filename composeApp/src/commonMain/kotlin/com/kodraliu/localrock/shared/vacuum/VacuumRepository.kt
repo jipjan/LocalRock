@@ -1530,11 +1530,13 @@ class VacuumRepository(
     /** Every event of a past clean, page by page as the robot hands them out (at most 20 pages). */
     suspend fun fetchCleanEvents(begin: Long): List<CleanEvent> {
         val all = mutableListOf<CleanEvent>()
+        var from = 0
         repeat(20) {
-            val page = parseCleanEventPage(session.getCleanDetail(begin, all.size).requireOk("get_clean_detail").result)
+            val page = parseCleanEventPage(session.getCleanDetail(begin, from).requireOk("get_clean_detail").result)
                 ?: return all
             all += page.events
-            if (!page.more || page.events.isEmpty()) return all
+            from += page.rawCount
+            if (!page.more || page.rawCount == 0) return all
         }
         return all
     }
