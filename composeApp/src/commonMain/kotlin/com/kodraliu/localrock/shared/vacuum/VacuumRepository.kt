@@ -1162,6 +1162,31 @@ class VacuumRepository(
     }
 
 
+    private val _dndPeriods = MutableStateFlow<List<DndPeriod>?>(null)
+
+    /** Every quiet-hour period, on robots with several (bit 140); null on others or before the robot answered. */
+    val dndPeriods: StateFlow<List<DndPeriod>?> = _dndPeriods
+
+    /** Reads the periods of a robot with several; does nothing on other robots. */
+    suspend fun fetchDndPeriods() {
+        runCatching { fetchRobotFeatureSet() }
+        if (!newFeatureBit(_robotFeatureSet.value, MULTI_DND_BIT)) return
+        _dndPeriods.value = parseMultiDnd(session.getMultiDndTimer().requireOk("get_multi_dnd_timer").result)
+    }
+
+    /** Replaces every period with [periods], as the official app does, and reads them back. */
+    suspend fun setDndPeriods(periods: List<DndPeriod>) {
+        require(periods.size <= MAX_DND_PERIODS) { "At most $MAX_DND_PERIODS quiet-hour periods" }
+        require(periods.map { it.times }.distinct().size == periods.size) { "This period already exists" }
+        session.setMultiDndTimer(periods).requireOk("set_multi_dnd_timer")
+        fetchDndPeriods()
+        // The robot keeps its periods sorted by start time (a296), so the order is not compared.
+        fun key(list: List<DndPeriod>?) = list?.map { it.times to it.enabled }?.sortedBy { it.first[0] * 60 + it.first[1] }
+        if (key(_dndPeriods.value) != key(periods)) {
+            throw IllegalStateException("The robot accepted the quiet hours, but reports different ones back.")
+        }
+    }
+
     suspend fun fetchDndSettings() {
         val resp = session.getDndTimer()
         val obj = resp.result?.let { r ->

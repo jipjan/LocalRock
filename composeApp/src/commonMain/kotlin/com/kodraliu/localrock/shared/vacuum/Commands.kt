@@ -233,6 +233,9 @@ suspend fun VacuumSession.getDndTimer(): V1Response = sendCommand("get_dnd_timer
 suspend fun VacuumSession.setDndTimer(startHour: Int, startMinute: Int, endHour: Int, endMinute: Int): V1Response =
     sendCommand("set_dnd_timer", listOf(startHour, startMinute, endHour, endMinute).map { JsonPrimitive(it) })
 
+suspend fun VacuumSession.getMultiDndTimer(): V1Response = sendCommand("get_multi_dnd_timer")
+suspend fun VacuumSession.setMultiDndTimer(periods: List<DndPeriod>): V1Response =
+    sendCommandRaw("set_multi_dnd_timer", multiDndListParams(periods))
 suspend fun VacuumSession.setMultiDndTimer(startHour: Int, startMinute: Int, endHour: Int, endMinute: Int, actions: JsonObject?): V1Response =
     sendCommandRaw("set_multi_dnd_timer", multiDndParams(startHour, startMinute, endHour, endMinute, actions))
 suspend fun VacuumSession.closeDndTimer(): V1Response = sendCommand("close_dnd_timer")

@@ -1,5 +1,7 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.shared.vacuum.MAX_DND_PERIODS
+import com.kodraliu.localrock.shared.vacuum.DndPeriod
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -172,6 +174,7 @@ fun VacuumSettingsScreen(
     val status by viewModel.status.collectAsState()
     val busy by viewModel.busy.collectAsState()
     val dndSettings by repository.dndSettings.collectAsState()
+    val dndPeriods by repository.dndPeriods.collectAsState()
     val valleySettings by repository.valleySettings.collectAsState()
     val cleanHistory by repository.cleanHistory.collectAsState()
     val cleanSummary by repository.cleanSummary.collectAsState()
@@ -215,6 +218,7 @@ fun VacuumSettingsScreen(
             },
             onDndMode = {
                 scope.launch { runCatching { repository.fetchDndSettings() } }
+                scope.launch { runCatching { repository.fetchDndPeriods() } }
                 route = SettingsRoute.DndMode
             },
             onBetaFeatures = if (!viewModel.showsBetaFeatures) null else ({
@@ -290,7 +294,11 @@ fun VacuumSettingsScreen(
             onFeatureToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
             onBack = { route = SettingsRoute.Root },
         )
-        SettingsRoute.DndMode -> DndScreen(
+        SettingsRoute.DndMode -> if (dndPeriods != null) MultiDndScreen(
+            robotPeriods = dndPeriods.orEmpty(),
+            onChange = { periods -> viewModel.report { r -> runCatching { r.setDndPeriods(periods) }.onFailure { r.fetchDndPeriods(); throw it } } },
+            onBack = { route = SettingsRoute.Root },
+        ) else DndScreen(
             dndSettings = dndSettings,
             // A refusal is shown and the robot's setting read back, so the switch never shows a state it lacks.
             onEnable = { sh, sm, eh, em -> viewModel.report { r -> runCatching { r.setDnd(sh, sm, eh, em) }.onFailure { r.fetchDndSettings(); throw it } } },
@@ -624,6 +632,95 @@ private fun DndScreen(
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+private fun formatClock(h: Int, m: Int) = "${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}"
+
+/** Quiet hours on robots with several periods (bit 140): each its own switch, times and delete, as in the official app. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPeriod>) -> Unit, onBack: () -> Unit) {
+    // Sorted by start time, as the robot keeps them; the open period is known by its times, not its place.
+    val periods = robotPeriods.sortedBy { it.startHour * 60 + it.startMinute }
+    var editingTimes by remember { mutableStateOf<List<Int>?>(null) }
+    val editing = periods.indexOfFirst { it.times == editingTimes }.takeIf { it >= 0 }
+    fun replace(index: Int, period: DndPeriod) {
+        if (editing == index) editingTimes = period.times
+        onChange(periods.toMutableList().also { it[index] = period })
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Do Not Disturb") },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+            )
+        },
+    ) { padding ->
+        CenteredContent {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Text(
+                    "The robot won't resume cleaning, speaks more quietly and dims its lights during these hours. " +
+                        "Up to $MAX_DND_PERIODS periods.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                periods.forEachIndexed { index, period ->
+                    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceContainer) {
+                        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Column(Modifier.weight(1f).clickable { editingTimes = if (editing == index) null else period.times }) {
+                                    Text(
+                                        "${formatClock(period.startHour, period.startMinute)} – ${formatClock(period.endHour, period.endMinute)}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                    )
+                                    Text(
+                                        if (editing == index) "Tap to close" else "Tap to change the times",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                                IconButton(onClick = { editingTimes = null; onChange(periods.filterIndexed { i, _ -> i != index }) }) {
+                                    Icon(Icons.Filled.Delete, "Delete period")
+                                }
+                                Switch(checked = period.enabled, onCheckedChange = { replace(index, period.copy(enabled = it)) })
+                            }
+                            if (editing == index) {
+                                Text("Start", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    NumberStepper2("Hour", period.startHour, 0..23) { replace(index, period.copy(startHour = it)) }
+                                    Text(":", style = MaterialTheme.typography.headlineMedium)
+                                    NumberStepper2("Minute", period.startMinute, 0..59, step = 15) { replace(index, period.copy(startMinute = it)) }
+                                }
+                                Text("End", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    NumberStepper2("Hour", period.endHour, 0..23) { replace(index, period.copy(endHour = it)) }
+                                    Text(":", style = MaterialTheme.typography.headlineMedium)
+                                    NumberStepper2("Minute", period.endMinute, 0..59, step = 15) { replace(index, period.copy(endMinute = it)) }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (periods.size < MAX_DND_PERIODS) {
+                    OutlinedButton(
+                        onClick = {
+                            // A free one-hour slot from 12:00, as two periods may not share their times.
+                            val taken = periods.map { it.times }.toSet()
+                            val hour = (12..35).map { it % 24 }.first { listOf(it, 0, (it + 1) % 24, 0) !in taken }
+                            val added = DndPeriod(hour, 0, (hour + 1) % 24, 0, true, periods.firstOrNull()?.actions)
+                            editingTimes = added.times
+                            onChange(periods + added)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text("Add period") }
                 }
             }
         }

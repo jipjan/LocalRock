@@ -97,16 +97,47 @@ internal val DEFAULT_DND_ACTIONS = JsonObject(mapOf(
     "resume" to JsonPrimitive(1), "vol" to JsonPrimitive(1),
 ))
 
+/** The official app allows at most this many quiet-hour periods (a296 plugin). */
+const val MAX_DND_PERIODS = 3
+
+/** One quiet-hour period of a robot with several (`get_multi_dnd_timer`). */
+data class DndPeriod(
+    val startHour: Int,
+    val startMinute: Int,
+    val endHour: Int,
+    val endMinute: Int,
+    val enabled: Boolean = true,
+    val actions: JsonObject? = null,
+) {
+    val times: List<Int> get() = listOf(startHour, startMinute, endHour, endMinute)
+}
+
+/** The periods in a `get_multi_dnd_timer` answer, e.g. `[{"dnd":[22,0,8,0],"enabled":1,"actions":{...}}]`. */
+internal fun parseMultiDnd(result: JsonElement?): List<DndPeriod>? {
+    val list = result as? JsonArray ?: return null
+    return list.mapNotNull { item ->
+        val obj = item as? JsonObject ?: return@mapNotNull null
+        val dnd = (obj["dnd"] as? JsonArray)?.map { (it as? JsonPrimitive)?.intOrNull ?: return@mapNotNull null }
+            ?: return@mapNotNull null
+        if (dnd.size != 4) return@mapNotNull null
+        DndPeriod(dnd[0], dnd[1], dnd[2], dnd[3], (obj["enabled"] as? JsonPrimitive)?.intOrNull == 1, obj["actions"] as? JsonObject)
+    }
+}
+
 /**
- * Parameters for `set_multi_dnd_timer` with one period, as the official app sent them (captured):
- * `[{"actions":{...},"dnd":[22,0,8,0],"enabled":1}]`. The robot's own actions are kept.
+ * Parameters for `set_multi_dnd_timer`: every period, as the official app sent one (captured):
+ * `[{"actions":{...},"dnd":[22,0,8,0],"enabled":1}]`. Each period keeps the robot's own actions.
  */
+internal fun multiDndListParams(periods: List<DndPeriod>): JsonArray = JsonArray(periods.map { p ->
+    JsonObject(mapOf(
+        "actions" to (p.actions ?: DEFAULT_DND_ACTIONS),
+        "dnd" to JsonArray(p.times.map { JsonPrimitive(it) }),
+        "enabled" to JsonPrimitive(if (p.enabled) 1 else 0),
+    ))
+})
+
 internal fun multiDndParams(startHour: Int, startMinute: Int, endHour: Int, endMinute: Int, actions: JsonObject?): JsonArray =
-    JsonArray(listOf(JsonObject(mapOf(
-        "actions" to (actions ?: DEFAULT_DND_ACTIONS),
-        "dnd" to JsonArray(listOf(startHour, startMinute, endHour, endMinute).map { JsonPrimitive(it) }),
-        "enabled" to JsonPrimitive(1),
-    ))))
+    multiDndListParams(listOf(DndPeriod(startHour, startMinute, endHour, endMinute, true, actions)))
 
 /**
  * The body for `app_set_dryer_setting`: the answer the robot gave with only `status`, and `on.dry_time`

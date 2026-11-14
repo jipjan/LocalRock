@@ -100,7 +100,7 @@ robot settings `long_haired_carpet_clean_status` and `nearbycarpet_detecting_wir
 | Setting | Write | Values | Source |
 |---|---|---|---|
 | Child lock | `set_child_lock_status {"lock_status":0/1}` | already in LocalRock | Captured |
-| Do not disturb | `set_multi_dnd_timer [{"actions":{"dry":0,"dust":0,"led":1,"resume":1,"vol":1},"dnd":[22,0,8,0],"enabled":1}]` | several periods possible (bit 140) | Captured |
+| Do not disturb | `set_multi_dnd_timer [{"actions":{"dry":0,"dust":0,"led":1,"resume":1,"vol":1},"dnd":[22,0,8,0],"enabled":1}, ...]`; read `get_multi_dnd_timer` | bit 140: up to 3 periods (plugin), each with its own `enabled` and `actions`, no two with the same times. The whole list is sent each time; the robot keeps it sorted by start time and drops periods left out | Captured, checked |
 | Voice assistant | `set_voice_service_switch {"data":0/1}` | | Captured |
 | Map save reminder | `save_map_remind {"map_index":0,"remind":1}` | | Captured |
 | Offline map | `set_offline_map_status {"status":0/1}`; read `get_offline_map_status` → `common_switch_status` bit 0 | | Plugin |
@@ -145,10 +145,11 @@ Built and checked on an a296 against the official app's values and commands:
 - Smart mop washing as `smart_wash_status`; wash mode 10 is no longer offered on AI-wash robots.
 - Cleaning count read from and saved on the robot (`set_clean_repeat_times`).
 - The 30-step water slider (221–250) on water slide robots.
-- Quiet hours with `set_multi_dnd_timer`, keeping the robot's `actions`. The a296 refuses LocalRock's
+- Quiet hours with `set_multi_dnd_timer`, keeping the robot's `actions`; up to 3 periods, each
+  switched, changed and deleted on its own. The a296 refuses LocalRock's
   old `set_dnd_timer` object (`get_dnd_timer` and `close_dnd_timer` do work), and that refusal used to
   be swallowed.
 
 Not built yet: intensive corner mopping and `distance_off` water flow (this a296 has neither, so they
-can't be tested here), the camera bitmask (fill light is value 2), several DND periods, and linking
+can't be tested here), the camera bitmask (fill light is value 2), and linking
 wash mode to water temperature.
