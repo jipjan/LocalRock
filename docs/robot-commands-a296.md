@@ -158,3 +158,21 @@ Built from the plugin, gated by the robot's flags, but not checked on a robot (t
 
 Not built: the camera bitmask (fill light is value 2), and linking
 wash mode to water temperature.
+
+## Map editor (captured 2026-11-14, each drawn in the official app and deleted again)
+
+Every edit is wrapped in `start_edit_map []` … `end_edit_map []`. Coordinates are map millimetres,
+four corners per shape (x1,y1,x2,y2,x3,y3,x4,y4).
+
+| Tool (Dutch label) | Command | Notes |
+|---|---|---|
+| Gordijn (curtain) | `app_set_curtains {"map_index":0,"zones":[[x1,y1,…,x4,y4,0,0], …]}` | the whole list each time; `"zones":[]` removes all. A 2.3 m × 0.1 m strip by default |
+| Drempel (door sill) | `app_set_smart_door_sill {"attrs":[10],"map_index":0,"side_heights":[[0,0,0,0]],"sides_infos":[[0,0,0,0]],"zones":[[2,x1,y1,…,y4]]}` | whole list; all lists empty removes all. LocalRock sends the S8 form without `attrs`/`side_heights` (not yet tried on an a296) |
+| Meubels (furniture) | `save_furnitures {"data":[[op,id,x1,y1,…,y4,type,subtype,1], …],"map_flag":0}` | changes only: op 1 = add (id -1), op 0 = delete (`[0,id]`). Types below |
+| Onder meubels (under furniture) | `app_set_low_space_zones {"map_index":0,"zone_data":[[op,x1,y1,…,y4], …]}` | op 0 = add, op 2 = delete that zone; the map shows the change after a reload |
+| Tapijt → rond (round carpet) | `set_carpet_area {"flags":[…],"map_index":0,"type":1,"zone_data":[[…], …]}` | whole list with one flag per carpet; round carpet `0x04330000` (round bit `0x04000000`); detected carpets keep their own flags (e.g. `0x331c7e`). Already built in LocalRock |
+
+Furniture types (type, subtype): TV cabinet 43,0 · bed double 45,2 · bed single 45,1 · sofa single
+46,1 · two-seat 46,2 · multi-seat 46,3 · modular 46,5 · dining set 47,0 · coffee table 48,1 · square
+table 48,2 · shoe rack 49,0 · nightstand 50,0 · wardrobe 51,0 · litter box 52,0 · closed litter box
+53,0 · pet cage 54,0 · pet basket 55,0 · pet bowls 56,0 · floor mirror 57,0 · cat tree 58,0.

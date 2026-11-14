@@ -60,11 +60,11 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Huisdieren: Reinigingsinstellingen (pet cleaning settings) | Not opened yet; probably pet supplies deep clean (built). |
 | Kaarten beheren (maps): save, multiple floors, backup | Built (map list, switch, backup/restore, rename). |
 | Kaart bewerken: splitsen, combineren, naam, verboden zones, type vloer, tapijt, volgorde | Built. |
-| Kaart bewerken: **Drempel** (door sills drawn by hand) | Missing: `app_set_door_sill_blocks` (LocalRock has only the automatic `app_set_smart_door_sill`). Bit 136 StairDoorSill is not advertised by this robot. |
-| Kaart bewerken: **Meubels** (furniture) | Missing: place/move furniture on the map. |
-| Kaart bewerken: **Gordijn** (curtains) | Missing: `app_set_curtains` (bit 138). |
-| Kaart bewerken: **Onder meubels** (under furniture) | Missing as a map tool; the low-area access setting itself is built. |
-| Kaart bewerken: tapijt negeren | Missing: `set_ignore_carpet_zone` (carpet areas themselves are built). |
+| Kaart bewerken: **Drempel** (door sills) | Built (`app_set_smart_door_sill`). The a296 app also sends `attrs [10]` and `side_heights`; not yet tried whether the a296 takes LocalRock's shorter form. |
+| Kaart bewerken: **Meubels** (furniture) | Missing in the app; commands and all 20 types captured (`save_furnitures`, see robot-commands-a296.md). Needs the furniture block of the map to show existing pieces. |
+| Kaart bewerken: **Gordijn** (curtains) | Missing in the app; command captured (`app_set_curtains`, bit 138). Needs the curtain block of the map. |
+| Kaart bewerken: **Onder meubels** (under furniture) | Missing in the app; command captured (`app_set_low_space_zones`). The low-area access setting itself is built. |
+| Kaart bewerken: tapijt (rectangular and round) | Built (`set_carpet_area` with flags). Ignoring a detected carpet (`set_ignore_carpet_zone`) is not in this robot's editor. |
 | Stemassistent: switch | Built (off; turning it on lets the robot process your voice). |
 | Stemassistent: Taal (voice pack) | Built, served by the local server. |
 | Stemassistent: Volume | The robot volume is built; the separate voice-chat volume (`set_voice_chat_volume`) is missing. |
