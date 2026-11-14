@@ -120,6 +120,8 @@ data class ParsedMap(
     val lowSpaceZones: List<MapZone>? = null,
     /** Map eraser areas (legacy block 47, `app_set_beautify_blocks`): parts of the map hidden as stray bits; null when absent. */
     val eraserZones: List<MapZone>? = null,
+    /** Each room's outline as straight edges (legacy block 55), which the official app draws rooms with; empty when absent. */
+    val floorPlan: List<FloorPlanRoom> = emptyList(),
     /** Furniture placed on the map (legacy block 25, `save_furnitures`); null when absent. */
     val furniture: List<MapZone>? = null,
 
@@ -143,7 +145,7 @@ data class ParsedMap(
             other.thresholds == thresholds &&
             other.obstacles == obstacles &&
             other.curtains == curtains && other.lowSpaceZones == lowSpaceZones && other.furniture == furniture &&
-            other.eraserZones == eraserZones
+            other.eraserZones == eraserZones && other.floorPlan == floorPlan
 
     override fun hashCode(): Int {
         var r = width
@@ -167,6 +169,7 @@ data class ParsedMap(
         r = 31 * r + lowSpaceZones.hashCode()
         r = 31 * r + furniture.hashCode()
         r = 31 * r + eraserZones.hashCode()
+        r = 31 * r + floorPlan.hashCode()
         return r
     }
 }
@@ -284,6 +287,9 @@ data class ParsedMapRoom(
     val labelNormX: Float? = null,
     val labelNormY: Float? = null,
 )
+
+/** A room's floor-plan outline: corners in robot mm, and per corner the robot's flag for the edge from it. */
+data class FloorPlanRoom(val roomId: Int, val pointsMm: List<Pair<Int, Int>>, val edgeFlags: List<Int>)
 
 data class ParsedMapPoint(
     val x: Int,

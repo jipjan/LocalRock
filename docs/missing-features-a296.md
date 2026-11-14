@@ -19,6 +19,7 @@ NewFeatureStrBit table). See `robot-commands-a296.md` for the commands of everyt
 | – | (no bit) | Robot settings → Voice pack (`dnld_install_sound`, packs served by the local server) |
 | 100 | CollectDustCountShow | History → "Bin emptied" total (`get_clean_summary` → `dust_collection_count`) |
 | 71 | MapEraser | Map editor → Eraser (`app_set_beautify_blocks`, map block 47) |
+| 122 | FloorPlanMap | The map draws each room from its outline (map block 55), as the official app does |
 | 108 | CleanEfficiency | History → m²/min per clean, with obstacles avoided, mop washes and bin emptied from the record |
 
 ### Handled on another page (not listed as missing)
@@ -38,7 +39,6 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Bit | Plugin name | What it is | Commands (plugin) | Effort |
 |---|---|---|---|---|
 | 85 | MidwayBackToDock | Returns to the dock mid-clean to wash/empty; shown in the clean's status | not found in the capture | needs a capture during a clean |
-| 122 | FloorPlanMap | Floor-plan style map view | map rendering | large |
 | 48, 59, 68, 74, 95, 103, 123, 126, 127 | (not in the plugin's table) | unknown | – | – |
 
 ## Official app compared page by page
@@ -55,7 +55,8 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Huisdieren (pets): Ik heb huisdieren, Pet Snaps | Built. |
 | Huisdieren: Zoek het huisdier (find the pet) | Missing: `app_start_pet_patrol`, a camera patrol. |
 | Huisdieren: Huisdierenalbum (pet album) | Missing: `get_pet_album`, `get_pet_album_photos`, photos are encrypted like obstacle photos. |
-| Huisdieren: Reinigingsinstellingen (pet cleaning settings) | Not opened yet; probably pet supplies deep clean (built). |
+| Huisdieren: Reinigingsinstellingen (pet cleaning settings) | Built elsewhere: it holds auto-empty frequency (dock) and re-clean areas blocked by people/pets (`dynamic_obstacle_replenish_status`). |
+| Huisdieren: Huisdiermeubels (pet furniture) | Built: pet supplies deep clean, and "Add" opens the same furniture editor as the map editor's Furniture tool. |
 | Kaarten beheren (maps): save, multiple floors, backup | Built (map list, switch, backup/restore, rename). |
 | Kaart bewerken: splitsen, combineren, naam, verboden zones, type vloer, tapijt, volgorde | Built. |
 | Kaart bewerken: **Drempel** (door sills) | Built (`app_set_smart_door_sill`). The a296 takes LocalRock's shorter form without `attrs`/`side_heights` (tested). |

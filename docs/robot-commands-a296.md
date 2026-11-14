@@ -185,6 +185,7 @@ table 48,2 · shoe rack 49,0 · nightstand 50,0 · wardrobe 51,0 · litter box 5
 | 25 | furniture | 23 bytes: 8 × u16 corners, u16 10000, u8 type, u8 subtype, u8 1, u8 id, u8 1 |
 | 52 | under-furniture zones | 20 bytes: u32 kind (0 drawn by the user, 1 found by the robot, 2 erased by the user), 8 × u16 corners |
 | 47 | map eraser areas | 20 bytes: u32 type, 8 × u16 corners |
+| 55 | floor plan (bit 122) | per room: u16 room id, u16 point count, u16 point size (6), then per point u16 x, u16 y (mm) and u16 edge flag (1 along a wall, other values where it meets another room). The official app fills each room as this polygon and hides the pixel walls inside it; floor with room 0 inside shows grey |
 | 59 | curtains | 20 bytes: 8 × u16 corners, 2 × u16 (0, 0) |
 | 39 | carpets with flags | the a296 keeps its carpets here only; block 22 stays empty |
 

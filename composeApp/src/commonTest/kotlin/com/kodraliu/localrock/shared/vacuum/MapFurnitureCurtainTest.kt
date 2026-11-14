@@ -7,6 +7,7 @@ import com.kodraliu.localrock.shared.vacuum.map.MapZone
 import com.kodraliu.localrock.shared.vacuum.map.ZoneKind
 import com.kodraliu.localrock.shared.vacuum.map.parseCurtains
 import com.kodraliu.localrock.shared.vacuum.map.parseEraserZones
+import com.kodraliu.localrock.shared.vacuum.map.parseFloorPlan
 import com.kodraliu.localrock.shared.vacuum.map.parseFurniture
 import com.kodraliu.localrock.shared.vacuum.map.parseLowSpaceZones
 import kotlin.test.Test
@@ -51,6 +52,22 @@ class MapFurnitureCurtainTest {
         val z = parseLowSpaceZones(b, 0, 12, b.size - 12)
         assertEquals(listOf(LOW_SPACE_USER, LOW_SPACE_DETECTED, LOW_SPACE_ERASED), z.map { it.lowSpaceKind })
         assertEquals(24776, z[0].x0)
+    }
+
+    @Test
+    fun readsFloorPlanOutlines() {
+        // Room 3 of an a296 map: 12 corners, 6 bytes each (x, y in mm and an edge flag).
+        val room3 = "03000c0006004259505f0100b667505f0100b667fa640100c864fa640100c864a46a0200c864d66a0300" +
+            "c864f06e02006464f06e03001860f06e0200e65ff06e0200e65fea6f01004259ea6f0100"
+        val b = block(55, 1, room3)
+        val plan = parseFloorPlan(b, 0, 12, b.size - 12)
+        assertEquals(listOf(3), plan.map { it.roomId })
+        assertEquals(12, plan[0].pointsMm.size)
+        assertEquals(22850 to 24400, plan[0].pointsMm[0])
+        assertEquals(listOf(1, 1, 1, 1, 2, 3, 2, 3, 2, 2, 1, 1), plan[0].edgeFlags)
+        // A block cut short keeps nothing rather than reading past its end.
+        val cut = block(55, 1, room3.dropLast(12))
+        assertEquals(emptyList(), parseFloorPlan(cut, 0, 12, cut.size - 12))
     }
 
     @Test

@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.luminance
 import com.kodraliu.localrock.shared.vacuum.map.FloorMaterial
 import com.kodraliu.localrock.shared.vacuum.map.MapZone
@@ -160,11 +161,35 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
         if (raw != null) palette.rooms[room(x, y) % palette.rooms.size] else palette.floor
 
     val fill = Paint().apply { isAntiAlias = true }
+    // Rooms with a floor-plan outline (block 55) are drawn as that polygon, the way the official app
+    // draws them: straight walls and sharp corners instead of the robot's pixel edges.
+    val plan = if (raw != null) floorPlanPolygons(map) else emptyList()
+    val planRooms = plan.map { it.roomId }.toSet()
+    val inPlan = planCells(plan, w, h)
+    fun inside(x: Int, y: Int) = x in 0 until w && y in 0 until h && inPlan[y * w + x] >= 0
+    fun nearPlan(x: Int, y: Int) = (-2..2).any { dy -> (-2..2).any { dx -> inside(x + dx, y + dy) } }
+    for (room in plan) {
+        fill.color = palette.rooms[room.roomId % palette.rooms.size]
+        canvas.drawPath(room.path, fill)
+    }
     // Floor: a cell surrounded by the same room is a plain square; an edge cell is drawn as a round
     // dot a little larger than the cell, so outlines come out rounded rather than stepped.
     for (y in 0 until h) {
         val drawY = (h - 1 - y).toFloat()
         for (x in 0 until w) {
+            if (plan.isNotEmpty()) {
+                if (inside(x, y)) {
+                    // The outline is the room. Floor inside it that the robot gave no room is grey, as in
+                    // the official app; walls and unmapped cells inside are not drawn.
+                    if (kind(x, y) == 128 && room(x, y) == 0) {
+                        fill.color = PLAN_UNASSIGNED
+                        canvas.drawRect(Rect(x.toFloat(), drawY, x + 1f, drawY + 1f), fill)
+                    }
+                    continue
+                }
+                // The robot's pixel fringe along an outline; floor further out (newly explored) still shows.
+                if (kind(x, y) == 128 && room(x, y) in planRooms && nearPlan(x, y)) continue
+            }
             if (kind(x, y) != 128) continue
             fill.color = floorColor(x, y)
             val r = room(x, y)
@@ -200,6 +225,8 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
         val drawY = (h - 1 - y).toFloat()
         for (x in 0 until w) {
             if (kind(x, y) != 127) continue
+            // The outline is the wall: none inside a floor-plan room, nor along its edge.
+            if (plan.isNotEmpty() && nearPlan(x, y)) continue
             val c = Offset(x + 0.5f, drawY + 0.5f)
             var joined = false
             // Right, up and both diagonals, so every pair of touching wall cells is joined once.
@@ -213,6 +240,16 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
             if (!joined) canvas.drawCircle(c, 0.45f, fill)
         }
     }
+    if (plan.isNotEmpty()) {
+        val outline = Paint().apply {
+            color = palette.wall
+            style = PaintingStyle.Stroke
+            strokeWidth = 0.6f
+            strokeJoin = StrokeJoin.Round
+            isAntiAlias = true
+        }
+        plan.forEach { canvas.drawPath(it.path, outline) }
+    }
     if (map.pathMm.size >= 2) drawPath(canvas, map, palette)
     if (drawRestrictions) {
         map.carpetAreas.forEach { drawZone(canvas, map, it, CARPET_FILL, CARPET_STROKE) }
@@ -225,6 +262,54 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
     map.chargerMm?.let { drawMarker(canvas, map, it, palette.charger, palette.markerRing, square = true) }
     map.robotMm?.let { drawMarker(canvas, map, it, palette.robot, palette.markerRing, square = false) }
     return bitmap
+}
+
+/** Floor inside a floor-plan room that the robot gave no room: the light grey the official app uses. */
+private val PLAN_UNASSIGNED = Color(0xffb0b0b0)
+
+internal class PlanPolygon(val roomId: Int, val corners: List<Offset>) {
+    val path: Path by lazy {
+        Path().apply {
+            moveTo(corners[0].x, corners[0].y)
+            corners.drop(1).forEach { lineTo(it.x, it.y) }
+            close()
+        }
+    }
+}
+
+/** The floor-plan outlines in cell space (y down, like the bitmap). */
+internal fun floorPlanPolygons(map: ParsedMap): List<PlanPolygon> = map.floorPlan.map { room ->
+    // mmToCell gives the top of the cell a point lies in; an outline runs along cell edges, so its
+    // corners sit one cell lower in bitmap space.
+    PlanPolygon(room.roomId, room.pointsMm.map { (x, y) -> map.mmToCell(x, y).let { Offset(it.x, it.y + 1f) } })
+}
+
+/** Per cell, the room id of the outline its centre lies in, or -1. */
+internal fun planCells(plan: List<PlanPolygon>, w: Int, h: Int): IntArray {
+    val out = IntArray(w * h) { -1 }
+    if (plan.isEmpty()) return out
+    for (y in 0 until h) {
+        val cy = (h - 1 - y) + 0.5f
+        for (x in 0 until w) {
+            val cx = x + 0.5f
+            for (room in plan) {
+                if (pointInPolygon(cx, cy, room.corners)) { out[y * w + x] = room.roomId; break }
+            }
+        }
+    }
+    return out
+}
+
+private fun pointInPolygon(px: Float, py: Float, pts: List<Offset>): Boolean {
+    var inside = false
+    var j = pts.lastIndex
+    for (i in pts.indices) {
+        val a = pts[i]
+        val b = pts[j]
+        if ((a.y > py) != (b.y > py) && px < (b.x - a.x) * (py - a.y) / (b.y - a.y) + a.x) inside = !inside
+        j = i
+    }
+    return inside
 }
 
 /** Cells within this distance (in cells) of a sub-pixel vote on its room, weighted by closeness. */

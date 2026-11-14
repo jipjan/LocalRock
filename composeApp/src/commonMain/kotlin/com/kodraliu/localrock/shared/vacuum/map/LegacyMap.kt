@@ -30,6 +30,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
     var curtains: List<MapZone>? = null
     var lowSpaceZones: List<MapZone>? = null
     var eraserZones: List<MapZone>? = null
+    var floorPlan: List<FloorPlanRoom> = emptyList()
     var furniture: List<MapZone>? = null
 
     var off = headerLen
@@ -107,6 +108,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
             BLOCK_CURTAINS -> curtains = parseCurtains(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_LOW_SPACE_ZONES -> lowSpaceZones = parseLowSpaceZones(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_ERASER_ZONES -> eraserZones = parseEraserZones(bytes, off, blockHeaderLen, blockDataLen)
+            BLOCK_FLOOR_PLAN -> floorPlan = parseFloorPlan(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_FURNITURE -> furniture = parseFurniture(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_SEGMENT_MATERIALS -> {
                 // One byte per segment id, indexed from 0 (on the S8 Pro Ultra, segment 21 read 4
@@ -204,6 +206,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         curtains = curtains,
         lowSpaceZones = lowSpaceZones,
         eraserZones = eraserZones,
+        floorPlan = floorPlan,
         furniture = furniture,
         originalGrid = pixels,
     )
@@ -235,6 +238,31 @@ internal fun parseLowSpaceZones(bytes: ByteArray, off: Int, headerLen: Int, data
         val p = body + i * 20
         quadAt(bytes, p + 4, ZoneKind.LOW_SPACE, listOf(u32(bytes, p)))
     }
+}
+
+/**
+ * Block 55 (`zoneLines` in the a296 plugin, feature bit 122 FloorPlanMap): per room a u16 room id, a
+ * u16 point count and a u16 point size, then the points: u16 x and u16 y in mm and the rest of the
+ * point (a u16 on an a296: 1 along a wall, other values where the edge meets another room). Entries
+ * that run past the block end are dropped.
+ */
+internal fun parseFloorPlan(bytes: ByteArray, off: Int, headerLen: Int, dataLen: Int): List<FloorPlanRoom> {
+    val count = if (headerLen >= 12) u32(bytes, off + 8) else 0
+    val end = off + headerLen + dataLen
+    var p = off + headerLen
+    val rooms = mutableListOf<FloorPlanRoom>()
+    repeat(count) {
+        if (p + 6 > end) return rooms
+        val id = u16(bytes, p)
+        val n = u16(bytes, p + 2)
+        val size = u16(bytes, p + 4)
+        if (size < 4 || p + 6 + n * size > end) return rooms
+        val points = List(n) { i -> u16(bytes, p + 6 + i * size) to u16(bytes, p + 8 + i * size) }
+        val flags = List(n) { i -> if (size >= 6) u16(bytes, p + 10 + i * size) else 0 }
+        if (n >= 3) rooms += FloorPlanRoom(id, points, flags)
+        p += 6 + n * size
+    }
+    return rooms
 }
 
 /** Block 47: per map-eraser area a u32 type (0 drawn by the user, others suggested by the robot) and eight u16 corners. */
@@ -355,6 +383,7 @@ private const val BLOCK_CURTAINS = 59
 
 // From the a296 plugin's map block table (`eraserZone`, saved with `app_set_beautify_blocks`).
 private const val BLOCK_ERASER_ZONES = 47
+private const val BLOCK_FLOOR_PLAN = 55
 
 /**
  * Restriction blocks that are not parsed: 19 no-carpet areas, 23 no-vacuum areas, 30 cliff areas,
