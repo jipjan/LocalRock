@@ -40,8 +40,8 @@ class BetaFeaturesTest {
     fun features_without_a_known_bit_are_always_probed() {
         assertEquals(
             listOf(
-                "carpet_boost", "dust_collection_switch", "follow_ground_material", "identify_furniture",
-                "identify_ground_material", "offline_map", "priority_carpet", "sway_arm_door_sill",
+                "carpet_boost", "dust_collection_switch", "fill_light", "follow_ground_material", "have_pets",
+                "identify_furniture", "identify_ground_material", "offline_map", "priority_carpet", "sway_arm_door_sill",
             ),
             supportedBetaFeatures(null).map { it.id }.sorted(),
         )
@@ -163,7 +163,12 @@ class BetaFeaturesTest {
     fun advertised_features_without_a_switch_are_listed_by_name() {
         val set = "0000000000119418CCD57EFDA869B6DDDBFF8F7F7EFEFFFF"
         val listed = unlistedAdvertisedFeatures(set).map { it.name }
-        assertTrue("Matter" in listed)
+        assertTrue("Map eraser" in listed)
+        assertTrue("Curtains on the map" in listed)
+        // Bits with nothing to switch (Matter needs Roborock's cloud) are not listed as missing.
+        assertFalse("Matter" in listed)
+        // Bits handled on another page (vacuum then mop) are not listed either.
+        assertFalse("Clean then mop mode" in listed)
         // Bit 80 now has a switch (Detach mops automatically), so it is no longer listed as missing.
         assertFalse("Auto tear down mop" in listed)
         assertFalse("Gap deep clean" in listed)
@@ -183,5 +188,23 @@ class BetaFeaturesTest {
         assertEquals(listOf(AdvertisedFeature(89, "Mechanical arm mode")), unlistedAdvertisedFeatures("2" + "0".repeat(22)))
         assertEquals(emptyList(), unlistedAdvertisedFeatures(null))
         assertEquals(emptyList(), unlistedAdvertisedFeatures(""))
+    }
+
+    @Test
+    fun a_camera_option_changes_only_its_own_bit() {
+        val pets = supportedBetaFeatures(null).first { it.id == "have_pets" }
+        // Captured: 387 with "I have pets" off, 419 with it on.
+        assertEquals(419, bitmaskWithBit(387, pets, 1))
+        assertEquals(387, bitmaskWithBit(419, pets, 0))
+        val light = supportedBetaFeatures(null).first { it.id == "fill_light" }
+        assertEquals(385, bitmaskWithBit(387, light, 0))
+    }
+
+    @Test
+    fun a_camera_option_is_read_from_the_bitmask() {
+        val json = kotlinx.serialization.json.Json
+        val pets = supportedBetaFeatures(null).first { it.id == "have_pets" }
+        assertEquals(1, readFeatureReply(pets, json.parseToJsonElement("[419]"))?.second)
+        assertEquals(0, readFeatureReply(pets, json.parseToJsonElement("[387]"))?.second)
     }
 }

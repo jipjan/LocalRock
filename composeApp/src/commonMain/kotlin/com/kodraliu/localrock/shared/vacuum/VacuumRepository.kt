@@ -1130,7 +1130,14 @@ class VacuumRepository(
     /** Sets a feature to [value]: 0/1 for a switch, one of its choices for a picker. */
     suspend fun setBetaFeature(id: String, value: Int) {
         val current = _betaFeatures.value.firstOrNull { it.def.id == id } ?: return
-        val candidates = featureSetParamCandidates(current.def, current.key, value)
+        val candidates = if (current.def.bitmaskWrite) {
+            // Read the whole bitmask now, so other options in it (set elsewhere meanwhile) are kept.
+            val raw = parseBetaReply(session.sendCommandRaw(current.def.getMethod, JsonArray(emptyList())).requireOk(current.def.getMethod).result)?.second
+                ?: throw IllegalStateException("The robot did not report ${current.def.getMethod}")
+            listOf(JsonArray(listOf(JsonPrimitive(bitmaskWithBit(raw, current.def, value)))))
+        } else {
+            featureSetParamCandidates(current.def, current.key, value)
+        }
         var last: V1Response? = null
         for (i in betaSetTryOrder(candidates.size, betaSetAcceptedShape[id])) {
             last = session.sendCommandRaw(current.def.setMethod, candidates[i])

@@ -47,6 +47,12 @@ data class BetaFeatureDef(
     val unlessBit: Int? = null,
     /** Send the set params as `[{key: n}]` only, as the official app does for this command. */
     val wrapSet: Boolean = false,
+    /**
+     * With [readBit] and no [readField]: the reply is one number holding several options (the camera's
+     * `get_camera_status`, e.g. `[419]`), and a change is written back as the whole number with only
+     * this bit changed, `[n]`, as the official app does with `set_camera_status`.
+     */
+    val bitmaskWrite: Boolean = false,
 )
 
 private const val GET_ROBOT_SETTING = "app_get_robot_setting"
@@ -85,6 +91,31 @@ private fun statusBitSwitch(
     getMethod = "get_offline_map_status", setMethod = setMethod, section = section,
     readField = "common_switch_status", readBit = statusBit, setKey = "status",
 )
+
+/**
+ * One bit of the camera's option bitmask (`get_camera_status` / `set_camera_status [n]`). Bits seen on an
+ * a296 with the official app (2026-11-14): 2 fill light automatic (385 ↔ 387), 32 "I have pets" (387 →
+ * 419), 4096 Pet Snaps (419 ↔ 4515). Bit 4 (0x4) is the remote-viewing authorization and cannot be set.
+ */
+private fun cameraBitSwitch(
+    id: String,
+    bitIndex: Int,
+    title: String,
+    description: String,
+    bit: Int?,
+    section: FeatureSection,
+    choices: List<Pair<Int, String>>? = null,
+) = BetaFeatureDef(
+    id = id, title = title, description = description, bit = bit,
+    getMethod = "get_camera_status", setMethod = "set_camera_status", section = section,
+    choices = choices, readBit = bitIndex, bitmaskWrite = true,
+)
+
+/** The value to write for [def] set to [value] (0/1), when the robot's whole bitmask is [raw]. */
+fun bitmaskWithBit(raw: Int, def: BetaFeatureDef, value: Int): Int {
+    val mask = 1 shl requireNotNull(def.readBit)
+    return if (value == 1) raw or mask else raw and mask.inv()
+}
 
 val BetaFeatureDefs = listOf(
     BetaFeatureDef(
@@ -331,6 +362,42 @@ val BetaFeatureDefs = listOf(
         readBit = 0,
         setKey = "status",
     ),
+    cameraBitSwitch(
+        id = "fill_light", bitIndex = 1,
+        title = "Fill light", description = "Lights up dark spots so obstacles are recognised better",
+        bit = null, section = FeatureSection.OBSTACLE,
+        choices = listOf(1 to "Automatic", 0 to "Off"),
+    ),
+    cameraBitSwitch(
+        id = "have_pets", bitIndex = 5,
+        title = "I have pets", description = "Watches out for pet waste and cleans pet areas with more care",
+        bit = null, section = FeatureSection.OBSTACLE,
+    ),
+    cameraBitSwitch(
+        id = "pet_snaps", bitIndex = 12,
+        title = "Pet Snaps", description = "Takes photos of your pets while cleaning",
+        bit = 50, section = FeatureSection.OBSTACLE,
+    ),
+    BetaFeatureDef(
+        id = "voice_assistant",
+        title = "Voice assistant",
+        description = "The robot listens for spoken commands; it processes your voice to do so",
+        bit = 37,
+        getMethod = "get_voice_service_switch",
+        setMethod = "set_voice_service_switch",
+        section = FeatureSection.ROBOT,
+        setKey = "data",
+    ),
+    robotSettingSwitch(
+        id = "product_experience", name = "product_experience_status",
+        title = "Share usage data", description = "Lets the robot send usage data to Roborock to improve the product",
+        bit = 121, section = FeatureSection.ROBOT,
+    ),
+    robotSettingSwitch(
+        id = "voice_experience", name = "voice_experience_status",
+        title = "Share voice data", description = "Lets the robot send voice recordings to Roborock to improve recognition",
+        bit = 121, section = FeatureSection.ROBOT,
+    ),
 )
 
 /** The features this robot's `newFeatureSet` advertises. */
@@ -351,6 +418,17 @@ fun List<BetaFeatureState>.inSection(section: FeatureSection): List<BetaFeatureS
  * handles elsewhere are left out of that list.
  */
 private val AdvertisedFeatureNames = mapOf(
+    71 to "Map eraser",
+    76 to "Cleaning history timeline",
+    85 to "Return to dock midway",
+    91 to "Cleaning timeline",
+    100 to "Dust collection count",
+    108 to "Cleaning efficiency",
+    122 to "Floor plan map",
+    136 to "Stair and door sill marks",
+    138 to "Curtains on the map",
+    147 to "Carpeted stairs",
+
     32 to "Two-key real-time video",
     33 to "Two-key video while charging",
     34 to "Dirty replenish clean",
@@ -375,11 +453,9 @@ private val AdvertisedFeatureNames = mapOf(
     67 to "Matter",
     69 to "Workday and holiday",
     70 to "Clean direct status",
-    71 to "Map eraser",
     72 to "Optimize battery",
     73 to "Video while charging and standby",
     75 to "Long-haired carpet",
-    76 to "Clean history timeline",
     77 to "Max zones opened",
     78 to "Exhibition function",
     79 to "LDS lifting",
@@ -388,24 +464,20 @@ private val AdvertisedFeatureNames = mapOf(
     82 to "Side brush up and down",
     83 to "Dry interval timer",
     84 to "UVC sterilize",
-    85 to "Midway back to dock",
     86 to "Main brush up and down",
     87 to "Egg dance mode",
     89 to "Mechanical arm mode",
-    91 to "Clean timeline",
     93 to "Clean then mop mode",
     94 to "Type identify",
     96 to "Get particular status",
     97 to "3D mapping inner test",
     98 to "Sync server name",
     99 to "Show arm overload",
-    100 to "Collect dust count",
     101 to "App stop grasp",
     102 to "Clean then mop with repeat",
     104 to "Side brush lift on carpet",
     105 to "Detect wire carpet",
     107 to "Soak and wash",
-    108 to "Clean efficiency",
     109 to "Back wash new smart",
     110 to "Dual-band Wi-Fi",
     111 to "Program mode",
@@ -420,8 +492,49 @@ private val AdvertisedFeatureNames = mapOf(
     128 to "Roller mop",
 )
 
-/** Bits that have their own place in the app (SmartPlan, water slide), so they are not listed as missing. */
-private val HandledElsewhereBits = setOf(55, 106)
+/**
+ * Bits that have their own place in the app, so they are not listed as missing (names from the
+ * official a296 plugin's NewFeatureStrBit table).
+ */
+private val HandledElsewhereBits = setOf(
+    55, 106, // SmartPlan, water slide (Vac & Mop sheet)
+    35, 112, // AutoDelivery, CleanFluidDelivery: cleaning fluid (dock)
+    41, // HotWashTowel: washing water temperature (dock)
+    42, // FloorDirCleanAnyTime: cleaning direction (floor)
+    47, 51, // ExactCustomMode, CustomCleanModeCount: per-room settings
+    53, // AutoCollection2: auto-empty (dock)
+    83, // DryIntervalTimer: mop drying at a set time (dock)
+    93, 102, 114, // CleanThenMopMode, CtmWithRepeat, OverSeaCTM: vacuum first, then mop
+    107, 109, // SoakAndWash, BackWashNewSmart: wash modes (dock)
+    113, // CarpetLongHairedEx: adaptive lift (carpet)
+    118, // TwoGearsNoCollision: collision mode (obstacles)
+    140, // SupportMultipleDNDTimePeriods: Do Not Disturb
+    32, 33, 73, // TwoKeyRealTimeVideo, TwoKeyRTVInCharging, ActivateVideoChargingAndStandby: camera
+)
+
+/**
+ * Bits that tell the app how the robot behaves, with nothing to switch: the official app has no setting
+ * for them either (it changes a label, a limit or a protocol detail). They are left out of the list.
+ */
+private val NoSettingBits = setOf(
+    38, // NewEndpoint: which Roborock host serves resources
+    52, // NewAIRecognition
+    57, // NoNeedCarpetPressSet: no carpet pressure setting needed
+    62, // MinBattery15ToCleanTask: starts a clean from 15 % battery
+    64, // ObjectDetectCheck
+    67, // Matter: pairing with a Matter hub, which needs Roborock's cloud
+    77, // MaxZoneOpened: more zones per clean
+    86, // SupportMainBrushUpDown: lifts the main brush by itself
+    87, // EggDanceMode: a demo
+    96, // SupportGetParticularStatus
+    98, // SyncServerName
+    99, // ShouldShowArmOverLoad: a message for robots with an arm
+    101, // supportApiAppStopGrasp: robots with an arm
+    110, // DualBandWiFi
+    119, // CarpetShapeType: how carpets are drawn on the map
+    143, // CancelOneTimeSweepThenMop
+    148, // SupportWashPhasePumping
+)
 
 /** A `newFeatureSet` bit the robot advertises that has no switch here; [name] is null when python-roborock has none. */
 data class AdvertisedFeature(val bit: Int, val name: String?)
@@ -429,7 +542,7 @@ data class AdvertisedFeature(val bit: Int, val name: String?)
 /** What the robot advertises in `newFeatureSet` (bit 32 and up) that has no switch here, in bit order. */
 fun unlistedAdvertisedFeatures(newFeatureSet: String?): List<AdvertisedFeature> {
     val s = newFeatureSet ?: return emptyList()
-    val covered = BetaFeatureDefs.mapNotNull { it.bit }.toSet() + HandledElsewhereBits
+    val covered = BetaFeatureDefs.mapNotNull { it.bit }.toSet() + HandledElsewhereBits + NoSettingBits
     return (32 until s.length * 4)
         .filter { it !in covered && newFeatureBit(s, it) }
         .map { AdvertisedFeature(it, AdvertisedFeatureNames[it]) }
@@ -462,6 +575,10 @@ fun featureReadParams(def: BetaFeatureDef): JsonElement =
  * is read out of a larger answer (such as `get_status`), optionally one bit of it.
  */
 fun readFeatureReply(def: BetaFeatureDef, result: JsonElement?): Pair<String?, Int>? {
+    if (def.bitmaskWrite) {
+        val raw = parseBetaReply(result)?.second ?: return null
+        return null to ((raw shr requireNotNull(def.readBit)) and 1)
+    }
     val field = def.readField ?: return parseBetaReply(result)
     val obj = (if (result is JsonArray) result.firstOrNull() else result) as? JsonObject ?: return null
     val raw = (obj[field] as? JsonPrimitive)?.intOrNull ?: return null
