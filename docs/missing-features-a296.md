@@ -83,3 +83,28 @@ official app sends the last two every time it opens the robot, even through the 
 ## Not tested on this robot because it lacks them
 Intensive corner mopping (`set_corner_clean_mode`) and the distance-based custom water flow
 (`set_water_box_distance_off`) are built behind their feature bits; this a296 has neither.
+
+## Remote viewing (Kijken op afstand): paused 2026-11-14, to be finished
+
+Done:
+- Server (bezemer-wit-server): TURN in provided mode (host api-roborock.stomp.cloud, UDP 3478 and
+  49160–49179 published and forwarded on the router; a STUN request from outside answers), and the
+  14-character camera domain `rr.stomp.cloud` in Caddy with a valid certificate. `POST
+  https://rr.stomp.cloud/iot.roborock.com/fwapi/createca` returns the relay details.
+- LocalRock pairing has a Camera domain field; the robot was re-paired with `rr.stomp.cloud` and
+  fetched createca from it (20:02 UTC).
+- Captured when the official app began activating: `set_user_privacy {"agree":1,"owner":1}`,
+  `set_camera_status [4515]` (419 + 4096) and 15 s later `[419]` again. So bit 4096 may belong to
+  activation rather than (only) Pet Snaps; check before relying on the Pet Snaps switch.
+
+Still to do (needs the robot to beep/speak and the power button pressed, so only when it may make noise):
+- Finish the activation in the official app while recording: the remote-view pattern
+  (`set_homesec_password`), the two-key `set_camera_status` request and the power-button press.
+- Build activation and the live view into LocalRock (CameraLiveSession already does the WebRTC part)
+  and test a stream through the relay.
+
+## Other things captured, not built yet
+
+- Past clean: `get_clean_record_map {"start_time": begin}` answers `["ok"]` and the map follows as a
+  map message; `get_clean_detail {"begin":…, "from":0, "id":0, "type":0}` (then `from` 47) is the
+  timeline (bits 76/91).
