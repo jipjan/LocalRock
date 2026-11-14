@@ -58,14 +58,14 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Huisdieren: Reinigingsinstellingen (pet cleaning settings) | Not opened yet; probably pet supplies deep clean (built). |
 | Kaarten beheren (maps): save, multiple floors, backup | Built (map list, switch, backup/restore, rename). |
 | Kaart bewerken: splitsen, combineren, naam, verboden zones, type vloer, tapijt, volgorde | Built. |
-| Kaart bewerken: **Drempel** (door sills) | Built (`app_set_smart_door_sill`). The a296 app also sends `attrs [10]` and `side_heights`; not yet tried whether the a296 takes LocalRock's shorter form. |
+| Kaart bewerken: **Drempel** (door sills) | Built (`app_set_smart_door_sill`). The a296 takes LocalRock's shorter form without `attrs`/`side_heights` (tested). |
 | Kaart bewerken: **Meubels** (furniture) | Built: the map editor's Furniture tool with all 20 types (`save_furnitures`, map block 25). |
 | Kaart bewerken: **Gordijn** (curtains) | Built: the map editor's Curtain tool (`app_set_curtains`, map block 59). |
 | Kaart bewerken: **Onder meubels** (under furniture) | Built: the map editor's Under furniture tool (`app_set_low_space_zones`, map block 52). |
 | Kaart bewerken: tapijt (rectangular and round) | Built (`set_carpet_area` with flags). Ignoring a detected carpet (`set_ignore_carpet_zone`) is not in this robot's editor. |
 | Stemassistent: switch | Built (off; turning it on lets the robot process your voice). |
 | Stemassistent: Taal (voice pack) | Built, served by the local server. |
-| Stemassistent: Volume | The robot volume is built; the separate voice-chat volume (`set_voice_chat_volume`) is missing. |
+| Stemassistent: Volume | Built (robot volume). `set_voice_chat_volume {"volume"}` is not this: in the plugin it is the talk-back volume of the remote-viewing screen, so it comes with remote viewing. |
 | Stemassistent: Chatgeschiedenis (chat history) | Missing: `get_voice_history`, `get_voice_history_summary`, `delete_all_voice_history`. |
 | Kijken op afstand (remote viewing) | Built in LocalRock (needs the server's TURN relay and the robot's camera password). |
 | Verbinding maken met Matter | Not possible locally (needs Roborock's cloud and a Matter hub). |

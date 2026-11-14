@@ -167,7 +167,7 @@ four corners per shape (x1,y1,x2,y2,x3,y3,x4,y4).
 | Tool (Dutch label) | Command | Notes |
 |---|---|---|
 | Gordijn (curtain) | `app_set_curtains {"map_index":0,"zones":[[x1,y1,…,x4,y4,0,0], …]}` | the whole list each time; `"zones":[]` removes all. A 2.3 m × 0.1 m strip by default |
-| Drempel (door sill) | `app_set_smart_door_sill {"attrs":[10],"map_index":0,"side_heights":[[0,0,0,0]],"sides_infos":[[0,0,0,0]],"zones":[[2,x1,y1,…,y4]]}` | whole list; all lists empty removes all. LocalRock sends the S8 form without `attrs`/`side_heights` (not yet tried on an a296) |
+| Drempel (door sill) | `app_set_smart_door_sill {"attrs":[10],"map_index":0,"side_heights":[[0,0,0,0]],"sides_infos":[[0,0,0,0]],"zones":[[2,x1,y1,…,y4]]}` | whole list; all lists empty removes all. LocalRock sends the S8 form without `attrs`/`side_heights`; the a296 accepts it and the sill shows in map block 28 (tested 2026-11-14). The plugin fills `attrs`/`side_heights` from the robot's own sill data (block 31), which is empty here |
 | Meubels (furniture) | `save_furnitures {"data":[[op,id,x1,y1,…,y4,type,subtype,1], …],"map_flag":0}` | changes only: op 1 = add (id -1), op 0 = delete (`[0,id]`). Types below |
 | Map eraser (bit 71; not opened in the official app) | `app_set_beautify_blocks {"map_index":0,"data":[[type,x1,y1,…,y4], …]}` | the full list each time (type 0 = drawn by the user; the robot's suggestions keep their type); `"data":[]` removes them all. The robot itself blanks the map pixels inside, and puts them back when the area is removed. Tested by LocalRock 2026-11-14 |
 | Onder meubels (under furniture) | `app_set_low_space_zones {"map_index":0,"zone_data":[[op,x1,y1,…,y4], …]}` | op 0 = add, op 2 = delete that zone; the map shows the change after a reload |
