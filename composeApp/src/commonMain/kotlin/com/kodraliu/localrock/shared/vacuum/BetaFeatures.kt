@@ -67,7 +67,11 @@ private fun robotSettingSwitch(
     choices = choices, robotSetting = name,
 )
 
-/** A switch read as one bit of `get_status`'s `switch_status`, written with its own `{"status": n}` setter. */
+/**
+ * A switch read as one bit of the option bitmask `get_offline_map_status` answers as
+ * `{"common_switch_status": n}` (bit 0 offline map, 3 carpets first, 4 re-mop, 5 cross carpets; an
+ * a296's get_status does not carry it), written with its own `{"status": n}` setter.
+ */
 private fun statusBitSwitch(
     id: String,
     setMethod: String,
@@ -78,8 +82,8 @@ private fun statusBitSwitch(
     section: FeatureSection,
 ) = BetaFeatureDef(
     id = id, title = title, description = description, bit = bit,
-    getMethod = "get_status", setMethod = setMethod, section = section,
-    readField = "switch_status", readBit = statusBit, setKey = "status",
+    getMethod = "get_offline_map_status", setMethod = setMethod, section = section,
+    readField = "common_switch_status", readBit = statusBit, setKey = "status",
 )
 
 val BetaFeatureDefs = listOf(

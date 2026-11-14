@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -222,6 +223,7 @@ fun VacuumSettingsScreen(
         )
         SettingsRoute.Carpet -> CarpetScreen(
             carpetMode = robotSettings.carpetMode,
+            modes = viewModel.carpetModes,
             features = betaFeatures.inSection(FeatureSection.CARPET),
             onCarpetModeChange = { mode -> viewModel.report { it.setCarpetMode(mode) } },
             onToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
@@ -1360,6 +1362,8 @@ private fun SimplePickerDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            // The whole row picks the option, not only the small radio button.
+                            .clickable(enabled = enabled) { onSelect(index) }
                             .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -1587,13 +1591,13 @@ private fun FeatureSectionScreen(
 @Composable
 private fun CarpetScreen(
     carpetMode: Int,
+    modes: List<Pair<Int, String>>,
     features: List<BetaFeatureState>,
     onCarpetModeChange: (Int) -> Unit,
     onToggle: (String, Int) -> Unit,
     onBack: () -> Unit,
 ) {
     var showDialog by remember { mutableStateOf(false) }
-    val options = listOf("Avoid carpet", "Standard", "Carpet boost")
     Scaffold(
         topBar = {
             TopAppBar(
@@ -1609,7 +1613,7 @@ private fun CarpetScreen(
                         icon = Icons.Default.GridView,
                         iconTint = AppColors.Good,
                         title = "Carpet mode",
-                        subtitle = options.getOrElse(carpetMode) { "Standard" },
+                        subtitle = modes.firstOrNull { it.first == carpetMode }?.second ?: "Unknown ($carpetMode)",
                         onClick = { showDialog = true },
                     )
                 }
@@ -1623,9 +1627,9 @@ private fun CarpetScreen(
     if (showDialog) {
         SimplePickerDialog(
             title = "Carpet mode",
-            options = options,
-            selected = carpetMode,
-            onSelect = { onCarpetModeChange(it); showDialog = false },
+            options = modes.map { it.second },
+            selected = modes.indexOfFirst { it.first == carpetMode },
+            onSelect = { onCarpetModeChange(modes[it].first); showDialog = false },
             onDismiss = { showDialog = false },
         )
     }

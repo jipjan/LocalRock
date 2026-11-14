@@ -33,6 +33,16 @@ class CleanSequenceTypeTest {
     }
 }
 
+class CarpetModeOptionsTest {
+    @Test
+    fun a296_gets_the_official_carpet_modes() {
+        // Captured on an a296: avoid 0, vacuum only 3, vacuum and mop 2.
+        val a296 = "0000000000199518CED77EFDA8E9BEDDDBFF8F7F7EFEFFFF"
+        assertEquals(listOf(0, 3, 2), carpetModeOptions(a296).map { it.first })
+        assertEquals(listOf(0, 1, 2), carpetModeOptions(null).map { it.first })
+    }
+}
+
 class DryerStartTest {
 
     @Test

@@ -102,6 +102,19 @@ internal fun dryerSettingBody(reported: JsonObject?, enabled: Boolean, dryTimeSe
     return JsonObject(body)
 }
 
+/**
+ * The carpet modes to offer, as set_carpet_clean_mode values. Robots with bit 49 (carpet custom clean,
+ * such as the a296) get the official app's choices, captured: 0 avoid, 3 vacuum only (the mops stay
+ * off the carpet), 2 vacuum and mop; crossing carpets is its own switch there. Other robots keep the
+ * list LocalRock had.
+ */
+fun carpetModeOptions(newFeatureSet: String?): List<Pair<Int, String>> =
+    if (newFeatureBit(newFeatureSet, 49)) {
+        listOf(0 to "Avoid carpet", 3 to "Vacuum only", 2 to "Vacuum and mop")
+    } else {
+        listOf(0 to "Avoid carpet", 1 to "Standard", 2 to "Carpet boost")
+    }
+
 const val DRY_START_OFF = 0
 const val DRY_START_AFTER_CLEANING = 1
 const val DRY_START_SCHEDULED = 2

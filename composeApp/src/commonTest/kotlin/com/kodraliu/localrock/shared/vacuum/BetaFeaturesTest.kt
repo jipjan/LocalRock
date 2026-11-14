@@ -86,12 +86,16 @@ class BetaFeaturesTest {
     }
 
     @Test
-    fun status_bit_features_read_one_bit_of_get_status() {
+    fun status_bit_features_read_one_bit_of_the_option_bitmask() {
         val def = BetaFeatureDefs.first { it.id == "dirty_replenish" }
-        // switch_status 24 = bits 3 and 4: carpets first and re-mop on.
-        val status = Json.parseToJsonElement("""[{"state":8,"switch_status":24}]""")
-        assertEquals("status" to 1, readFeatureReply(def, status))
-        assertEquals("status" to 0, readFeatureReply(def, Json.parseToJsonElement("""[{"switch_status":8}]""")))
+        assertEquals("get_offline_map_status", def.getMethod)
+        // 24 = bits 3 and 4: carpets first and re-mop on.
+        assertEquals("status" to 1, readFeatureReply(def, Json.parseToJsonElement("""{"common_switch_status":24}""")))
+        // An a296 with carpets first on and re-mop off answered 10.
+        val a296 = Json.parseToJsonElement("""{"common_switch_status":10}""")
+        assertEquals("status" to 0, readFeatureReply(def, a296))
+        assertEquals("status" to 1, readFeatureReply(BetaFeatureDefs.first { it.id == "priority_carpet" }, a296))
+        assertEquals("status" to 0, readFeatureReply(BetaFeatureDefs.first { it.id == "cross_carpet" }, a296))
         assertEquals("""{"status":1}""", featureSetParamCandidates(def, null, 1).first().toString())
     }
 

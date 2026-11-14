@@ -41,7 +41,7 @@ data class VacuumStatus(
     @SerialName("seq_type") val seqType: Int? = null,
     /** How many passes the next clean makes. */
     @SerialName("repeat") val repeat: Int? = null,
-    /** Option bits: 3 carpets first, 4 re-mop dirty spots, 5 cross carpets (a296 plugin, confirmed by captures). */
+    /** Option bits on some models; an a296 reports them through get_offline_map_status instead (common_switch_status). */
     @SerialName("switch_status") val switchStatus: Int? = null,
 ) {
     val vacuumThenMop: Boolean? get() = seqType?.let { it == SEQ_TYPE_VACUUM_THEN_MOP }

@@ -7,6 +7,7 @@ import com.kodraliu.localrock.shared.messages.MessageSeverity
 import com.kodraliu.localrock.shared.model.Scene
 import com.kodraliu.localrock.shared.model.SceneRunResult
 import com.kodraliu.localrock.shared.model.namesAVersion
+import com.kodraliu.localrock.shared.vacuum.carpetModeOptions
 import com.kodraliu.localrock.shared.vacuum.newFeatureBit
 import com.kodraliu.localrock.shared.vacuum.DockCapabilities
 import com.kodraliu.localrock.shared.vacuum.FeatureSection
@@ -47,6 +48,7 @@ class VacuumViewModel(
     val dockCapabilities = DockCapabilities(modelName, device.featureSet, device.newFeatureSet)
     val betaFeatureDefs = supportedBetaFeatures(device.newFeatureSet)
     val unlistedFeatures = unlistedAdvertisedFeatures(device.newFeatureSet)
+    val carpetModes = carpetModeOptions(device.newFeatureSet)
     val showsBetaFeatures = betaFeatureDefs.any { it.section == FeatureSection.BETA && it.bit != null } || unlistedFeatures.isNotEmpty()
     val repository: VacuumRepository = container.vacuumRepositoryFor(device)
 
