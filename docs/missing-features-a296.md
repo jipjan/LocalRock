@@ -37,7 +37,6 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Bit | Plugin name | What it is | Commands (plugin) | Effort |
 |---|---|---|---|---|
 | 71 | MapEraser | Erase stray bits from the map | `app_set_beautify_blocks` | map editor tool |
-| 76, 91 | CleanHistoryTimeLine, CleanTimeLine | Timeline of a clean (what happened when) in the history | `get_clean_record` details, `get_clean_record_map(_v2)` | history detail page |
 | 85 | MidwayBackToDock | Returns to the dock mid-clean to wash/empty; shown in the clean's status | not found in the capture | needs a capture during a clean |
 | 122 | FloorPlanMap | Floor-plan style map view | map rendering | large |
 | 48, 59, 68, 74, 95, 103, 123, 126, 127 | (not in the plugin's table) | unknown | – | – |
@@ -105,6 +104,15 @@ Still to do (needs the robot to beep/speak and the power button pressed, so only
 
 ## Other things captured, not built yet
 
-- Past clean: `get_clean_record_map {"start_time": begin}` answers `["ok"]` and the map follows as a
-  map message; `get_clean_detail {"begin":…, "from":0, "id":0, "type":0}` (then `from` 47) is the
-  timeline (bits 76/91).
+- Voice chat history: `get_voice_history_summary []` → `{"min_id":0,"max_id":0,"count":0}`, then
+  `get_voice_history {"min_id","max_id"}`. This robot's history is empty (voice assistant off), so the
+  entry format is unknown; build once there is a conversation to read.
+- Pet album: `get_pet_album {from_task, from_photo, max_task_count, max_photo_count, photo_type,
+  end_point, security}` and `get_pet_album_photos` (encrypted like obstacle photos). Empty here
+  (Pet Snaps off), so not built.
+
+## Built after the first list
+
+- Past clean: History → tap a clean: its map with the path (`get_clean_record_map {"start_time"}`,
+  answered through the map channel) and a timeline of state changes with battery (`get_clean_detail`
+  event 11). Other event types (rooms, washes, obstacles) are not decoded yet.

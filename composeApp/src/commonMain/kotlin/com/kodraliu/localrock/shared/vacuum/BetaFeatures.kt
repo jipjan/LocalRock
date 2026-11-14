@@ -512,6 +512,7 @@ private val HandledElsewhereBits = setOf(
     32, 33, 73, // TwoKeyRealTimeVideo, TwoKeyRTVInCharging, ActivateVideoChargingAndStandby: camera
     100, 108, // CollectDustCountShow, CleanEfficiency: cleaning history
     138, // Curtain: the map editor's Curtain tool
+    76, 91, // CleanHistoryTimeLine, CleanTimeLine: History → a clean's map and timeline
 )
 
 /**

@@ -164,6 +164,8 @@ class BetaFeaturesTest {
         val set = "0000000000119418CCD57EFDA869B6DDDBFF8F7F7EFEFFFF"
         val listed = unlistedAdvertisedFeatures(set).map { it.name }
         assertTrue("Map eraser" in listed)
+        // The timeline (bits 76 and 91) is in the history now.
+        assertFalse("Cleaning timeline" in listed)
         // Curtains (bit 138) have the map editor's Curtain tool now.
         assertFalse("Curtains on the map" in listed)
         // Bits with nothing to switch (Matter needs Roborock's cloud) are not listed as missing.
