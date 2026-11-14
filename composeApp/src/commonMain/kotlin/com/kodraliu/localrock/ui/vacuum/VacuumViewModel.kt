@@ -52,7 +52,7 @@ class VacuumViewModel(
     val unlistedFeatures = unlistedAdvertisedFeatures(device.newFeatureSet)
     val carpetModes = carpetModeOptions(device.newFeatureSet)
     val showsBetaFeatures = betaFeatureDefs.any { it.section == FeatureSection.BETA && it.bit != null } || unlistedFeatures.isNotEmpty()
-    val repository: VacuumRepository = container.vacuumRepositoryFor(device)
+    val repository: VacuumRepository = container.vacuumRepositoryFor(device).also { it.restoreCachedFeatures(betaFeatureDefs) }
 
     // The robot's own answer wins; the server's record is the fallback until it has replied.
     val supportsSmartPlan: StateFlow<Boolean> = repository.robotFeatureSet

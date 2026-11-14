@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import androidx.compose.foundation.layout.statusBarsPadding
 import com.kodraliu.localrock.shared.vacuum.MAX_DND_PERIODS
 import com.kodraliu.localrock.shared.vacuum.DndPeriod
 import androidx.compose.foundation.clickable
@@ -182,11 +183,16 @@ fun VacuumSettingsScreen(
     val betaFeatures by repository.betaFeatures.collectAsState()
     val betaFeaturesLoading by repository.betaFeaturesLoading.collectAsState()
 
-    // Every feature the robot reports is read once, so a page with none is not offered.
+    val reading by repository.reading.collectAsState()
+
+    // The options come from the cache first (what the robot said last time) and are read again each
+    // time settings open; the pages keep showing the cached values until the robot has answered.
     LaunchedEffect(Unit) {
-        if (betaFeatures.isEmpty()) runCatching { repository.fetchBetaFeatures(viewModel.betaFeatureDefs) }
+        runCatching { repository.fetchRobotFeatureSet() }
+        runCatching { repository.fetchBetaFeatures(viewModel.betaFeatureDefs) }
     }
 
+    Box(Modifier.fillMaxSize()) {
     when (route) {
         SettingsRoute.Root -> SettingsRootScreen(
             modelName = viewModel.modelName,
@@ -323,6 +329,13 @@ fun VacuumSettingsScreen(
                 onBack = { route = SettingsRoute.Root },
             )
         }
+    }
+    // A thin bar under the top bar while the robot is being asked; the values below are the last known.
+    if (reading) {
+        LinearProgressIndicator(
+            Modifier.fillMaxWidth().align(Alignment.TopCenter).statusBarsPadding().padding(top = 64.dp),
+        )
+    }
     }
 }
 

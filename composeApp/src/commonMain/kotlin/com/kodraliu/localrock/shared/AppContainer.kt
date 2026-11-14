@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.shared
 
+import com.kodraliu.localrock.shared.vacuum.CapabilityCacheStore
 import com.russhwolf.settings.Settings
 import com.kodraliu.localrock.shared.auth.AuthRepository
 import com.kodraliu.localrock.shared.auth.LoginApi
@@ -59,6 +60,9 @@ class AppContainer(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val appSettings: AppSettings = AppSettings(settings)
+
+    /** What each vacuum last reported about itself, so its settings pages show at once. */
+    private val capabilityCache = CapabilityCacheStore(settings)
 
     val messages: MessageCenter = MessageCenter()
 
@@ -431,6 +435,7 @@ class AppContainer(
             topicsProvider = topicsProvider,
             nowEpochSeconds = { currentEpochSeconds().toInt() },
             demo = isDemo,
+            capabilityCache = capabilityCache.takeUnless { isDemo },
         ).apply {
             setHomeRooms(deviceRepository.home.value?.rooms ?: emptyList())
         }

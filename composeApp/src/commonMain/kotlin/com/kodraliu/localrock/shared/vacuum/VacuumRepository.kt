@@ -55,7 +55,35 @@ class VacuumRepository(
     private val nowEpochSeconds: () -> Int,
     private val pollIntervalMs: Long = 5_000L,
     private val demo: Boolean = false,
+    /** Where what the robot reported is kept between runs; null keeps nothing (demo, tests). */
+    private val capabilityCache: CapabilityCacheStore? = null,
 ) {
+    private val duidForCache = duid
+    private val cached: CapabilityCache? = capabilityCache?.load(duid)
+
+    private val _reading = MutableStateFlow(0)
+
+    /** True while a settings page is being read from the robot, for a progress bar over cached values. */
+    val reading: StateFlow<Boolean> = _reading.map { it > 0 }.stateIn(
+        CoroutineScope(SupervisorJob() + Dispatchers.Default), SharingStarted.Eagerly, false,
+    )
+
+    private suspend fun <T> reading(block: suspend () -> T): T {
+        _reading.update { it + 1 }
+        try { return block() } finally { _reading.update { it - 1 } }
+    }
+
+    private fun persist() {
+        val store = capabilityCache ?: return
+        runCatching {
+            store.save(duidForCache, CapabilityCache(
+                featureSet = _robotFeatureSet.value,
+                features = _betaFeatures.value.takeIf { featuresRead }?.toCache() ?: cached?.features,
+                dock = _dockSettings.value.toCache(),
+            ))
+        }
+    }
+
     val session: VacuumSession = VacuumSession(
         localKey = localKey,
         mqtt = mqttClient,
@@ -107,17 +135,23 @@ class VacuumRepository(
     private val _robotSettings = MutableStateFlow(RobotSettings())
     val robotSettings: StateFlow<RobotSettings> = _robotSettings
 
-    private val _robotFeatureSet = MutableStateFlow<String?>(null)
+    // Starts from what the robot said last time, so features gated on its own flags don't appear late.
+    private val _robotFeatureSet = MutableStateFlow(cached?.featureSet)
+    private var featureSetFresh = false
 
-    /** The feature flags the robot reports itself; null until it has answered. */
+    /** The feature flags the robot reports itself; the cached ones until it has answered this run. */
     val robotFeatureSet: StateFlow<String?> = _robotFeatureSet
 
     suspend fun fetchRobotFeatureSet() {
-        if (_robotFeatureSet.value != null) return
-        _robotFeatureSet.value = featureSetFromInitStatus(session.getInitStatus().requireOk("app_get_init_status").result)
+        if (featureSetFresh) return
+        featureSetFromInitStatus(session.getInitStatus().requireOk("app_get_init_status").result)?.let {
+            _robotFeatureSet.value = it
+        }
+        featureSetFresh = true
+        persist()
     }
 
-    private val _dockSettings = MutableStateFlow(DockSettings())
+    private val _dockSettings = MutableStateFlow(cached?.dock?.toSettings() ?: DockSettings())
     val dockSettings: StateFlow<DockSettings> = _dockSettings
 
     private val _cleanSummary = MutableStateFlow<CleanSummary?>(null)
@@ -939,7 +973,9 @@ class VacuumRepository(
 
     // Each read stands alone: a Qrevo answers the volume as [45], the LED as [1] and the carpet mode
     // as [{...}], and one read that threw used to skip every read after it.
-    suspend fun fetchRobotSettings() {
+    suspend fun fetchRobotSettings() = reading { readRobotSettings() }
+
+    private suspend fun readRobotSettings() {
         suspend fun read(key: String?, ask: suspend () -> V1Response): Int? =
             runCatching { ask().result.asAnswerInt(key) }.getOrNull()
 
@@ -1004,16 +1040,38 @@ class VacuumRepository(
         )
     }
 
-    /** Stops at the first option the robot does not reply to, so an offline robot costs one timeout, not one per option. */
-    suspend fun fetchBetaFeatures(defs: List<BetaFeatureDef>) {
+    private var featuresRead = false
+
+    /** Options set while [fetchBetaFeatures] runs; their newer value wins over the one it read before. */
+    private val setDuringRead = mutableSetOf<String>()
+
+    /** Shows the options the robot reported last time, until [fetchBetaFeatures] has read them again. */
+    fun restoreCachedFeatures(defs: List<BetaFeatureDef>) {
+        if (_betaFeatures.value.isEmpty()) cached?.featureStates(defs)?.let { _betaFeatures.value = it }
+    }
+
+    /**
+     * Reads every option again. The list on screen stays until all have answered, then is replaced at
+     * once, so rows don't appear one by one. Stops at the first option the robot does not reply to, so
+     * an offline robot costs one timeout, not one per option, and keeps what was shown.
+     */
+    suspend fun fetchBetaFeatures(defs: List<BetaFeatureDef>) = reading {
         _betaFeaturesLoading.value = true
+        setDuringRead.clear()
         try {
             val states = mutableListOf<BetaFeatureState>()
+            var complete = true
             for (def in defs) {
-                val state = readBetaFeature(def) ?: break
+                val state = readBetaFeature(def)
+                if (state == null) { complete = false; break }
                 if (state.answered && state.toggleable) states += state
             }
-            _betaFeatures.value = states
+            if (complete || _betaFeatures.value.isEmpty()) {
+                val current = _betaFeatures.value.associateBy { it.def.id }
+                _betaFeatures.value = states.map { s -> if (s.def.id in setDuringRead) current[s.def.id] ?: s else s }
+                featuresRead = complete
+                if (complete) persist()
+            }
         } finally {
             _betaFeaturesLoading.value = false
         }
@@ -1040,12 +1098,39 @@ class VacuumRepository(
             if (last.error?.get("code")?.jsonPrimitive?.intOrNull !in BetaShapeRefusalCodes) break
         }
         val updated = readBetaFeature(current.def)?.takeIf { it.answered && it.toggleable }
-        if (updated != null) _betaFeatures.update { list -> list.map { if (it.def.id == id) updated else it } }
+        if (updated != null) {
+            if (_betaFeaturesLoading.value) setDuringRead += id
+            _betaFeatures.update { list -> list.map { if (it.def.id == id) updated else it } }
+            if (featuresRead) persist()
+        }
         last?.requireOk(current.def.setMethod)
     }
 
-    suspend fun fetchDockSettings() {
-        _dockSettings.value = DockSettings()
+    /**
+     * Reads the dock settings. What is shown stays until the robot has answered; a read that fails
+     * keeps the last value instead of hiding the row.
+     */
+    suspend fun fetchDockSettings() = reading {
+        val before = _dockSettings.value
+        val fresh = MutableStateFlow(DockSettings())
+        readDockSettingsInto(fresh)
+        val r = fresh.value
+        _dockSettings.value = r.copy(
+            washMode = r.washMode ?: before.washMode,
+            smartWash = r.smartWash ?: before.smartWash,
+            autoEmptyMode = r.autoEmptyMode ?: before.autoEmptyMode,
+            mopDrying = r.mopDrying ?: before.mopDrying,
+            dryTimeSeconds = r.dryTimeSeconds ?: before.dryTimeSeconds,
+            dryerAnswer = r.dryerAnswer ?: before.dryerAnswer,
+            dryStart = r.dryStart ?: before.dryStart,
+            dryScheduleHour = if (r.dryStart != null) r.dryScheduleHour else before.dryScheduleHour,
+            dryScheduleMinute = if (r.dryStart != null) r.dryScheduleMinute else before.dryScheduleMinute,
+            washWaterTemperature = r.washWaterTemperature ?: before.washWaterTemperature,
+        )
+        persist()
+    }
+
+    private suspend fun readDockSettingsInto(_dockSettings: MutableStateFlow<DockSettings>) {
         val wash = runCatching { session.getWashTowelMode().requireOk("get_wash_towel_mode").result as? JsonObject }.getOrNull()
         _dockSettings.update { it.copy(washMode = (wash?.get("wash_mode") as? JsonPrimitive)?.intOrNull) }
         val frequency = runCatching { parseSmartWashSettings(session.getSmartWashParams().requireOk("get_smart_wash_params").result) }.getOrNull()
@@ -1189,7 +1274,9 @@ class VacuumRepository(
     val dndPeriods: StateFlow<List<DndPeriod>?> = _dndPeriods
 
     /** Reads the periods of a robot with several; does nothing on other robots. */
-    suspend fun fetchDndPeriods() {
+    suspend fun fetchDndPeriods() = reading { readDndPeriods() }
+
+    private suspend fun readDndPeriods() {
         runCatching { fetchRobotFeatureSet() }
         if (!newFeatureBit(_robotFeatureSet.value, MULTI_DND_BIT)) return
         _dndPeriods.value = parseMultiDnd(session.getMultiDndTimer().requireOk("get_multi_dnd_timer").result)
@@ -1200,7 +1287,7 @@ class VacuumRepository(
         require(periods.size <= MAX_DND_PERIODS) { "At most $MAX_DND_PERIODS quiet-hour periods" }
         require(periods.map { it.times }.distinct().size == periods.size) { "This period already exists" }
         session.setMultiDndTimer(periods).requireOk("set_multi_dnd_timer")
-        fetchDndPeriods()
+        readDndPeriods()
         // The robot keeps its periods sorted by start time (a296), so the order is not compared.
         fun key(list: List<DndPeriod>?) = list?.map { it.times to it.enabled }?.sortedBy { it.first[0] * 60 + it.first[1] }
         if (key(_dndPeriods.value) != key(periods)) {
@@ -1208,7 +1295,9 @@ class VacuumRepository(
         }
     }
 
-    suspend fun fetchDndSettings() {
+    suspend fun fetchDndSettings() = reading { readDndSettings() }
+
+    private suspend fun readDndSettings() {
         val resp = session.getDndTimer()
         val obj = resp.result?.let { r ->
             when (r) {
