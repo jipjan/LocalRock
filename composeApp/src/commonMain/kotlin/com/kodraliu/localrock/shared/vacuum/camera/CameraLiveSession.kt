@@ -165,9 +165,9 @@ class CameraLiveSession(private val session: VacuumSession) {
                 val status = runCatching { firstInt(session.getCameraStatus().result) }.getOrNull()
                 throw IllegalStateException(
                     "Remote viewing is not enabled on this robot (-10012, camera_status=" +
-                        "${status ?: "unknown"}). It can only be switched on from the manufacturer's " +
-                        "own app while the robot is connected to the manufacturer's cloud, and the " +
-                        "setting is lost when the robot is moved back to a local server."
+                        "${status ?: "unknown"}). Turn it on once in the official Roborock app (Remote " +
+                        "viewing: set the pattern, then press the robot's power button when asked). On some " +
+                        "older models this only works while the robot uses Roborock's cloud."
                 )
             }
             if (errorCode(startResp.error) == ERR_TURN_SERVER_FAILED) throw IllegalStateException(TURN_SERVER_HINT)
@@ -306,9 +306,10 @@ class CameraLiveSession(private val session: VacuumSession) {
         const val ERR_TURN_SERVER_FAILED = -10014
 
         const val TURN_SERVER_HINT =
-            "The robot couldn't get a video relay from the server (-10014). The camera needs a local " +
-                "server with camera (TURN) support set up, and the robot paired so that it can find it. " +
-                "See the server's camera documentation."
+            "The robot couldn't get a video relay from the server (-10014). The server needs camera " +
+                "(TURN) support, and the robot must be paired so it can find it: on a Saros 20 or Qrevo MaxV, " +
+                "pair with a camera domain and \"Also use as the robot's server name\" turned on. See the " +
+                "server's camera documentation."
 
         /** `client_id` the robot returns when the camera is free. */
         const val NO_CLIENT = "none"

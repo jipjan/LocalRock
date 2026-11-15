@@ -71,17 +71,20 @@ internal class AndroidRtcPeer(iceServers: List<RtcIceServer>) : RtcPeer {
     }
 
     override suspend fun createOffer(): String {
-        pc.addTransceiver(
-            MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
-            RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY),
-        )
+        // Audio first, as the official app offers it: the Saros 20 (a296) never answers an offer
+        // whose first m-line is video.
         pc.addTransceiver(
             MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO,
             RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY),
         )
+        pc.addTransceiver(
+            MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
+            RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY),
+        )
         val offer = suspendCoroutine<SessionDescription> { cont ->
             pc.createOffer(object : SdpObserverAdapter() {
-                override fun onCreateSuccess(desc: SessionDescription) = cont.resume(desc)
+                override fun onCreateSuccess(desc: SessionDescription) =
+                    cont.resume(SessionDescription(desc.type, keepRobotCodecs(desc.description)))
                 override fun onCreateFailure(error: String?) =
                     cont.resumeWithException(RuntimeException("createOffer failed: $error"))
             }, MediaConstraints())

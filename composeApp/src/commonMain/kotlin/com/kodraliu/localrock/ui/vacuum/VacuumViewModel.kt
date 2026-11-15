@@ -54,6 +54,8 @@ class VacuumViewModel(
     val betaFeatureDefs = supportedBetaFeatures(device.newFeatureSet)
     val unlistedFeatures = unlistedAdvertisedFeatures(device.newFeatureSet)
     val carpetModes = carpetModeOptions(device.newFeatureSet)
+    /** Remote viewing: TwoKeyRealTimeVideo (32) or TwoKeyRTVInCharging (33). */
+    val hasCamera = newFeatureBit(device.newFeatureSet, 32) || newFeatureBit(device.newFeatureSet, 33)
     val showsBetaFeatures = betaFeatureDefs.any { it.section == FeatureSection.BETA && it.bit != null } || unlistedFeatures.isNotEmpty()
     val repository: VacuumRepository = container.vacuumRepositoryFor(device).also { it.restoreCachedFeatures(betaFeatureDefs) }
 

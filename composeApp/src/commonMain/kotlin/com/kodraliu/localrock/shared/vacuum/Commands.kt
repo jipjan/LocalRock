@@ -298,8 +298,20 @@ suspend fun VacuumSession.getMultiMapsList(): V1Response = sendCommand("get_mult
 suspend fun VacuumSession.checkHomesecPassword(passwordMd5Hex: String): V1Response =
     sendCommandRaw("check_homesec_password", JsonObject(mapOf("password" to JsonPrimitive(passwordMd5Hex))))
 
-suspend fun VacuumSession.setHomesecPassword(passwordMd5Hex: String): V1Response =
-    sendCommandRaw("set_homesec_password", JsonObject(mapOf("password" to JsonPrimitive(passwordMd5Hex))))
+/**
+ * Sets the remote-view PIN (MD5 of the digits). Newer firmware (Saros 20, as the official app sends it)
+ * takes `enable_password`/`new_password`/`old_password`; older firmware takes `{"password"}`, tried
+ * when the first form is refused.
+ */
+suspend fun VacuumSession.setHomesecPassword(passwordMd5Hex: String, oldPasswordMd5Hex: String = ""): V1Response {
+    val current = sendCommandRaw("set_homesec_password", JsonObject(mapOf(
+        "enable_password" to JsonPrimitive(1),
+        "new_password" to JsonPrimitive(passwordMd5Hex),
+        "old_password" to JsonPrimitive(oldPasswordMd5Hex),
+    )))
+    if (current.error == null) return current
+    return sendCommandRaw("set_homesec_password", JsonObject(mapOf("password" to JsonPrimitive(passwordMd5Hex))))
+}
 
 suspend fun VacuumSession.resetHomesecPassword(): V1Response = sendCommand("reset_homesec_password")
 

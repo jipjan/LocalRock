@@ -74,13 +74,15 @@ final class WebRtcPeer: NSObject, RtcNativePeer, RTCPeerConnectionDelegate {
     // MARK: RtcNativePeer
 
     func createOffer(onSuccess: @escaping (String) -> Void, onError: @escaping (String) -> Void) {
-        let recvVideo = RTCRtpTransceiverInit()
-        recvVideo.direction = .recvOnly
-        peerConnection.addTransceiver(of: .video, init: recvVideo)
-
+        // Audio first, as the official app offers it: the Saros 20 (a296) never answers an offer
+        // whose first m-line is video.
         let recvAudio = RTCRtpTransceiverInit()
         recvAudio.direction = .recvOnly
         peerConnection.addTransceiver(of: .audio, init: recvAudio)
+
+        let recvVideo = RTCRtpTransceiverInit()
+        recvVideo.direction = .recvOnly
+        peerConnection.addTransceiver(of: .video, init: recvVideo)
 
         let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
         peerConnection.offer(for: constraints) { [weak self] sdp, error in
