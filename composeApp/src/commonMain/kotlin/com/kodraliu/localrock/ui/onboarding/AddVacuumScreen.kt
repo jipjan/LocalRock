@@ -5,6 +5,7 @@ import com.kodraliu.localrock.ui.adaptive.CenteredContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,6 +50,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
@@ -129,7 +132,14 @@ private class AddVacuumModel(
         }
     }
 
-    fun start(adminPassword: String, ssid: String, password: String, timezone: String, cameraDomain: String = "") {
+    fun start(
+        adminPassword: String,
+        ssid: String,
+        password: String,
+        timezone: String,
+        cameraDomain: String = "",
+        cameraDomainAsServer: Boolean = false,
+    ) {
         if (_running.value) return
         val duid = _selectedDuid.value
         scope.launch {
@@ -158,6 +168,7 @@ private class AddVacuumModel(
                         homeSsid = ssid,
                         homePassword = password,
                         cameraDomain = cameraDomain,
+                        cameraDomainAsServer = cameraDomainAsServer,
                     )
                 )
 
@@ -275,6 +286,7 @@ fun AddVacuumScreen(onBack: () -> Unit) {
     var password by remember { mutableStateOf("") }
     var timezone by remember { mutableStateOf(DEFAULT_IANA_TZ) }
     var cameraDomain by remember { mutableStateOf("") }
+    var cameraDomainAsServer by remember { mutableStateOf(false) }
     val cameraDomainError = runCatching { cameraDomainInput(cameraDomain) }.exceptionOrNull()?.message
 
     val canStartPairing = !running && !loadingDevices &&
@@ -328,6 +340,8 @@ fun AddVacuumScreen(onBack: () -> Unit) {
                     cameraDomain = cameraDomain,
                     cameraDomainError = cameraDomainError,
                     onCameraDomainChange = { cameraDomain = it },
+                    cameraDomainAsServer = cameraDomainAsServer,
+                    onCameraDomainAsServerChange = { cameraDomainAsServer = it },
                     running = running,
                     canStartPairing = canStartPairing,
                     onSsidChange = { ssid = it },
@@ -340,6 +354,7 @@ fun AddVacuumScreen(onBack: () -> Unit) {
                             password = password,
                             timezone = timezone.trim(),
                             cameraDomain = cameraDomain.trim(),
+                            cameraDomainAsServer = cameraDomainAsServer,
                         )
                     },
                 )
@@ -389,6 +404,8 @@ private fun NetworkDetailsCard(
     cameraDomain: String,
     cameraDomainError: String?,
     onCameraDomainChange: (String) -> Unit,
+    cameraDomainAsServer: Boolean,
+    onCameraDomainAsServerChange: (Boolean) -> Unit,
     running: Boolean,
     canStartPairing: Boolean,
     onSsidChange: (String) -> Unit,
@@ -458,6 +475,32 @@ private fun NetworkDetailsCard(
                     )
                 },
             )
+
+            if (cameraDomain.isNotBlank()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .toggleable(
+                            value = cameraDomainAsServer,
+                            enabled = !running,
+                            role = Role.Switch,
+                            onValueChange = onCameraDomainAsServerChange,
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Also use as the robot's server name", style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            "Needed for remote viewing on a Saros 20 or Qrevo MaxV. The robot then reaches the " +
+                                "server as api-${cameraDomain.trim().trimEnd('/')}, so that name must reach it too.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Switch(checked = cameraDomainAsServer, onCheckedChange = null, enabled = !running)
+                }
+            }
 
             Button(
                 onClick = onStartPairing,

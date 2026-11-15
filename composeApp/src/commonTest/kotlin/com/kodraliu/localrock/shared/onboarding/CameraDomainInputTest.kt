@@ -20,4 +20,16 @@ class CameraDomainInputTest {
         assertFailsWith<IllegalArgumentException> { cameraDomainInput("rr.x.cc:555") }
         assertFailsWith<IllegalArgumentException> { cameraDomainInput("nodot") }
     }
+
+    @Test
+    fun robotServerNameIsTheCameraDomainOnlyWhenAsked() {
+        val base = OnboardingInput(homeSsid = "w", homePassword = "p", serverBaseUrl = "https://api-roborock.stomp.cloud")
+        assertEquals("roborock.stomp.cloud/", robotServerStack(base))
+        assertEquals("roborock.stomp.cloud/", robotServerStack(base.copy(cameraDomain = "rr.stomp.cloud")))
+        assertEquals(
+            "rr.stomp.cloud/",
+            robotServerStack(base.copy(cameraDomain = "rr.stomp.cloud", cameraDomainAsServer = true)),
+        )
+        assertEquals("roborock.stomp.cloud/", robotServerStack(base.copy(cameraDomainAsServer = true)))
+    }
 }

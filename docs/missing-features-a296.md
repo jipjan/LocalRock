@@ -91,8 +91,16 @@ Done:
   49160–49179 published and forwarded on the router; a STUN request from outside answers), and the
   14-character camera domain `rr.stomp.cloud` in Caddy with a valid certificate. `POST
   https://rr.stomp.cloud/iot.roborock.com/fwapi/createca` returns the relay details.
-- LocalRock pairing has a Camera domain field; the robot was re-paired with `rr.stomp.cloud` and
-  fetched createca from it (20:02 UTC).
+- LocalRock pairing has a Camera domain field. The robot was re-paired with `rr.stomp.cloud` as
+  `country_domain`, but it never requested createca: the requests in the log are curl tests.
+- Activation finished on 2026-11-15 in the official app (`set_homesec_password`, then the power button
+  press). The live view then fails: `start_camera_preview` answers -10014 "request turnserver failed"
+  within 0.6 s, and the robot sends no HTTP request.
+- The a296 sends `region=<token.r>` in its `/region` call, so like the Qrevo MaxV it most likely builds
+  the camera host from `token.r`, not `country_domain`. `roborock.stomp.cloud/` cut to 15 characters
+  plus `iot.roborock.com` gives `roborock.stomp.iot.roborock.com`, which does not resolve. The fix:
+  pairing's "Also use as the robot's server name" switch sends the camera domain as `token.r`, and
+  `api-<camera domain>` must reach the server.
 - Captured when the official app began activating: `set_user_privacy {"agree":1,"owner":1}`,
   `set_camera_status [4515]` (419 + 4096) and 15 s later `[419]` again. So bit 4096 may belong to
   activation rather than (only) Pet Snaps; check before relying on the Pet Snaps switch.

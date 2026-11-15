@@ -31,7 +31,7 @@ class VacuumOnboarder(
             val body = WifiConfigBody(
                 ssid = input.homeSsid,
                 password = input.homePassword,
-                serverStack = sanitizeStackServer(input.serverBaseUrl),
+                serverStack = robotServerStack(input),
                 timezone = input.timezone,
                 posixTz = posixTzFromIana(input.timezone),
                 countryDomain = cameraDomainInput(input.cameraDomain) ?: countryDomainFromIana(input.timezone),
@@ -77,6 +77,12 @@ data class OnboardingInput(
      * domain is at most 14 characters plus `/` (local_roborock_server's camera.md).
      */
     val cameraDomain: String = "",
+    /**
+     * Also send the camera domain as the robot's server name (`token.r`). Some firmware (Saros 20,
+     * Qrevo MaxV) builds the camera address from `token.r` instead of the country code; the robot then
+     * reaches the server as `api-<camera domain>`, so that name must route to the server too.
+     */
+    val cameraDomainAsServer: Boolean = false,
 )
 
 data class OnboardingResult(
@@ -84,6 +90,11 @@ data class OnboardingResult(
     val tokenS: String,
     val tokenT: String,
 )
+
+/** The robot's server name (`token.r`): the camera domain when asked for, otherwise the server's host without `api-`. */
+fun robotServerStack(input: OnboardingInput): String =
+    cameraDomainInput(input.cameraDomain)?.takeIf { input.cameraDomainAsServer }
+        ?: sanitizeStackServer(input.serverBaseUrl)
 
 /**
  * The `country_domain` value for a camera domain: the hostname with a trailing `/`, or null when blank.
