@@ -1749,7 +1749,15 @@ private fun ValleyScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Switch(checked = enabled, onCheckedChange = { enabled = it; commit() })
+                    Switch(checked = enabled, onCheckedChange = {
+                        // A robot with off-peak off reports 00:00 to 00:00 (a296); turning it on with that
+                        // would send an empty window, so start from 22:00 to 06:00 instead.
+                        if (it && startHour == endHour && startMinute == endMinute) {
+                            startHour = 22; startMinute = 0; endHour = 6; endMinute = 0
+                        }
+                        enabled = it
+                        commit()
+                    })
                 }
                 if (enabled) {
                     HorizontalDivider()
