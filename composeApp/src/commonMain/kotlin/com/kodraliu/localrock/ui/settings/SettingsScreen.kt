@@ -33,6 +33,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -113,6 +115,13 @@ fun SettingsScreen(onDone: () -> Unit, allowCancel: Boolean) {
                         }
                     }
                 }
+                val roomOutlines by container.appSettings.mapRoomOutlines.collectAsState()
+                SwitchRow(
+                    "Room outlines on the map",
+                    "Draw rooms with straight walls from the robot's floor plan, as the Roborock app does. Off shows the robot's own map pixels.",
+                    roomOutlines,
+                    container.appSettings::setMapRoomOutlines,
+                )
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
@@ -308,8 +317,9 @@ private fun NotificationSettings() {
 
 @Composable
 private fun SwitchRow(title: String, description: String?, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    // The whole row toggles, so the text is a target too, and it reads as one switch to TalkBack.
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -323,7 +333,7 @@ private fun SwitchRow(title: String, description: String?, checked: Boolean, onC
                 )
             }
         }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 

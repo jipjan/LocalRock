@@ -16,6 +16,7 @@ private const val KEY_INSTALL_ID = "install_id"
 private const val KEY_INTRO_SEEN = "intro_seen"
 private const val KEY_LAST_SEEN_VERSION = "last_seen_version"
 private const val KEY_DEMO_MODE = "demo_mode"
+private const val KEY_MAP_ROOM_OUTLINES = "map_room_outlines"
 private const val KEY_LOGIN_EMAIL = "login_email"
 private const val KEY_LOGIN_CODE = "login_code"
 private const val KEY_NOTIFY_ENABLED = "notify_enabled"
@@ -62,6 +63,18 @@ class AppSettings(private val settings: Settings) {
     fun setDemoMode(value: Boolean) {
         settings.putBoolean(KEY_DEMO_MODE, value)
         _demoMode.value = value
+    }
+
+    /**
+     * Draw rooms from the robot's floor-plan outlines when its map has them, as the official app does
+     * by default; off shows the robot's own pixels.
+     */
+    private val _mapRoomOutlines = MutableStateFlow(settings.getBoolean(KEY_MAP_ROOM_OUTLINES, true))
+    val mapRoomOutlines: StateFlow<Boolean> = _mapRoomOutlines.asStateFlow()
+
+    fun setMapRoomOutlines(value: Boolean) {
+        settings.putBoolean(KEY_MAP_ROOM_OUTLINES, value)
+        _mapRoomOutlines.value = value
     }
 
     private val _themeMode = MutableStateFlow(

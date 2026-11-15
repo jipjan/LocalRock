@@ -3,6 +3,8 @@ package com.kodraliu.localrock.ui.vacuum
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import com.kodraliu.localrock.ui.LocalAppContainer
+import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import androidx.compose.runtime.setValue
@@ -94,17 +96,18 @@ private val DarkPalette = MapPalette(
 @Composable
 fun rememberMapBitmap(map: ParsedMap, drawRestrictions: Boolean = true): ImageBitmap {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val outlines by LocalAppContainer.current.appSettings.mapRoomOutlines.collectAsState()
     // The first bitmap is drawn at once so there is something to show; later ones (a map poll every few
     // seconds while cleaning) are drawn off the main thread, and the previous one stays until it is ready.
-    val first = remember { renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions) }
-    val firstKey = remember { Triple(map, dark, drawRestrictions) }
+    val first = remember { renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions, outlines) }
+    val firstKey = remember { listOf(map, dark, drawRestrictions, outlines) }
     var shown by remember { mutableStateOf(first) }
-    LaunchedEffect(map, dark, drawRestrictions) {
-        if (Triple(map, dark, drawRestrictions) == firstKey) {
+    LaunchedEffect(map, dark, drawRestrictions, outlines) {
+        if (listOf(map, dark, drawRestrictions, outlines) == firstKey) {
             shown = first
             return@LaunchedEffect
         }
-        shown = withContext(Dispatchers.Default) { renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions) }
+        shown = withContext(Dispatchers.Default) { renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions, outlines) }
     }
     return shown
 }
@@ -160,7 +163,7 @@ private const val MAX_RENDER_SCALE = 4
 private const val MAX_MAP_BITMAP_PX = 2048
 
 /** [drawRestrictions] is false for the editor, which draws the shapes it is editing itself. */
-private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boolean): ImageBitmap {
+private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boolean, roomOutlines: Boolean = true): ImageBitmap {
     val s = mapRenderScale(map)
     val bitmap = ImageBitmap(map.width * s, map.height * s)
     val canvas = Canvas(bitmap)
@@ -181,7 +184,7 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
     val roomWeights = FloatArray(ROOM_ID_COUNT)
     // Rooms with a floor-plan outline (block 55) are drawn as that polygon, the way the official app
     // draws them: straight walls and sharp corners instead of the robot's pixel edges.
-    val plan = if (raw != null) floorPlanPolygons(map) else emptyList()
+    val plan = if (raw != null && roomOutlines) floorPlanPolygons(map) else emptyList()
     val planRooms = BooleanArray(ROOM_ID_COUNT).also { has -> plan.forEach { has[it.roomId and (ROOM_ID_COUNT - 1)] = true } }
     val inPlan = planCells(plan, w, h)
     fun inside(x: Int, y: Int) = x in 0 until w && y in 0 until h && inPlan[y * w + x] >= 0
