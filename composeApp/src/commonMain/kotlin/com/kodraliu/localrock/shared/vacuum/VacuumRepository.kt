@@ -116,6 +116,16 @@ class VacuumRepository(
 
     private var homeRoomNames: Map<Long, String> = emptyMap()   // roomId -> name
     private var segmentToRoomId: Map<Int, Long> = emptyMap()     // map segment id -> roomId
+    /** The loaded map the room mapping was read for: each saved map has its own (a296, 2026-11-15). */
+    private var roomMappingFloor: Int? = null
+    /** Room ids the home's room list was already reloaded for, so a missing name is asked for once. */
+    private val homeRoomsReloadedFor = mutableSetOf<Long>()
+
+    /**
+     * Reloads the home's rooms from the server; set by the app. A map built later (a second floor)
+     * points its segments at rooms the server created after the home was first read.
+     */
+    var homeRoomsReloader: (suspend () -> List<Room>)? = null
 
     /**
      * The robot's segment table exactly as `get_room_mapping` returned it: segment, room id (kept
@@ -261,7 +271,10 @@ class VacuumRepository(
             var loaded = false
             while (isActive) {
                 mqttClient.connected.first { it }
-                runCatching { fetchMap() }
+                // Never during a map edit: a map asked for inside an edit session went unanswered
+                // (a296, 2026-11-15) and held the map lock for its whole timeout, so the edit's own
+                // read-back could not fetch the result and the save was reported unconfirmed.
+                runCatching { mapEditMutex.withLock { fetchMap() } }
                     .onSuccess { loaded = true }
                     .onFailure { println("[VacLocal] fetchMap FAILED: ${it::class.simpleName}: ${it.message}") }
                 // Until a map has arrived, ask again soon: sitting out the idle minute after a
@@ -319,10 +332,17 @@ class VacuumRepository(
         if (result is JsonArray) {
             // Names resolve from the first two columns, which every firmware returns.
             val mapping = parseRoomMapping(result)
-            if (mapping.isNotEmpty()) {
-                segmentToRoomId = mapping
-                println("[VacLocal] room mapping seg->roomId=$mapping resolved=${mapping.mapValues { homeRoomNames[it.value] ?: "(no home name)" }}")
-                applyRoomNames()
+            // Replaced even when empty: the mapping belongs to the loaded map, and another map's
+            // would give this map's rooms the wrong names.
+            segmentToRoomId = mapping
+            roomMappingFloor = _status.value.loadedMapFlag
+            println("[VacLocal] room mapping seg->roomId=$mapping resolved=${mapping.mapValues { homeRoomNames[it.value] ?: "(no home name)" }}")
+            applyRoomNames()
+            val unknown = mapping.values.filter { it !in homeRoomNames && it !in homeRoomsReloadedFor }
+            val reload = homeRoomsReloader
+            if (unknown.isNotEmpty() && reload != null) {
+                homeRoomsReloadedFor += unknown
+                runCatching { reload() }.onSuccess { setHomeRooms(it) }
             }
         }
         return resp
@@ -1593,6 +1613,8 @@ class VacuumRepository(
                 ?: runCatching { parseLegacyMap(resp.data) }.getOrNull()
             _parsedMap.value = parsed
             parsedMapFloorFlag = floorBefore
+            // Another map is loaded than the room names were read for: read its own mapping.
+            if (floorBefore != null && floorBefore != roomMappingFloor) runCatching { rooms() }
             // Debug builds keep the latest map, to work out blocks (curtains, furniture, ...) with adb.
             if (isDebugBuild) runCatching { saveDebugBlob("map-latest.bin", resp.data) }
             if (parsed != null && parsed.rooms.isNotEmpty()) {

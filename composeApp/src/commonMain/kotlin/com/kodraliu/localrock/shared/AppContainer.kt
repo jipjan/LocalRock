@@ -442,6 +442,10 @@ class AppContainer(
             capabilityCache = capabilityCache.takeUnless { isDemo },
         ).apply {
             setHomeRooms(deviceRepository.home.value?.rooms ?: emptyList())
+            homeRoomsReloader = {
+                deviceRepository.refresh()
+                deviceRepository.home.value?.rooms ?: emptyList()
+            }
         }
     }
 
