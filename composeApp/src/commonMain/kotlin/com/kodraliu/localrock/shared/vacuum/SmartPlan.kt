@@ -53,6 +53,22 @@ fun isCornerCleanSupported(newFeatureSet: String?): Boolean = newFeatureBit(newF
 fun isWaterDistanceSupported(featureSet: String?, newFeatureSet: String?): Boolean =
     !isWaterSlideSupported(newFeatureSet) && ((featureSet?.toULongOrNull() ?: 0uL) and (1uL shl 31)) != 0uL
 
+/**
+ * The mop routes the robot offers, as the official a296 plugin builds its list (MopMethods): Standard;
+ * Deep (301) only without clean efficiency (bit 108), which an a296 has and refused 301 with -10005;
+ * Deep+ (303) with careful slow mopping (bit 41 of the decimal featureSet); Fast (304) with the fast
+ * route (bit 8). Null while the robot's flags are unknown, so every route stays on offer.
+ */
+fun mopRouteOptions(featureSet: String?, newFeatureSet: String?): Set<Int>? {
+    if (newFeatureSet == null) return null
+    return buildSet {
+        add(MopRoute.STANDARD)
+        if (!newFeatureBit(newFeatureSet, 108)) add(MopRoute.DEEP)
+        if (((featureSet?.toULongOrNull() ?: 0uL) shr 41) and 1uL == 1uL) add(MopRoute.DEEP_PLUS)
+        if (newFeatureBit(newFeatureSet, 8)) add(MopRoute.FAST)
+    }
+}
+
 /** SmartPlan is on if any of the three values is its smart code (python-roborock is_smart_mode_set). */
 fun isSmartModeSet(fanPower: Int?, waterBoxMode: Int?, mopMode: Int?): Boolean =
     fanPower == VacuumFanPower.SMART || waterBoxMode == WaterBoxMode.SMART || mopMode == MopRoute.SMART

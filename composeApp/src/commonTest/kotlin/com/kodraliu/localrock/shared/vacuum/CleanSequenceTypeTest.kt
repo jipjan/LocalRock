@@ -66,3 +66,17 @@ class DryerStartTest {
         assertEquals(null, parseDailyCron("61 17 * * *"))
     }
 }
+
+class MopRouteOptionsTest {
+    @Test
+    fun anA296OffersStandardDeepPlusAndFastButNotDeep() {
+        // The a296's flags (server inventory, 2026-11-15); it refused Deep (301) with -10005 and took 300/303/304.
+        val routes = mopRouteOptions("4499197267967999", "0000000000199518CED77EFDA8E9BEDDDBFF8F7F7EFEFFFF")
+        assertEquals(setOf(MopRoute.STANDARD, MopRoute.DEEP_PLUS, MopRoute.FAST), routes)
+    }
+
+    @Test
+    fun unknownFlagsOfferEveryRoute() {
+        assertEquals(null, mopRouteOptions(null, null))
+    }
+}

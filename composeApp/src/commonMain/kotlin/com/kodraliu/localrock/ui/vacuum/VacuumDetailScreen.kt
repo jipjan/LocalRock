@@ -206,6 +206,10 @@ private val ROUTE_OPTIONS = listOf(
 
 private val DEEP_ROUTES = setOf(MopRoute.DEEP, MopRoute.DEEP_PLUS)
 
+/** The route buttons for a robot: the ones it offers, and the one it has now even if not offered. */
+private fun routeChoices(offered: Set<Int>?, current: Int?): List<Pair<Int, String>> =
+    ROUTE_OPTIONS.filter { offered == null || it.first in offered || it.first == current }
+
 private val ACTIVE_CLEANING_STATES = setOf(
     VacuumStateCodes.CLEANING, VacuumStateCodes.SEGMENT_CLEANING,
     VacuumStateCodes.ZONED_CLEANING, VacuumStateCodes.SPOT_CLEANING,
@@ -230,6 +234,7 @@ fun VacuumDetailScreen(
     val busy by viewModel.busy.collectAsState()
     val supportsSmartPlan by viewModel.supportsSmartPlan.collectAsState()
     val supportsWaterSlide by viewModel.supportsWaterSlide.collectAsState()
+    val routeOptions by viewModel.routeOptions.collectAsState()
     val supportsVacuumThenMop by viewModel.supportsVacuumThenMop.collectAsState()
     val supportsCornerClean by viewModel.supportsCornerClean.collectAsState()
     val supportsWaterDistance by viewModel.supportsWaterDistance.collectAsState()
@@ -421,6 +426,7 @@ fun VacuumDetailScreen(
                     currentRoute = mopMode,
                     cleaningCount = cleaningCount,
                     waterSlide = supportsWaterSlide,
+                    routeOptions = routeOptions,
                     busy = busy,
                     supportsSmartPlan = supportsSmartPlan,
                     rooms = parsedMap?.rooms ?: emptyList(),
@@ -1441,6 +1447,8 @@ private fun CleaningModeSheetContent(
     cleaningCount: Int,
     /** Water slide robots get the official app's 30-step slider instead of the four water buttons. */
     waterSlide: Boolean = false,
+    /** The routes this robot takes ([mopRouteOptions]); null offers all of them. */
+    routeOptions: Set<Int>? = null,
     busy: Boolean,
     supportsSmartPlan: Boolean,
     rooms: List<ParsedMapRoom>,
@@ -1508,7 +1516,7 @@ private fun CleaningModeSheetContent(
             }
         } else if (perRoom) {
             if (roomModesLoaded == true) {
-                RoomCleanModesEditor(rooms, roomCleanModes, busy, onSaveRoomModes)
+                RoomCleanModesEditor(rooms, roomCleanModes, busy, onSaveRoomModes, routeOptions)
             } else {
                 Text(
                     if (roomModesLoaded == null) "Reading the room settings from the robot."
@@ -1560,8 +1568,9 @@ private fun CleaningModeSheetContent(
                         else if (waterDistance != null) WaterDistanceSelector(currentWaterMode, waterDistance, !busy, onWaterModeSelected, onWaterDistanceChange)
                         else ModeOptionSelector("Water flow", WATER_OPTIONS.map { it.second }, WATER_OPTIONS.indexOfFirst { it.first == WaterBoxMode.normalize(currentWaterMode) }, !busy) { onWaterModeSelected(WATER_OPTIONS[it].first) }
                     }
+                    val routes = routeChoices(routeOptions, currentRoute)
                     val route = @Composable {
-                        ModeOptionSelector("Route", ROUTE_OPTIONS.map { it.second }, ROUTE_OPTIONS.indexOfFirst { it.first == currentRoute }, !busy) { onRouteSelected(ROUTE_OPTIONS[it].first) }
+                        ModeOptionSelector("Route", routes.map { it.second }, routes.indexOfFirst { it.first == currentRoute }, !busy) { onRouteSelected(routes[it].first) }
                     }
 
                     when (selectedTab) {
@@ -1605,6 +1614,7 @@ private fun RoomCleanModesEditor(
     stored: List<RoomCleanMode>,
     busy: Boolean,
     onSave: (List<RoomCleanMode>) -> Unit,
+    routeOptions: Set<Int>? = null,
 ) {
     val saved = remember(rooms, stored) { roomCleanModesFor(rooms.map { it.id }, stored) }
     var draft by remember(saved) { mutableStateOf(saved) }
@@ -1658,8 +1668,9 @@ private fun RoomCleanModesEditor(
                             update(mode.copy(fanPower = fan, waterBoxMode = water, mopMode = route))
                         }
                         if (mode.waterBoxMode != WaterBoxMode.OFF) {
-                            ModeOptionSelector("Route", ROUTE_OPTIONS.map { it.second }, ROUTE_OPTIONS.indexOfFirst { it.first == mode.mopMode }, !busy) {
-                                update(mode.copy(mopMode = ROUTE_OPTIONS[it].first))
+                            val routes = routeChoices(routeOptions, mode.mopMode)
+                            ModeOptionSelector("Route", routes.map { it.second }, routes.indexOfFirst { it.first == mode.mopMode }, !busy) {
+                                update(mode.copy(mopMode = routes[it].first))
                             }
                         }
                     }
