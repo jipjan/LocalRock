@@ -11,8 +11,8 @@ import kotlin.test.assertNull
 
 class ObstacleMarkersTest {
 
-    // 100 x 100 cells of 50 mm from (0, 0), drawn 1:1, so cell (10, 89) is 500 mm right and
-    // 500 mm up from the bottom-left corner.
+    // 100 x 100 cells of 50 mm from (0, 0), drawn 1:1, so (500, 500) mm is the corner at x 10 and,
+    // 10 rows up from the bottom edge, y 90.
     private val shoe = MapObstacle(x = 500, y = 500, type = 2, confidence = 0.9f, photoId = "a", ignored = false)
     private val cable = MapObstacle(x = 1500, y = 500, type = 0, confidence = 0.8f, photoId = null, ignored = false)
     private val map = ParsedMap(
@@ -23,9 +23,9 @@ class ObstacleMarkersTest {
 
     @Test
     fun an_obstacle_sits_where_the_renderer_puts_its_cell() {
-        assertEquals(Offset(10f, 89f), map.obstacleOnScreen(shoe, content, Offset.Zero, 1f))
+        assertEquals(Offset(10f, 90f), map.obstacleOnScreen(shoe, content, Offset.Zero, 1f))
         // Zoomed 2x and panned by (5, 5).
-        assertEquals(Offset(25f, 183f), map.obstacleOnScreen(shoe, content, Offset(5f, 5f), 2f))
+        assertEquals(Offset(25f, 185f), map.obstacleOnScreen(shoe, content, Offset(5f, 5f), 2f))
     }
 
     @Test

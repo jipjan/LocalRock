@@ -303,9 +303,7 @@ internal class PlanPolygon(val roomId: Int, val corners: List<Offset>) {
 
 /** The floor-plan outlines in cell space (y down, like the bitmap). */
 internal fun floorPlanPolygons(map: ParsedMap): List<PlanPolygon> = map.floorPlan.map { room ->
-    // mmToCell gives the top of the cell a point lies in; an outline runs along cell edges, so its
-    // corners sit one cell lower in bitmap space.
-    PlanPolygon(room.roomId, room.pointsMm.map { (x, y) -> map.mmToCell(x, y).let { Offset(it.x, it.y + 1f) } })
+    PlanPolygon(room.roomId, room.pointsMm.map { (x, y) -> map.mmToCell(x, y) })
 }
 
 /** Per cell, the room id of the outline its centre lies in, or -1. */
@@ -474,9 +472,7 @@ private fun drawPath(canvas: Canvas, map: ParsedMap, palette: MapPalette) {
     val gfxPath = Path()
     var started = false
     for (point in map.pathMm) {
-        val cellX = (point.x / 50f) - map.pixelOffsetLeft
-        val cellYBottom = (point.y / 50f) - map.pixelOffsetTop
-        val cellY = (map.height - 1) - cellYBottom
+        val (cellX, cellY) = map.mmToCell(point.x, point.y).let { it.x to it.y }
         if (cellX !in 0f..map.width.toFloat() || cellY !in 0f..map.height.toFloat()) {
             started = false
             continue
@@ -510,10 +506,7 @@ private fun drawMarker(
     radius: Float = 4f,
 ) {
 
-    val cellX = (point.x / 50f) - map.pixelOffsetLeft
-    val cellYBottom = (point.y / 50f) - map.pixelOffsetTop
-    // Flip Y to match the rendered orientation above.
-    val cellY = (map.height - 1) - cellYBottom
+    val (cellX, cellY) = map.mmToCell(point.x, point.y).let { it.x to it.y }
     if (cellX !in 0f..map.width.toFloat() || cellY !in 0f..map.height.toFloat()) return
     val ringPaint = Paint().apply { this.color = ring }
     val fillPaint = Paint().apply { this.color = color }

@@ -3,6 +3,7 @@ package com.kodraliu.localrock.ui.vacuum
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import com.kodraliu.localrock.shared.vacuum.MAX_MAP_COORD_MM
+import com.kodraliu.localrock.shared.vacuum.map.MapFormat
 import com.kodraliu.localrock.shared.vacuum.map.MapZone
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
 import com.kodraliu.localrock.shared.vacuum.map.VirtualWall
@@ -20,17 +21,25 @@ import kotlin.math.roundToInt
 
 internal const val MM_PER_CELL = 50f
 
+/**
+ * The bitmap y of map row 0's bottom edge. On a legacy map a coordinate of n × 50 mm is the bottom
+ * (or left) edge of pixel n: each room's floor-plan outline (block 55) runs exactly along the edges of
+ * its floor cells (a296, 2026-11-15), so the bottom edge of row 0 is at bitmap y = height. The other
+ * format keeps the earlier `height - 1` until it is checked the same way.
+ */
+internal val ParsedMap.mmYOrigin: Float get() = if (format == MapFormat.LEGACY) height.toFloat() else height - 1f
+
 /** Robot mm -> bitmap cell (Y flipped to match the renderer). */
 internal fun ParsedMap.mmToCell(xMm: Int, yMm: Int): Offset {
     val cellX = xMm / MM_PER_CELL - pixelOffsetLeft
     val cellYFromBottom = yMm / MM_PER_CELL - pixelOffsetTop
-    return Offset(cellX, (height - 1) - cellYFromBottom)
+    return Offset(cellX, mmYOrigin - cellYFromBottom)
 }
 
 /** Bitmap cell -> robot mm; exact inverse of [mmToCell] up to rounding. */
 internal fun ParsedMap.cellToMm(cell: Offset): Pair<Int, Int> {
     val xMm = ((cell.x + pixelOffsetLeft) * MM_PER_CELL).roundToInt()
-    val yMm = (((height - 1) - cell.y + pixelOffsetTop) * MM_PER_CELL).roundToInt()
+    val yMm = ((mmYOrigin - cell.y + pixelOffsetTop) * MM_PER_CELL).roundToInt()
     return xMm to yMm
 }
 

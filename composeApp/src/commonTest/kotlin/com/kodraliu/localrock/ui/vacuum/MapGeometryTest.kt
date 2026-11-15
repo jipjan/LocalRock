@@ -31,7 +31,16 @@ class MapGeometryTest {
         // Charger of the real sample: (25552, 24972) mm.
         val c = map.mmToCell(25552, 24972)
         assertEquals(25552 / 50f - 315, c.x)
-        assertEquals((516 - 1) - (24972 / 50f - 142), c.y)
+        // On a legacy map n x 50 mm is the bottom edge of row n, so row 0's bottom is at y = height.
+        assertEquals(516 - (24972 / 50f - 142), c.y)
+    }
+
+    @Test
+    fun a_coordinate_on_a_cell_edge_lands_on_that_edge() {
+        // Row 10 from the bottom (y 7600..7650 mm with pixelOffsetTop 142) is drawn from 505 to 506.
+        assertEquals(506f, map.mmToCell(25552, (142 + 10) * 50).y)
+        assertEquals(505f, map.mmToCell(25552, (142 + 11) * 50).y)
+        assertEquals(10f, map.mmToCell((315 + 10) * 50, 24972).x)
     }
 
     @Test
