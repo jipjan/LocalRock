@@ -84,32 +84,31 @@ official app sends the last two every time it opens the robot, even through the 
 Intensive corner mopping (`set_corner_clean_mode`) and the distance-based custom water flow
 (`set_water_box_distance_off`) are built behind their feature bits; this a296 has neither.
 
-## Remote viewing (Kijken op afstand): paused 2026-11-14, to be finished
+## Remote viewing (Kijken op afstand): works in the official app (2026-11-15)
 
-Done:
-- Server (bezemer-wit-server): TURN in provided mode (host api-roborock.stomp.cloud, UDP 3478 and
-  49160–49179 published and forwarded on the router; a STUN request from outside answers), and the
-  14-character camera domain `rr.stomp.cloud` in Caddy with a valid certificate. `POST
-  https://rr.stomp.cloud/iot.roborock.com/fwapi/createca` returns the relay details.
-- LocalRock pairing has a Camera domain field. The robot was re-paired with `rr.stomp.cloud` as
-  `country_domain`, but it never requested createca: the requests in the log are curl tests.
-- Activation finished on 2026-11-15 in the official app (`set_homesec_password`, then the power button
-  press). The live view then fails: `start_camera_preview` answers -10014 "request turnserver failed"
-  within 0.6 s, and the robot sends no HTTP request.
-- The a296 sends `region=<token.r>` in its `/region` call, so like the Qrevo MaxV it most likely builds
-  the camera host from `token.r`, not `country_domain`. `roborock.stomp.cloud/` cut to 15 characters
-  plus `iot.roborock.com` gives `roborock.stomp.iot.roborock.com`, which does not resolve. The fix:
-  pairing's "Also use as the robot's server name" switch sends the camera domain as `token.r`, and
-  `api-<camera domain>` must reach the server.
-- Captured when the official app began activating: `set_user_privacy {"agree":1,"owner":1}`,
-  `set_camera_status [4515]` (419 + 4096) and 15 s later `[419]` again. So bit 4096 may belong to
-  activation rather than (only) Pet Snaps; check before relying on the Pet Snaps switch.
-
-Still to do (needs the robot to beep/speak and the power button pressed, so only when it may make noise):
-- Finish the activation in the official app while recording: the remote-view pattern
-  (`set_homesec_password`), the two-key `set_camera_status` request and the power-button press.
-- Build activation and the live view into LocalRock (CameraLiveSession already does the WebRTC part)
-  and test a stream through the relay.
+- Server: TURN in provided mode (host api-roborock.stomp.cloud, UDP 3478 and 49160–49179 forwarded).
+  Caddy serves `api-roborock.stomp.cloud`, `rr.stomp.cloud` and `api-rr.stomp.cloud`.
+- The a296 builds its camera host from `token.r`, not `country_domain`: the first 15 characters of
+  `token.r` plus `iot.roborock.com`. Its region request (`region=<token.r>`) shows the same.
+  - With `token.r` `roborock.stomp.cloud/`, that host was `roborock.stomp.iot.roborock.com`, which
+    does not resolve, so `start_camera_preview` failed within 0.6 s with -10014 "request turnserver
+    failed".
+  - Paired with "Also use as the robot's server name" (`token.r` `rr.stomp.cloud/`), the robot
+    reaches the server as `api-rr.stomp.cloud`, POSTs `rr.stomp.cloud/iot.roborock.com/fwapi/createca`,
+    and the live view plays.
+- Activation (official app): `set_user_privacy`, then `set_camera_status [4515]`, a power-button
+  press, and `set_homesec_password {"enable_password":1,"new_password":<md5 of the pattern>,"old_password":""}`.
+- Live view (official app), in order:
+  1. `get_homesec_connect_status` and `check_homesec_password`
+  2. `get_turn_server`
+  3. `switch_video_quality {"quality":"HD"}`
+  4. `start_camera_preview {"client_id","password","quality"}`
+  5. `send_sdp_to_robot`, then poll `get_device_sdp`
+  6. `send_ice_to_robot`, and poll `get_device_ice` (`{"dev_ice":"retry"}` until the robot has
+     candidates, then base64 JSON candidates)
+  7. `stop_camera_preview`
+- Tested with the phone on the same network as the robot only; the TURN relay from outside is not proven.
+- Still to do: build activation and the live view into LocalRock (CameraLiveSession does the WebRTC part).
 
 ## Other things captured, not built yet
 
