@@ -1240,8 +1240,17 @@ class VacuumRepository(
         if (updated != null) {
             if (_betaFeaturesLoading.value) setDuringRead += id
             _betaFeatures.update { list -> list.map { if (it.def.id == id) updated else it } }
-            if (featuresRead) persist()
         }
+        // Options read from one shared bit field change together on the robot: turning Cross carpets on
+        // turned Carpets first off (a296, switch_status 26 -> 50). Read the others in that field again.
+        if (current.def.readField != null) {
+            val siblings = _betaFeatures.value.filter { it.def.id != id && it.def.readField == current.def.readField && it.def.getMethod == current.def.getMethod }
+            for (sibling in siblings) {
+                val fresh = readBetaFeature(sibling.def)?.takeIf { it.answered && it.toggleable } ?: continue
+                _betaFeatures.update { list -> list.map { if (it.def.id == sibling.def.id) fresh else it } }
+            }
+        }
+        if (updated != null && featuresRead) persist()
         last?.requireOk(current.def.setMethod)
         if (updated != null && updated.value != value) {
             throw IllegalStateException("The robot accepted the change but still reports the old setting.")

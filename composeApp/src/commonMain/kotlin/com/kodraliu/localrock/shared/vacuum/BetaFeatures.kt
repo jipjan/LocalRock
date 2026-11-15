@@ -53,6 +53,8 @@ data class BetaFeatureDef(
      * this bit changed, `[n]`, as the official app does with `set_camera_status`.
      */
     val bitmaskWrite: Boolean = false,
+    /** Shown only while the option with this id is on; the robot refuses it otherwise (as the official app hides it). */
+    val shownWhenOn: String? = null,
 )
 
 private const val GET_ROBOT_SETTING = "app_get_robot_setting"
@@ -67,10 +69,11 @@ private fun robotSettingSwitch(
     bit: Int?,
     section: FeatureSection,
     choices: List<Pair<Int, String>>? = null,
+    shownWhenOn: String? = null,
 ) = BetaFeatureDef(
     id = id, title = title, description = description, bit = bit,
     getMethod = GET_ROBOT_SETTING, setMethod = SET_ROBOT_SETTING, section = section,
-    choices = choices, robotSetting = name,
+    choices = choices, robotSetting = name, shownWhenOn = shownWhenOn,
 )
 
 /**
@@ -319,8 +322,10 @@ val BetaFeatureDefs = listOf(
     ),
     robotSettingSwitch(
         id = "long_haired_carpet", name = "long_haired_carpet_clean_status",
-        title = "Adaptive lift", description = "Tilts up for high-pile carpets; works with Carpets first",
+        title = "Adaptive lift", description = "Tilts up for high-pile carpets while Carpets first is on",
         bit = 75, section = FeatureSection.CARPET,
+        // The robot refused it with Carpets first off: -10007 "invalid param, not carpet clean first".
+        shownWhenOn = "priority_carpet",
     ),
     robotSettingSwitch(
         id = "carpet_wire", name = "nearbycarpet_detecting_wire_status",
@@ -410,7 +415,10 @@ fun supportedBetaFeatures(newFeatureSet: String?): List<BetaFeatureDef> =
 
 /** The reads of [features] that belong on [section], in the order the definitions list them. */
 fun List<BetaFeatureState>.inSection(section: FeatureSection): List<BetaFeatureState> =
-    filter { it.def.section == section }
+    filter { s ->
+        s.def.section == section &&
+            (s.def.shownWhenOn == null || firstOrNull { it.def.id == s.def.shownWhenOn }?.value == 1)
+    }
 
 /**
  * Names for `newFeatureSet` bits from 32 up (python-roborock NewFeatureStrBit), for listing what a
