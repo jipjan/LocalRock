@@ -87,7 +87,12 @@ data class CleanRunSettings(val suction: Int?, val water: Int?, val route: Int?,
     val suctionLabel: String?
         get() = when (suction) { null, 0 -> null; 1 -> "Quiet"; 2 -> "Standard"; 3 -> "Strong"; 4 -> "MAX"; 5 -> "MAX+"; else -> "Suction $suction" }
     val waterLabel: String?
-        get() = when (water) { null, 0 -> null; 1 -> "Low"; 2 -> "Medium"; 3 -> "High"; else -> "Water $water" }
+        get() = when (water) {
+            null, 0 -> null
+            1 -> "Low"; 2 -> "Medium"; 3 -> "High"
+            // Water slide robots log the slider code without its 200 (a296: 35 for 235, the medium mark).
+            else -> WaterBoxMode.slideLabel(water + 200) ?: "Water $water"
+        }
     val routeLabel: String?
         get() = when (route) { null -> null; 0 -> "Standard"; else -> "Route $route" }
 }
@@ -111,8 +116,11 @@ private fun cleanMode(f: JsonObject): String? = runSettings(f)?.mode
  * manual changes, the end and auto-emptying. Events whose meaning is unknown are left out, as the
  * official app shows only these. [roomName] turns a room id into its name.
  */
-fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): List<CleanTimelineEntry> =
-    events.sortedBy { it.epoch }.mapNotNull { e ->
+fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): List<CleanTimelineEntry> {
+    // A room the robot goes back to is logged twice at once: the usual room event, and one with field
+    // 425 that the official app shows as "<room> · resume cleaning" (a296, 2026-11-15). Only that one is shown.
+    val resumed = events.filter { it.type == 42 && it.fields.int("425") != null }.map { it.epoch to it.fields.int("2") }.toSet()
+    return events.sortedBy { it.epoch }.mapNotNull { e ->
         val f = e.fields
         when (e.type) {
             25 -> if (f.int("252") == null && f.int("251") == null) null else {
@@ -120,10 +128,13 @@ fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): L
                 val source = when (f.int("251")) { 2 -> "from the app"; else -> null }
                 CleanTimelineEntry(e.epoch, "Started $type", listOfNotNull(source, cleanMode(f)).joinToString(" · ").ifEmpty { null }, milestone = true)
             }
-            42 -> {
+            42 -> run {
                 val room = f.int("2")
+                val name = room?.let(roomName) ?: "room ${room ?: "?"}"
+                if (f.int("425") != null) return@run CleanTimelineEntry(e.epoch, "Resumed cleaning $name", milestone = true)
+                if ((e.epoch to room) in resumed) return@run null
                 val title = if (f.int("421") == 3) "Re-cleaning areas blocked by people or pets"
-                else "Cleaning " + (room?.let(roomName) ?: "room ${room ?: "?"}")
+                else "Cleaning $name"
                 val passes = f.int("6")?.takeIf { it > 0 }?.let { "×$it" }
                 CleanTimelineEntry(
                     e.epoch, title, listOfNotNull(cleanMode(f), passes).joinToString(" · ").ifEmpty { null },
@@ -139,6 +150,9 @@ fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): L
             21 -> CleanTimelineEntry(e.epoch, "Settings changed by hand", if (f.int("211") == 1) "Water flow changed" else null)
             12 -> CleanTimelineEntry(e.epoch, "Clean finished", milestone = true)
             23 -> CleanTimelineEntry(e.epoch, "Auto-empty", when (f.int("231")) { 1 -> "Balanced"; 2 -> "High"; else -> null })
+            // State changes are not shown, except a pause, which the official app lists ("Pauzeren").
+            CLEAN_EVENT_STATE_CHANGE -> if (f.int("112") == VacuumStateCodes.PAUSED) CleanTimelineEntry(e.epoch, "Paused") else null
             else -> null
         }
     }
+}

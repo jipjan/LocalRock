@@ -75,3 +75,29 @@ class CleanRunSettingsTest {
         assertEquals("Mop only", CleanRunSettings(0, 2, 0, 1).mode)
     }
 }
+
+class CleanTimelineResumeTest {
+    // The end of the a296 clean at 11:09 on 2026-11-15 (second floor). The official app listed:
+    // "Kitchen · Reiniging hervatten", "Pauzeren", "Reiniging voltooid".
+    private fun ev(t: Long, i: Int, e: String) = CleanEvent(t, i, Json.parseToJsonElement(e) as kotlinx.serialization.json.JsonObject)
+    private val events = listOf(
+        ev(1794737561, 42, """{"2":1,"421":0,"3":2,"4":35,"5":0,"6":1,"422":1,"10":0,"12":0}"""),
+        ev(1794738975, 42, """{"2":1,"421":0,"3":2,"4":35,"5":0,"6":1,"422":1,"10":0,"12":0}"""),
+        ev(1794738975, 42, """{"425":0,"2":1}"""),
+        ev(1794739400, 11, """{"111":5,"112":10,"1":82,"113":1}"""),
+        ev(1794739407, 12, """{"121":123}"""),
+    )
+
+    @Test
+    fun aRoomGoneBackToIsAResumeAndAPauseIsListed() {
+        val names = mapOf(1 to "Kitchen")
+        val lines = describeCleanEvents(events) { names[it] }
+        assertEquals(listOf("Cleaning Kitchen", "Resumed cleaning Kitchen", "Paused", "Clean finished"), lines.map { it.title })
+    }
+
+    @Test
+    fun aSlideWaterLevelIsReadAsTheSlider() {
+        val first = describeCleanEvents(events) { null }.first()
+        assertEquals("15 · Medium", first.settings?.waterLabel)
+    }
+}

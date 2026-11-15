@@ -1033,22 +1033,53 @@ private fun MaintenanceScreen(
                             )
                         }
                     }
-                    consumables.strainerWorkTime?.let { used ->
+                    // Counted, not timed: shown as the official app does, with the count since the last reset.
+                    consumables.strainerWorkTime?.let { count ->
                         item { HorizontalDivider(Modifier.padding(start = 76.dp)) }
                         item {
-                            ConsumableItem(
+                            CountedConsumableItem(
                                 icon = Icons.Default.FilterAlt,
                                 iconTint = AppColors.AccentIndigo,
                                 title = "Strainer",
-                                usedSeconds = used,
-                                maxSeconds = ConsumableStatus.STRAINER_LIFETIME_S,
+                                detail = "Clean when needed · $count mop wash${if (count == 1L) "" else "es"} since reset",
                                 onReset = { onReset("strainer_work_times") },
+                            )
+                        }
+                    }
+                    consumables.dustCollectionWorkTimes?.let { count ->
+                        item { HorizontalDivider(Modifier.padding(start = 76.dp)) }
+                        item {
+                            CountedConsumableItem(
+                                icon = Icons.Default.Delete,
+                                iconTint = AppColors.Good,
+                                title = "Dust bag",
+                                detail = "Replace when needed · $count auto-empt${if (count == 1L) "y" else "ies"} since reset",
+                                onReset = { onReset("dust_collection_work_times") },
                             )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/** A part the robot counts uses of rather than timing: no lifetime, just the count and a reset. */
+@Composable
+private fun CountedConsumableItem(icon: ImageVector, iconTint: Color, title: String, detail: String, onReset: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Surface(shape = RoundedCornerShape(12.dp), color = iconTint.copy(alpha = 0.12f), modifier = Modifier.size(44.dp)) {
+            Box(contentAlignment = Alignment.Center) { Icon(icon, null, Modifier.size(22.dp), iconTint) }
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        TextButton(onClick = onReset) { Text("Reset", color = MaterialTheme.colorScheme.error) }
     }
 }
 

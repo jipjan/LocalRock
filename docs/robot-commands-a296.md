@@ -178,6 +178,20 @@ Furniture types (type, subtype): TV cabinet 43,0 · bed double 45,2 · bed singl
 table 48,2 · shoe rack 49,0 · nightstand 50,0 · wardrobe 51,0 · litter box 52,0 · closed litter box
 53,0 · pet cage 54,0 · pet basket 55,0 · pet bowls 56,0 · floor mirror 57,0 · cat tree 58,0.
 
+### Options the robot changes together (2026-11-15)
+
+`switch_status` in `get_status` and `common_switch_status` from `get_offline_map_status` carry the
+same bits (plugin: 1 offline map, 2 cleaning-fluid module, 8 Carpets first, 16 re-clean dirty spots,
+32 Cross carpets). Turning Cross carpets on cleared Carpets first (26 -> 50), and turning re-mop dirty
+spots off cleared it too (26 -> 2); turning them back did not restore it. Adaptive lift is refused
+while Carpets first is off: -10007 "invalid param, not carpet clean first".
+
+### Consumables (2026-11-15)
+
+`get_consumable` on the a296: `strainer_work_times` (5 after two cleans) and
+`dust_collection_work_times` (2) are counts of mop washes and auto-empties, not seconds; the official
+app shows no lifetime for them ("clean/replace when needed"). `filter_element_work_time` was 0.
+
 ### Deleting a carpet the robot detected (2026-11-15)
 
 Leaving a detected carpet out of `set_carpet_area` removes it only until the robot detects it again
@@ -241,5 +255,10 @@ Settings fields in events 25 and 42, as the official app's room card shows them 
 3 suction (1 Quiet, 2 Standard, 3 Strong, 4 MAX, 5 MAX+; quiet uses a moon icon, the rest a fan),
 4 water (0 off, 1 Low, 2 Medium, 3 High; water drop), 5 route (0 Standard), 6 passes (×n). With
 suction 0 the card says "Mop only", with water 0 "Vacuum only", otherwise "Vacuum and mop".
+
+Also seen (2026-11-15): a room the robot goes back to is logged twice at the same second, a normal
+42 and `{"425":0,"2":room}`; the official app shows only "<room> · Reiniging hervatten" (resume
+cleaning). An 11 with 112 = 10 is shown as "Pauzeren" (paused). Water in 25/42 on a water-slide robot
+is the slider code minus 200 (35 = 235, the medium mark).
 
 Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47 (room queue), 51, 54, 61, 62.
