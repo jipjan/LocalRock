@@ -195,6 +195,15 @@ Edits always apply to the loaded map; every map-indexed command names it (`save_
 refuses a save when the editor's shapes were read while another map was loaded. Tested on map 1
 (`save_map … [100,1]`, `set_carpet_area … "map_index":1`).
 
+### Other things seen while editing two maps (2026-11-15)
+
+- A map requested (`get_map_v1`) while an edit session was open was never answered; ask for the map
+  only after `end_edit_map`.
+- Each saved map has its own room mapping: `get_room_mapping` on map 1 answered
+  `[[1,"",1],[2,"6",14],[3,"5",10],[4,"4",1]]` (segment, home room id, room type). Its rooms were
+  created on the server when the map was built, after the home was first read, and the official app
+  gave segment 1 a new room (`name_segment`) the first time it opened that map.
+
 ### Where the map keeps them (legacy `rr` map, a296)
 
 | Block | Holds | Entry |
