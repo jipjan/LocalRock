@@ -123,6 +123,7 @@ import com.kodraliu.localrock.shared.vacuum.restrictionSaveBlocker
 import com.kodraliu.localrock.shared.vacuum.restrictionsMatch
 import com.kodraliu.localrock.shared.vacuum.thresholdStrip
 import com.kodraliu.localrock.shared.vacuum.saveMapIndex
+import com.kodraliu.localrock.shared.vacuum.zoneMatches
 import com.kodraliu.localrock.shared.vacuum.restrictionVertexCount
 import com.kodraliu.localrock.shared.vacuum.map.FloorMaterial
 import com.kodraliu.localrock.shared.vacuum.map.MapZone
@@ -283,9 +284,12 @@ fun MapEditScreen(
 
     // Follow the robot's map until the user starts editing; after that local edits own the state
     // so the periodic map poll can't wipe work in progress.
+    // The map (floor) the shapes below were read from; a save is refused if the robot has another one loaded.
+    var editingFloor by remember { mutableStateOf<Int?>(null) }
     LaunchedEffect(parsedMap, dirty) {
         val pm = parsedMap
         if (!dirty && pm != null) {
+            editingFloor = repository.parsedMapFloorFlag
             zones = pm.noGoZones + pm.noMopZones + pm.carpetAreas + pm.thresholds +
                 pm.curtains.orEmpty() + pm.furniture.orEmpty() + pm.eraserZones.orEmpty() +
                 // Only the zones the user drew; what the robot found itself, and erase marks, stay as they are.
@@ -297,7 +301,7 @@ fun MapEditScreen(
 
     val pm = parsedMap
     val blockedReason = repository.editBlockedReason(pm, status.state)
-    val mapIndex = saveMapIndex(floorMaps)
+    val mapIndex = saveMapIndex(floorMaps, status.loadedMapFlag)
     // Carpets and thresholds only need the map index; no-go zones and walls also need save_map to
     // be safe on this map.
     // Until the robot's map list arrives nothing is blocked for drawing; only Save waits for it.
@@ -546,7 +550,8 @@ fun MapEditScreen(
                             ShapeBar(
                                 kind = kind,
                                 round = selectedZone?.isRoundCarpet == true,
-                                title = furnitureLabel(selectedZone),
+                                title = furnitureLabel(selectedZone) ?: "Detected carpet".takeIf { selectedZone?.isDetectedCarpet == true },
+                                help = DETECTED_CARPET_HELP.takeIf { selectedZone?.isDetectedCarpet == true && pm?.ignoredCarpetZones != null },
                                 canEdit = deleteEnabled,
                                 onDelete = {
                                     when (sel) {
@@ -604,6 +609,9 @@ fun MapEditScreen(
         val noGo = zones.count { it.kind == ZoneKind.NO_GO }
         val carpets = zones.count { it.kind == ZoneKind.CARPET }
         val thresholds = zones.count { it.kind == ZoneKind.THRESHOLD }
+        val deletesDetectedCarpet = pm?.ignoredCarpetZones != null && pm.carpetAreas.any { old ->
+            old.isDetectedCarpet && zones.none { it.kind == ZoneKind.CARPET && zoneMatches(it, old) }
+        }
         val extras = listOfNotNull(
             zones.count { it.kind == ZoneKind.CURTAIN }.takeIf { pm?.curtains != null }?.let { "$it curtain(s)" },
             zones.count { it.kind == ZoneKind.LOW_SPACE }.takeIf { pm?.lowSpaceZones != null }?.let { "$it under-furniture zone(s)" },
@@ -617,7 +625,8 @@ fun MapEditScreen(
                 Text(
                     "The robot will keep exactly these: $noGo no-go zone(s), ${walls.size} wall(s), " +
                         "$carpets carpet area(s), $thresholds threshold(s)$extras. Anything removed here is " +
-                        "removed from the robot."
+                        "removed from the robot." +
+                        (if (deletesDetectedCarpet) " Where you deleted a carpet the robot found, it stops detecting carpet." else "")
                 )
             },
             confirmButton = {
@@ -633,7 +642,7 @@ fun MapEditScreen(
                     val furniture = zones.filter { it.kind == ZoneKind.FURNITURE }.takeIf { m?.furniture != null }
                     val eraser = zones.filter { it.kind == ZoneKind.ERASER }.takeIf { m?.eraserZones != null }
                     runEdit("Saved. The robot's map shows the changes.") {
-                        repository.saveMapEdits(noGoZones, savedWalls, carpetAreas, thresholdStrips, curtains, lowSpace, furniture, eraser)
+                        repository.saveMapEdits(noGoZones, savedWalls, carpetAreas, thresholdStrips, curtains, lowSpace, furniture, eraser, floorFlag = editingFloor)
                         dirty = false
                         selection = null
                         null
@@ -1218,6 +1227,9 @@ private fun kindTitle(kind: ZoneKind?, round: Boolean = false) = when (kind) {
     ZoneKind.ERASER -> "Erased area"
 }
 
+/** A carpet the robot found can only be deleted, as in the official app; deleting it ignores carpet there. */
+private const val DETECTED_CARPET_HELP = "Found by the robot. Deleting it turns carpet detection off in this area."
+
 private fun kindHelp(kind: ZoneKind?, round: Boolean = false) = when {
     round -> "Drag to move. Resize round carpets in the Roborock app."
     else -> kindHelpFor(kind)
@@ -1235,14 +1247,14 @@ private fun kindHelpFor(kind: ZoneKind?) = when (kind) {
 
 /** Replaces the tool dock while a shape is selected: what it is, and what can be done to it. */
 @Composable
-private fun ShapeBar(kind: ZoneKind?, round: Boolean, title: String? = null, canEdit: Boolean, onDelete: () -> Unit, onDone: () -> Unit) {
+private fun ShapeBar(kind: ZoneKind?, round: Boolean, title: String? = null, help: String? = null, canEdit: Boolean, onDelete: () -> Unit, onDone: () -> Unit) {
     val color = kind?.let { zoneColor(it) } ?: WALL_COLOR
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(Modifier.size(14.dp).clip(CircleShape).background(color))
         Column(Modifier.weight(1f)) {
             Text(title ?: kindTitle(kind, round), style = MaterialTheme.typography.titleSmall)
             Text(
-                if (canEdit || kind == ZoneKind.NO_MOP) kindHelp(kind, round) else "Can't be changed right now.",
+                if (canEdit || kind == ZoneKind.NO_MOP) help ?: kindHelp(kind, round) else "Can't be changed right now.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1484,9 +1496,9 @@ private val ROTATE_HANDLE_DISTANCE = 36.dp
  * Round carpets only move: the map stores them as a bounding square plus a flag, and what the robot
  * makes of a stretched or rotated one has not been captured.
  */
-private fun canRotateOrResize(zone: MapZone) =
+private fun canRotateOrResize(zone: MapZone) = !zone.isDetectedCarpet && (
     zone.kind == ZoneKind.NO_GO || zone.kind == ZoneKind.LOW_SPACE || zone.kind == ZoneKind.FURNITURE || zone.kind == ZoneKind.ERASER ||
-        (zone.kind == ZoneKind.CARPET && !zone.isRoundCarpet)
+        (zone.kind == ZoneKind.CARPET && !zone.isRoundCarpet))
 
 /** Screen positions of the selected shape's handles. */
 private fun dragHandles(
@@ -1596,7 +1608,8 @@ private fun applyEdit(
         is Selection.Zone -> {
             val z = startZone ?: return
             val moved = when (target) {
-                DragTarget.Body -> z.translated(dx, dy)
+                // A detected carpet stays where the robot found it: moving it would only be undone.
+                DragTarget.Body -> if (z.isDetectedCarpet) return else z.translated(dx, dy)
                 is DragTarget.ZoneCorner -> {
                     val (cx, cy) = z.corners()[target.index]
                     z.resizedFromCorner(target.index, cx + dx, cy + dy, MIN_SHAPE_MM)

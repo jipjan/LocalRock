@@ -16,6 +16,7 @@ import com.kodraliu.localrock.shared.vacuum.map.ParsedMapRoom
 import com.kodraliu.localrock.shared.vacuum.map.VirtualWall
 import com.kodraliu.localrock.shared.vacuum.map.parseB01Map
 import com.kodraliu.localrock.shared.vacuum.map.parseLegacyMap
+import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -636,6 +637,11 @@ class VacuumRepository(
         else -> null
     }
 
+    /** The robot's loaded map (map_status) when the current [parsedMap] was requested; null if unknown. */
+    @Volatile
+    var parsedMapFloorFlag: Int? = null
+        private set
+
     /** Current map, checked to be one this app can edit safely. */
     private fun editableMap(): ParsedMap {
         editBlockedReason()?.let { throw MapEditException(it) }
@@ -676,17 +682,33 @@ class VacuumRepository(
         furniture: List<MapZone>? = null,
         /** All map eraser areas, or null to leave them. */
         eraserZones: List<MapZone>? = null,
+        /** The map the shapes were read from ([parsedMapFloorFlag] when the editor loaded them). */
+        floorFlag: Int? = null,
     ): Unit = mapEditMutex.withLock {
         val map = editableMap()
         runCatching { fetchFloorMaps() }
         if (!_floorMapsLoaded.value) {
             throw MapEditException("Couldn't read the robot's saved maps, so nothing was saved. Try again.")
         }
-        val mapIndex = saveMapIndex(_floorMaps.value)
+        refreshStatus()
+        val loaded = _status.value.loadedMapFlag
+        val mapIndex = saveMapIndex(_floorMaps.value, loaded)
         mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
         val index = mapIndex!!
+        // With several maps, the shapes must come from the map that is loaded now: edits always apply
+        // to the loaded one, and saving another floor's shapes there would overwrite it.
+        if (_floorMaps.value.size > 1 && (floorFlag ?: parsedMapFloorFlag) != index) {
+            throw MapEditException("The robot loaded another map while you were editing. Nothing was saved; close the editor and open it again.")
+        }
         val restrictionsChanged = !restrictionsMatch(map, noGoZones, map.noMopZones, walls)
-        val carpetsChanged = !sameZones(carpets, map.carpetAreas)
+        // A carpet the robot detected comes back when it is only left out of set_carpet_area: it has to
+        // be ignored, as the official app does, which also removes other detected carpets in that area.
+        val ignoreZones = if (map.ignoredCarpetZones != null) {
+            map.carpetAreas.filter { old -> old.isDetectedCarpet && carpets.none { zoneMatches(it, old) } }.map(::ignoreZoneFor)
+        } else emptyList()
+        fun ignored(c: MapZone) = c.isDetectedCarpet && ignoreZones.any { it.coversCarpet(c) }
+        val keptCarpets = carpets.filterNot(::ignored)
+        val carpetsChanged = !sameZones(keptCarpets, map.carpetAreas.filterNot(::ignored))
         val thresholdsChanged = !sameZones(thresholds, map.thresholds)
         val curtainsChanged = curtains != null && map.curtains != null && !sameZones(curtains, map.curtains)
         val userLowSpace = map.lowSpaceZones.orEmpty().filter { it.lowSpaceKind == LOW_SPACE_USER }
@@ -694,13 +716,14 @@ class VacuumRepository(
         val furnitureChange = if (furniture != null && map.furniture != null) furnitureChanges(map.furniture, furniture) else null
         val furnitureChanged = furnitureChange != null && (furnitureChange.first.isNotEmpty() || furnitureChange.second.isNotEmpty())
         val eraserChanged = eraserZones != null && map.eraserZones != null && !sameZones(eraserZones, map.eraserZones)
-        if (!restrictionsChanged && !carpetsChanged && !thresholdsChanged &&
+        if (!restrictionsChanged && !carpetsChanged && ignoreZones.isEmpty() && !thresholdsChanged &&
             !curtainsChanged && !lowSpaceChanged && !furnitureChanged && !eraserChanged
         ) return@withLock
         if (restrictionsChanged) restrictionSaveBlocker(map, mapIndex)?.let { throw MapEditException(it) }
         session.inEditSession {
             if (restrictionsChanged) session.saveMap(noGoZones, walls, index)
-            if (carpetsChanged) session.setCarpetAreas(carpets, index, map.carpetFlagsPresent)
+            if (ignoreZones.isNotEmpty()) session.setIgnoreCarpetZones(ignoreZones, index)
+            if (carpetsChanged) session.setCarpetAreas(keptCarpets, index, map.carpetFlagsPresent)
             if (thresholdsChanged) session.setThresholds(thresholds, index)
             if (curtainsChanged) session.setCurtains(curtains!!, index)
             if (lowSpaceChanged) {
@@ -717,8 +740,8 @@ class VacuumRepository(
         }
         awaitMap { m ->
             restrictionsMatch(m, noGoZones, map.noMopZones, walls) &&
-                sameZones(carpets, m.carpetAreas) &&
-                m.carpetAreas.count { it.isRoundCarpet } == carpets.count { it.isRoundCarpet } &&
+                sameZones(keptCarpets, m.carpetAreas) &&
+                m.carpetAreas.count { it.isRoundCarpet } == keptCarpets.count { it.isRoundCarpet } &&
                 sameZones(thresholds, m.thresholds) &&
                 (!curtainsChanged || sameZones(curtains!!, m.curtains.orEmpty())) &&
                 (!eraserChanged || sameZones(eraserZones!!, m.eraserZones.orEmpty())) &&
@@ -1556,6 +1579,9 @@ class VacuumRepository(
             return MapResponse(requestId = 0, data = ByteArray(0))
         }
         _mapStatus.value = "requesting…"
+        // The map the robot has loaded as the request goes out, so edits know which floor they show.
+        // The first map can be asked for before the first status has arrived; ask for the status then.
+        val floorBefore = _status.value.loadedMapFlag ?: run { refreshStatus(); _status.value.loadedMapFlag }
         val sd = createSecurityData(rriotKeyProvider())
         try {
             val resp = session.fetchMap(sd, timeoutMs = 60_000L)
@@ -1566,6 +1592,7 @@ class VacuumRepository(
             val parsed = b01.getOrNull()
                 ?: runCatching { parseLegacyMap(resp.data) }.getOrNull()
             _parsedMap.value = parsed
+            parsedMapFloorFlag = floorBefore
             // Debug builds keep the latest map, to work out blocks (curtains, furniture, ...) with adb.
             if (isDebugBuild) runCatching { saveDebugBlob("map-latest.bin", resp.data) }
             if (parsed != null && parsed.rooms.isNotEmpty()) {

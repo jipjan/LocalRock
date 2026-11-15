@@ -120,6 +120,11 @@ data class ParsedMap(
     val lowSpaceZones: List<MapZone>? = null,
     /** Map eraser areas (legacy block 47, `app_set_beautify_blocks`): parts of the map hidden as stray bits; null when absent. */
     val eraserZones: List<MapZone>? = null,
+    /**
+     * Areas where carpet detection is turned off (legacy block 19, `set_ignore_carpet_zone`); null when
+     * the map has no such block, so a detected carpet can't be removed that way.
+     */
+    val ignoredCarpetZones: List<MapZone>? = null,
     /** Each room's outline as straight edges (legacy block 55), which the official app draws rooms with; empty when absent. */
     val floorPlan: List<FloorPlanRoom> = emptyList(),
     /** Furniture placed on the map (legacy block 25, `save_furnitures`); null when absent. */
@@ -145,7 +150,8 @@ data class ParsedMap(
             other.thresholds == thresholds &&
             other.obstacles == obstacles &&
             other.curtains == curtains && other.lowSpaceZones == lowSpaceZones && other.furniture == furniture &&
-            other.eraserZones == eraserZones && other.floorPlan == floorPlan
+            other.eraserZones == eraserZones && other.floorPlan == floorPlan &&
+            other.ignoredCarpetZones == ignoredCarpetZones
 
     override fun hashCode(): Int {
         var r = width
@@ -170,6 +176,7 @@ data class ParsedMap(
         r = 31 * r + furniture.hashCode()
         r = 31 * r + eraserZones.hashCode()
         r = 31 * r + floorPlan.hashCode()
+        r = 31 * r + ignoredCarpetZones.hashCode()
         return r
     }
 }
@@ -216,6 +223,9 @@ const val ERASER_USER = 0
  * round carpet and 0x02338000 for a new rectangular one. Only the round bit is interpreted.
  */
 const val CARPET_FLAG_ROUND = 0x04000000L
+
+/** [MapZone.extra] of a carpet the robot detected: in map block 39 but not among the drawn ones of block 22. */
+const val CARPET_DETECTED = 1
 const val NEW_ROUND_CARPET_FLAGS = 0x06338000L
 const val NEW_RECT_CARPET_FLAGS = 0x02338000L
 
@@ -254,6 +264,15 @@ data class MapZone(
 
     /** Under-furniture zone kind; null for other kinds. */
     val lowSpaceKind: Int? get() = extra.getOrNull(0)?.takeIf { kind == ZoneKind.LOW_SPACE }
+
+    /** A carpet the robot detected itself, not one drawn in an app; see [CARPET_DETECTED]. */
+    val isDetectedCarpet: Boolean
+        get() = kind == ZoneKind.CARPET && extra.firstOrNull() == CARPET_DETECTED
+
+    /** Same four corners in the same order, as the robot repeats a carpet in blocks 22 and 39. */
+    fun sameCorners(other: MapZone): Boolean =
+        x0 == other.x0 && y0 == other.y0 && x1 == other.x1 && y1 == other.y1 &&
+            x2 == other.x2 && y2 == other.y2 && x3 == other.x3 && y3 == other.y3
 
     /** A round carpet: stored as its bounding square with [CARPET_FLAG_ROUND] set. */
     val isRoundCarpet: Boolean

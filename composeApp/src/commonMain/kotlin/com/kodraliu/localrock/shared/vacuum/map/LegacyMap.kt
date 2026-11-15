@@ -30,6 +30,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
     var curtains: List<MapZone>? = null
     var lowSpaceZones: List<MapZone>? = null
     var eraserZones: List<MapZone>? = null
+    var ignoredCarpetZones: List<MapZone>? = null
     var floorPlan: List<FloorPlanRoom> = emptyList()
     var furniture: List<MapZone>? = null
 
@@ -107,6 +108,8 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
                 thresholds = parseQuadZones(bytes, off, blockHeaderLen, blockDataLen, ZoneKind.THRESHOLD)
             BLOCK_CURTAINS -> curtains = parseCurtains(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_LOW_SPACE_ZONES -> lowSpaceZones = parseLowSpaceZones(bytes, off, blockHeaderLen, blockDataLen)
+            BLOCK_IGNORED_CARPET_ZONES ->
+                ignoredCarpetZones = parseQuadZones(bytes, off, blockHeaderLen, blockDataLen, ZoneKind.CARPET)
             BLOCK_ERASER_ZONES -> eraserZones = parseEraserZones(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_FLOOR_PLAN -> floorPlan = parseFloorPlan(bytes, off, blockHeaderLen, blockDataLen)
             BLOCK_FURNITURE -> furniture = parseFurniture(bytes, off, blockHeaderLen, blockDataLen)
@@ -141,12 +144,17 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         off += blockHeaderLen + blockDataLen
     }
 
-    // Block 39 repeats block 22's corners and adds each carpet's flags. Use it when the two agree on
-    // the count, so a map where they differ can never lose carpets — or when block 22 is empty: an
-    // a296 keeps its carpets in block 39 only (3 carpets there, none in 22, 2026-11-14), and ignoring
-    // them would let a carpet edit send set_carpet_area without them and delete them.
-    val carpetsFromFlags = flaggedCarpets?.takeIf { it.size == carpetAreas.size || carpetAreas.isEmpty() }
-    if (carpetsFromFlags != null) carpetAreas = carpetsFromFlags
+    // Block 22 (`customCarpet` in the a296 plugin) holds the carpets drawn in an app; block 39
+    // (`modeCarpet`) holds every carpet with its flags, the ones the robot detected too. Seen on an
+    // a296 (2026-11-15): one drawn carpet was in both, the detected ones only in 39. Block 39 is used
+    // when it holds every drawn carpet, so no carpet is lost; one not in block 22 is marked detected.
+    val drawnCarpets = carpetAreas
+    val carpetsFromFlags = flaggedCarpets?.takeIf { flagged -> drawnCarpets.all { d -> flagged.any { it.sameCorners(d) } } }
+    if (carpetsFromFlags != null) {
+        carpetAreas = carpetsFromFlags.map { c ->
+            if (drawnCarpets.any { it.sameCorners(c) }) c else c.copy(extra = listOf(CARPET_DETECTED))
+        }
+    }
 
     val pixels = imagePixels ?: throw MapParseException("Legacy map has no IMAGE block")
     val grid = ByteArray(pixels.size)
@@ -206,6 +214,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         curtains = curtains,
         lowSpaceZones = lowSpaceZones,
         eraserZones = eraserZones,
+        ignoredCarpetZones = ignoredCarpetZones,
         floorPlan = floorPlan,
         furniture = furniture,
         originalGrid = pixels,
@@ -381,6 +390,8 @@ private const val BLOCK_CURTAINS = 59
 
 // From the a296 plugin's map block table (`eraserZone`, saved with `app_set_beautify_blocks`).
 private const val BLOCK_ERASER_ZONES = 47
+// `cfbzs` in the a296 plugin: the areas set_ignore_carpet_zone last sent (2026-11-15).
+private const val BLOCK_IGNORED_CARPET_ZONES = 19
 private const val BLOCK_FLOOR_PLAN = 55
 
 /**

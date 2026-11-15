@@ -12,6 +12,7 @@ import com.kodraliu.localrock.shared.vacuum.map.parseFurniture
 import com.kodraliu.localrock.shared.vacuum.map.parseLowSpaceZones
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class MapFurnitureCurtainTest {
     private fun hex(s: String) = ByteArray(s.length / 2) { s.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
@@ -145,5 +146,25 @@ class A296CarpetBlockTest {
         assertEquals(1, map.carpetAreas.size)
         assertEquals(0x331c7eL, map.carpetAreas[0].flags)
         assertEquals(true, map.carpetFlagsPresent)
+        assertTrue(map.carpetAreas[0].isDetectedCarpet)
+    }
+
+    @Test
+    fun aDrawnCarpetIsInBothBlocksAndADetectedOneOnlyIn39() {
+        // a296, 2026-11-15: after LocalRock drew a carpet, block 22 held it and block 39 held it (flags
+        // 0x00336700) plus the kitchen carpet the robot had detected (0x00331c7e).
+        fun le16(v: Int) = byteArrayOf(v.toByte(), (v shr 8).toByte())
+        fun le32(v: Int) = byteArrayOf(v.toByte(), (v shr 8).toByte(), (v shr 16).toByte(), (v shr 24).toByte())
+        fun quad(vararg v: Int) = v.fold(ByteArray(0)) { a, x -> a + le16(x) }
+        val header = byteArrayOf('r'.code.toByte(), 'r'.code.toByte()) + le16(20) + ByteArray(16)
+        val image = le16(2) + le16(28) + le32(1) + le32(0) + le32(0) + le32(0) + le32(1) + le32(1) + byteArrayOf(7)
+        val drawn = quad(25353, 31114, 27397, 31114, 27397, 29836, 25353, 29836)
+        val kitchen = quad(25625, 34275, 26275, 34275, 26275, 35175, 25625, 35175)
+        val block22 = le16(22) + le16(12) + le32(16) + le32(1) + drawn
+        val block39 = le16(39) + le16(12) + le32(40) + le32(2) + drawn + kitchen + le32(0x336700) + le32(0x331c7e)
+        val map = com.kodraliu.localrock.shared.vacuum.map.parseLegacyMap(header + image + block22 + block39)
+        assertEquals(2, map.carpetAreas.size)
+        assertEquals(listOf(false, true), map.carpetAreas.map { it.isDetectedCarpet })
+        assertEquals(listOf(0x336700L, 0x331c7eL), map.carpetAreas.map { it.flags })
     }
 }

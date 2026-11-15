@@ -74,7 +74,8 @@ internal const val SAVE_MAP_TYPE_MAP_INDEX = 100
  * The map index save_map needs, from the robot's map list: known only when the robot holds exactly
  * one map (the captured case). Null otherwise.
  */
-fun saveMapIndex(floorMaps: List<FloorMap>): Int? = floorMaps.singleOrNull()?.mapFlag
+fun saveMapIndex(floorMaps: List<FloorMap>, loadedMapFlag: Int? = null): Int? =
+    floorMaps.singleOrNull()?.mapFlag ?: loadedMapFlag?.takeIf { flag -> floorMaps.any { it.mapFlag == flag } }
 
 /**
  * Reasons [map]'s restrictions can't be saved safely, or null when they can. save_map replaces
@@ -98,7 +99,7 @@ private const val MOP_ONLY_AREAS_BLOCK = 23
  * That map need not be map 0: a robot that once had a second floor can keep its only map as map 1.
  */
 fun mapIndexBlocker(mapIndex: Int?): String? =
-    if (mapIndex == null) "Saving map edits is only supported on robots with a single saved map for now." else null
+    if (mapIndex == null) "The robot hasn't said which of its maps is loaded, so map edits can't be saved yet." else null
 
 fun restrictionVertexCount(walls: Int, zones: Int): Int = walls * 2 + zones * 4
 
@@ -405,6 +406,38 @@ suspend fun VacuumSession.setCurtains(curtains: List<MapZone>, mapIndex: Int): V
 suspend fun VacuumSession.setLowSpaceZones(zones: List<MapZone>, mapIndex: Int): V1Response =
     sendCommandRaw("app_set_low_space_zones", encodeLowSpaceParams(zones, mapIndex), timeoutMs = MAP_EDIT_TIMEOUT_MS)
         .requireOk("app_set_low_space_zones")
+
+/**
+ * `set_ignore_carpet_zone`, as the official a296 app sent it when a detected carpet was deleted:
+ * `{"map_index":0,"need_retry":1,"zone_data":[[x1,…,y4]]}`. The robot removes the detected carpets
+ * inside each area and stops detecting carpet there. It keeps only the areas of the latest command
+ * (map block 19); the official app sent just the newly deleted ones, and earlier deletions stayed.
+ */
+internal fun encodeIgnoreCarpetParams(zones: List<MapZone>, mapIndex: Int): JsonObject {
+    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    return JsonObject(mapOf(
+        "map_index" to JsonPrimitive(mapIndex),
+        "need_retry" to JsonPrimitive(1),
+        "zone_data" to JsonArray(zones.map { JsonArray(quad(it)) }),
+    ))
+}
+
+/** The area the official app sent for a deleted detected carpet: the carpet's bounds and 150 mm around them. */
+internal fun ignoreZoneFor(carpet: MapZone): MapZone = MapZone.rect(
+    carpet.minXmm - IGNORE_CARPET_MARGIN_MM, carpet.minYmm - IGNORE_CARPET_MARGIN_MM,
+    carpet.maxXmm + IGNORE_CARPET_MARGIN_MM, carpet.maxYmm + IGNORE_CARPET_MARGIN_MM,
+    ZoneKind.CARPET,
+)
+
+internal const val IGNORE_CARPET_MARGIN_MM = 150
+
+/** True when [carpet] lies inside [zone]; the robot removes such detected carpets with the zone. */
+internal fun MapZone.coversCarpet(carpet: MapZone): Boolean =
+    carpet.minXmm >= minXmm && carpet.maxXmm <= maxXmm && carpet.minYmm >= minYmm && carpet.maxYmm <= maxYmm
+
+suspend fun VacuumSession.setIgnoreCarpetZones(zones: List<MapZone>, mapIndex: Int): V1Response =
+    sendCommandRaw("set_ignore_carpet_zone", encodeIgnoreCarpetParams(zones, mapIndex), timeoutMs = MAP_EDIT_TIMEOUT_MS)
+        .requireOk("set_ignore_carpet_zone")
 
 suspend fun VacuumSession.setEraserZones(zones: List<MapZone>, mapIndex: Int): V1Response =
     sendCommandRaw("app_set_beautify_blocks", encodeEraserParams(zones, mapIndex), timeoutMs = MAP_EDIT_TIMEOUT_MS)

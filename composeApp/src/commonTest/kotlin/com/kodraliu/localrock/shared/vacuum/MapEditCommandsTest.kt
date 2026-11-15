@@ -1,6 +1,7 @@
 package com.kodraliu.localrock.shared.vacuum
 
 import com.kodraliu.localrock.shared.protocol.V1Response
+import com.kodraliu.localrock.shared.vacuum.map.CARPET_DETECTED
 import com.kodraliu.localrock.shared.vacuum.map.MapFormat
 import com.kodraliu.localrock.shared.vacuum.map.MapZone
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
@@ -256,7 +257,7 @@ class MapEditCommandsTest {
         assertTrue(restrictionSaveBlocker(map(blocks = setOf(23)), 0)!!.contains("mop-only"))
         assertTrue(restrictionSaveBlocker(map(noMop = listOf(noGo.copy(kind = ZoneKind.NO_MOP))), 0)!!.contains("no-mop"))
         assertNull(restrictionSaveBlocker(map(), mapIndex = 1))
-        assertTrue(restrictionSaveBlocker(map(), mapIndex = null)!!.contains("single saved map"))
+        assertTrue(restrictionSaveBlocker(map(), mapIndex = null)!!.contains("which of its maps is loaded"))
     }
 
     @Test
@@ -266,6 +267,35 @@ class MapEditCommandsTest {
         assertEquals(1, saveMapIndex(listOf(FloorMap("Home", 1))))
         assertNull(saveMapIndex(emptyList()))
         assertNull(saveMapIndex(listOf(FloorMap("Down", 0), FloorMap("Up", 1))))
+    }
+
+    @Test
+    fun with_several_maps_the_loaded_one_is_edited() {
+        val floors = listOf(FloorMap("Beneden", 0), FloorMap("Boven", 1))
+        assertEquals(1, saveMapIndex(floors, loadedMapFlag = 1))
+        assertEquals(0, saveMapIndex(floors, loadedMapFlag = 0))
+        // Not one of the saved maps (63 while a new map is unsaved), or not known: nothing is edited.
+        assertNull(saveMapIndex(floors, loadedMapFlag = 63))
+        assertNull(saveMapIndex(floors, loadedMapFlag = null))
+        // A single map is that map, whatever map_status says.
+        assertEquals(0, saveMapIndex(listOf(FloorMap("Hus", 0)), loadedMapFlag = 63))
+    }
+
+    @Test
+    fun a_deleted_detected_carpet_is_ignored_as_the_official_app_sends_it() {
+        // a296, 2026-11-15: the carpet at x 25775-26325, y 27425-27725 (flags 0x00331cfe) was deleted
+        // in the official app, which sent this area: its bounds and 150 mm around them.
+        val carpet = MapZone(25775, 27425, 26325, 27425, 26325, 27725, 25775, 27725, ZoneKind.CARPET, flags = 0x00331cfeL, extra = listOf(CARPET_DETECTED))
+        assertTrue(carpet.isDetectedCarpet)
+        assertFalse(carpet.copy(extra = emptyList()).isDetectedCarpet)
+        assertEquals(
+            """{"map_index":0,"need_retry":1,"zone_data":[[25625,27875,26475,27875,26475,27275,25625,27275]]}""",
+            encodeIgnoreCarpetParams(listOf(ignoreZoneFor(carpet)), 0).toString(),
+        )
+        assertTrue(ignoreZoneFor(carpet).coversCarpet(carpet))
+        // A fragment partly outside the area stays, as it did on the robot.
+        val outside = MapZone(25075, 24575, 25175, 24575, 25175, 24625, 25075, 24625, ZoneKind.CARPET, flags = 0x00331e7eL)
+        assertFalse(MapZone.rect(24375, 24425, 25125, 24875, ZoneKind.CARPET).coversCarpet(outside))
     }
 
     @Test

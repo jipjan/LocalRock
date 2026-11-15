@@ -178,6 +178,23 @@ Furniture types (type, subtype): TV cabinet 43,0 · bed double 45,2 · bed singl
 table 48,2 · shoe rack 49,0 · nightstand 50,0 · wardrobe 51,0 · litter box 52,0 · closed litter box
 53,0 · pet cage 54,0 · pet basket 55,0 · pet bowls 56,0 · floor mirror 57,0 · cat tree 58,0.
 
+### Deleting a carpet the robot detected (2026-11-15)
+
+Leaving a detected carpet out of `set_carpet_area` removes it only until the robot detects it again
+(it came back as five fragments after a clean). The official app deletes it with
+`set_ignore_carpet_zone {"map_index":0,"need_retry":1,"zone_data":[[x1,…,y4]]}`, the carpet's bounds
+plus 150 mm, after warning that carpet detection is turned off there. The robot removes every detected
+carpet inside the area, and block 19 then holds only the areas of that command; earlier deletions
+stayed deleted. A drawn carpet is deleted with `set_carpet_area` (the remaining carpets, detected ones
+with their flags). LocalRock does the same.
+
+### Editing the second map
+
+Edits always apply to the loaded map; every map-indexed command names it (`save_map` `[100, n]`,
+`"map_index": n`). With several maps LocalRock edits the one `map_status >> 2` reports as loaded, and
+refuses a save when the editor's shapes were read while another map was loaded. Tested on map 1
+(`save_map … [100,1]`, `set_carpet_area … "map_index":1`).
+
 ### Where the map keeps them (legacy `rr` map, a296)
 
 | Block | Holds | Entry |
@@ -186,8 +203,11 @@ table 48,2 · shoe rack 49,0 · nightstand 50,0 · wardrobe 51,0 · litter box 5
 | 52 | under-furniture zones | 20 bytes: u32 kind (0 drawn by the user, 1 found by the robot, 2 erased by the user), 8 × u16 corners |
 | 47 | map eraser areas | 20 bytes: u32 type, 8 × u16 corners |
 | 55 | floor plan (bit 122) | per room: u16 room id, u16 point count, u16 point size (6), then per point u16 x, u16 y (mm) and u16 edge flag (1 along a wall, other values where it meets another room). The official app fills each room as this polygon and hides the pixel walls inside it; floor with room 0 inside shows grey |
+| 19 | carpet ignore areas (`cfbzs`) | 16 bytes: 8 × u16 corners; only the areas of the latest `set_ignore_carpet_zone` |
+| 22 | drawn carpets (`customCarpet`) | 16 bytes: 8 × u16 corners; only carpets drawn in an app |
+| 48 | carpet details (`longCarpet`) | 12 bytes per detected carpet: u32 carpet id, u32, u32 |
 | 59 | curtains | 20 bytes: 8 × u16 corners, 2 × u16 (0, 0) |
-| 39 | carpets with flags | the a296 keeps its carpets here only; block 22 stays empty |
+| 39 | carpets with flags (`modeCarpet`) | every carpet, detected and drawn: first all 8 × u16 corner sets, then one u32 flags each. Flags (plugin `MapCarpetCleanFlags`, from bit 0): userModified 1, userSetIndex 6, carpetId 8, deepClean 1, addPressure 1, priorityClean 3, cleanMode 3, longHaired 1, sidebrushlift 1, detectwire 1, shape 3, pileType 3. A carpet in 39 but not in 22 was detected by the robot |
 
 The robot keeps its own copy (kind 1) of a zone the user draws, so removing a zone needs an erase
 mark (kind 2) over it, as the official app sends. Erase marks stay in the list.
