@@ -19,7 +19,7 @@ NewFeatureStrBit table). See `robot-commands-a296.md` for the commands of everyt
 | – | (no bit) | Robot settings → Voice pack (`dnld_install_sound`, packs served by the local server) |
 | 100 | CollectDustCountShow | History → "Bin emptied" total (`get_clean_summary` → `dust_collection_count`) |
 | 71 | MapEraser | Map editor → Eraser (`app_set_beautify_blocks`, map block 47) |
-| 122 | FloorPlanMap | The map draws each room from its outline (map block 55), as the official app does |
+| 122 | FloorPlanMap | The map draws each room from its outline (map block 55), as the official app does; Settings → Room outlines on the map turns it off |
 | 108 | CleanEfficiency | History → m²/min per clean, with obstacles avoided, mop washes and bin emptied from the record |
 
 ### Handled on another page (not listed as missing)
@@ -57,13 +57,13 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Huisdieren: Huisdierenalbum (pet album) | Missing: `get_pet_album`, `get_pet_album_photos`, photos are encrypted like obstacle photos. |
 | Huisdieren: Reinigingsinstellingen (pet cleaning settings) | Built elsewhere: it holds auto-empty frequency (dock) and re-clean areas blocked by people/pets (`dynamic_obstacle_replenish_status`). |
 | Huisdieren: Huisdiermeubels (pet furniture) | Built: pet supplies deep clean, and "Add" opens the same furniture editor as the map editor's Furniture tool. |
-| Kaarten beheren (maps): save, multiple floors, backup | Built (map list, switch, backup/restore, rename). |
+| Kaarten beheren (maps): save, multiple floors, backup | Built (map list, switch, backup/restore, rename). Editing works on whichever map is loaded (tested on a second floor), with that map's own room names. |
 | Kaart bewerken: splitsen, combineren, naam, verboden zones, type vloer, tapijt, volgorde | Built. |
 | Kaart bewerken: **Drempel** (door sills) | Built (`app_set_smart_door_sill`). The a296 takes LocalRock's shorter form without `attrs`/`side_heights` (tested). |
 | Kaart bewerken: **Meubels** (furniture) | Built: the map editor's Furniture tool with all 20 types (`save_furnitures`, map block 25). |
 | Kaart bewerken: **Gordijn** (curtains) | Built: the map editor's Curtain tool (`app_set_curtains`, map block 59). |
 | Kaart bewerken: **Onder meubels** (under furniture) | Built: the map editor's Under furniture tool (`app_set_low_space_zones`, map block 52). |
-| Kaart bewerken: tapijt (rectangular and round) | Built (`set_carpet_area` with flags). Ignoring a detected carpet (`set_ignore_carpet_zone`) is not in this robot's editor. |
+| Kaart bewerken: tapijt (rectangular and round) | Built (`set_carpet_area` with flags). Deleting a carpet the robot detected uses `set_ignore_carpet_zone`, as the official app does, so it does not come back. |
 | Stemassistent: switch | Built (off; turning it on lets the robot process your voice). |
 | Stemassistent: Taal (voice pack) | Built, served by the local server. |
 | Stemassistent: Volume | Built (robot volume). `set_voice_chat_volume {"volume"}` is not this: in the plugin it is the talk-back volume of the remote-viewing screen, so it comes with remote viewing. |
