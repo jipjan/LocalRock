@@ -80,3 +80,18 @@ class MopRouteOptionsTest {
         assertEquals(null, mopRouteOptions(null, null))
     }
 }
+
+class TimerParamsTest {
+    @Test
+    fun setTimerIsSentAsTheOfficialA296AppSentIt() {
+        // Captured 2026-11-15: a weekday 19:05 full clean.
+        val settings = kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"clean_mop":1,"fan_power":102,"map_index":-1,"mop_mode":300,"repeat":1,"segments":"0","seq_type":0,"water_box_mode":235}""",
+        ) as kotlinx.serialization.json.JsonObject
+        assertEquals(
+            """{"data":[["1794751409585",["5 19 * * 1,2,3,4,5",["start_clean",""" +
+                """{"clean_mop":1,"fan_power":102,"map_index":-1,"mop_mode":300,"repeat":1,"segments":"0","seq_type":0,"water_box_mode":235}]]]],"need_retry":1}""",
+            setTimerParams("1794751409585", "5 19 * * 1,2,3,4,5", settings).toString(),
+        )
+    }
+}

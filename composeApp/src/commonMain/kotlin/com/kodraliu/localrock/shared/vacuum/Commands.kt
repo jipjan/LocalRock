@@ -110,6 +110,29 @@ suspend fun VacuumSession.appZonedClean(zones: List<ZoneRect>): V1Response =
 
 suspend fun VacuumSession.getTimer(): V1Response = sendCommand("get_timer")
 
+/** The ids of the robot's schedules, as the official a296 app reads them: `["1794751409585", …]`. */
+suspend fun VacuumSession.getTimerSummary(): V1Response = sendCommand("get_timer_summary")
+
+/** One schedule: `[[id, "on", [cron, ["start_clean", {…}]]]]`. */
+suspend fun VacuumSession.getTimerDetail(id: String): V1Response = sendCommand("get_timer_detail", listOf(JsonPrimitive(id)))
+
+/**
+ * `set_timer` as the official app sent it on an a296 (2026-11-15):
+ * `{"data":[[id, [cron, ["start_clean", {settings}]]]], "need_retry":1}`, the id in milliseconds and
+ * the clean's settings in full. The a296 refused the older form with "on" and empty settings
+ * (-10005 "timer type error").
+ */
+internal fun setTimerParams(id: String, cron: String, settings: JsonObject): JsonObject = JsonObject(mapOf(
+    "data" to JsonArray(listOf(JsonArray(listOf(
+        JsonPrimitive(id),
+        JsonArray(listOf(JsonPrimitive(cron), JsonArray(listOf(JsonPrimitive("start_clean"), settings)))),
+    )))),
+    "need_retry" to JsonPrimitive(1),
+))
+
+suspend fun VacuumSession.setTimerWithSettings(id: String, cron: String, settings: JsonObject): V1Response =
+    sendCommandRaw("set_timer", setTimerParams(id, cron, settings), firstReplyTimeoutMs = 6_000L)
+
 suspend fun VacuumSession.setTimer(id: String, enabled: Boolean, cron: String): V1Response =
     sendCommand("set_timer", listOf(JsonArray(listOf(
         JsonPrimitive(id),
@@ -125,7 +148,12 @@ suspend fun VacuumSession.setTimer(id: String, enabled: Boolean, cron: String): 
 suspend fun VacuumSession.delTimer(id: String): V1Response =
     sendCommand("del_timer", listOf(JsonPrimitive(id)))
 
+/** `upd_timer [id, "on"|"off"]`, flat, as the official a296 app sent it. */
 suspend fun VacuumSession.updTimer(id: String, enabled: Boolean): V1Response =
+    sendCommand("upd_timer", listOf(JsonPrimitive(id), JsonPrimitive(if (enabled) "on" else "off")))
+
+/** The nested form LocalRock sent before, kept for robots that refuse the flat one. */
+suspend fun VacuumSession.updTimerNested(id: String, enabled: Boolean): V1Response =
     sendCommand("upd_timer", listOf(JsonArray(listOf(
         JsonPrimitive(id),
         JsonPrimitive(if (enabled) "on" else "off"),

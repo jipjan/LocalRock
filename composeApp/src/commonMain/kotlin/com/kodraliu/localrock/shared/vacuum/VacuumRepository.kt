@@ -1064,9 +1064,15 @@ class VacuumRepository(
     }
 
     suspend fun fetchTimers() {
-        val resp = session.getTimer()
-        val result = resp.result ?: return
-        if (result !is JsonArray) return
+        // The official a296 app reads the ids, then each schedule; older robots answer get_timer.
+        val ids = runCatching { session.getTimerSummary().requireOk("get_timer_summary").result as? JsonArray }.getOrNull()
+        val result: JsonArray = if (ids != null) {
+            JsonArray(ids.mapNotNull { it.jsonPrimitive.contentOrNull }.mapNotNull { id ->
+                runCatching { (session.getTimerDetail(id).requireOk("get_timer_detail").result as? JsonArray)?.firstOrNull() }.getOrNull()
+            })
+        } else {
+            session.getTimer().result as? JsonArray ?: return
+        }
         val parsed = result.mapNotNull { entry ->
             if (entry !is JsonArray || entry.size < 3) return@mapNotNull null
             val id = entry[0].jsonPrimitive.contentOrNull ?: return@mapNotNull null
@@ -1079,9 +1085,18 @@ class VacuumRepository(
     }
 
     suspend fun createTimer(hour: Int, minute: Int, weekdays: Set<Int>): CleanTimer {
-        val id = nowEpochSeconds().toString()
+        // Milliseconds, as the official app's ids are.
+        val id = (nowEpochSeconds().toLong() * 1000).toString()
         val cron = buildCron(minute, hour, weekdays)
-        session.setTimer(id, enabled = true, cron = cron).requireOk("set_timer")
+        // The robot refuses a schedule without a route ("Param error, no mop_mode"), so read it first if unknown.
+        if (_mopMode.value == null) runCatching { fetchMopMode() }
+        val answer = session.setTimerWithSettings(id, cron, timerCleanSettings())
+        if (answer.errorCode() == PARAM_FORMAT_REFUSED_CODE && answer.error?.toString()?.contains("timer type") != true) {
+            // A robot that does not take the a296 form: the older one, with "on" and empty settings.
+            session.setTimer(id, enabled = true, cron = cron).requireOk("set_timer")
+        } else {
+            answer.requireOk("set_timer")
+        }
         val timer = CleanTimer(id = id, enabled = true, hour = hour, minute = minute, weekdays = weekdays)
         _timers.value = _timers.value + timer
         return timer
@@ -1089,8 +1104,28 @@ class VacuumRepository(
 
     suspend fun toggleTimer(timer: CleanTimer) {
         val updated = timer.copy(enabled = !timer.enabled)
-        session.updTimer(timer.id, updated.enabled).requireOk("upd_timer")
+        val answer = session.updTimer(timer.id, updated.enabled)
+        if (answer.errorCode() == PARAM_FORMAT_REFUSED_CODE) session.updTimerNested(timer.id, updated.enabled).requireOk("upd_timer")
+        else answer.requireOk("upd_timer")
         _timers.value = _timers.value.map { if (it.id == timer.id) updated else it }
+    }
+
+    /**
+     * The settings a schedule cleans with, as the official app sent them: the robot's current suction,
+     * water, route, passes and vacuum-then-mop, the whole home (`segments "0"`) on the loaded map (-1).
+     */
+    private fun timerCleanSettings(): JsonObject {
+        val s = _status.value
+        return JsonObject(buildMap {
+            put("clean_mop", JsonPrimitive(1))
+            s.fanPower?.let { put("fan_power", JsonPrimitive(it)) }
+            put("map_index", JsonPrimitive(-1))
+            put("mop_mode", JsonPrimitive(_mopMode.value ?: MopRoute.STANDARD))
+            put("repeat", JsonPrimitive(s.repeat ?: 1))
+            put("segments", JsonPrimitive("0"))
+            put("seq_type", JsonPrimitive(s.seqType ?: 0))
+            s.waterBoxCustomMode?.let { put("water_box_mode", JsonPrimitive(it)) }
+        })
     }
 
     suspend fun deleteTimer(timer: CleanTimer) {

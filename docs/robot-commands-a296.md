@@ -178,6 +178,16 @@ Furniture types (type, subtype): TV cabinet 43,0 · bed double 45,2 · bed singl
 table 48,2 · shoe rack 49,0 · nightstand 50,0 · wardrobe 51,0 · litter box 52,0 · closed litter box
 53,0 · pet cage 54,0 · pet basket 55,0 · pet bowls 56,0 · floor mirror 57,0 · cat tree 58,0.
 
+### Schedules (2026-11-15)
+
+Captured from the official app: `set_timer {"data":[["<id ms>",["5 19 * * 1,2,3,4,5",["start_clean",
+{"clean_mop":1,"fan_power":102,"map_index":-1,"mop_mode":300,"repeat":1,"segments":"0","seq_type":0,
+"water_box_mode":235}]]]],"need_retry":1}` (answered `["retry"]`, then `["ok"]`); `upd_timer [id,"off"]`;
+`del_timer [id]`; read with `get_timer_summary []` (the ids) and `get_timer_detail [id]`. The older
+`[[id,["on",[cron,["start_clean",{}]]]]]` is refused (-10005 "timer type error"), and so is one
+without `mop_mode` ("Param error, no mop_mode"). LocalRock sends the a296 form, with the older forms
+as fallbacks for robots that refuse its shape.
+
 ### Options the robot changes together (2026-11-15)
 
 `switch_status` in `get_status` and `common_switch_status` from `get_offline_map_status` carry the
