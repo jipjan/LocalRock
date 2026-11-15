@@ -163,7 +163,9 @@ class BetaFeaturesTest {
     fun advertised_features_without_a_switch_are_listed_by_name() {
         val set = "0000000000119418CCD57EFDA869B6DDDBFF8F7F7EFEFFFF"
         val listed = unlistedAdvertisedFeatures(set).map { it.name }
-        assertTrue("Map eraser" in listed)
+        // The map eraser (bit 71) has the map editor's Eraser tool now, the floor plan (122) the room outlines.
+        assertFalse("Map eraser" in listed)
+        assertFalse("Floor plan map" in listed)
         // The timeline (bits 76 and 91) is in the history now.
         assertFalse("Cleaning timeline" in listed)
         // Curtains (bit 138) have the map editor's Curtain tool now.

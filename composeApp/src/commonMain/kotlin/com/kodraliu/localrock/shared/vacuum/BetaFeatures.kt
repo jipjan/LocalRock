@@ -517,6 +517,8 @@ private val HandledElsewhereBits = setOf(
     113, // CarpetLongHairedEx: adaptive lift (carpet)
     118, // TwoGearsNoCollision: collision mode (obstacles)
     140, // SupportMultipleDNDTimePeriods: Do Not Disturb
+    71, // MapEraser: the map editor's Eraser tool
+    122, // FloorPlanMap: rooms drawn from their outlines (Settings → Room outlines on the map)
     32, 33, 73, // TwoKeyRealTimeVideo, TwoKeyRTVInCharging, ActivateVideoChargingAndStandby: camera
     100, 108, // CollectDustCountShow, CleanEfficiency: cleaning history
     138, // Curtain: the map editor's Curtain tool
