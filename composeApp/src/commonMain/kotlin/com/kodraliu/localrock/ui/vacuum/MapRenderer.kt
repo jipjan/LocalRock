@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.luminance
@@ -493,23 +494,27 @@ private fun drawWall(canvas: Canvas, map: ParsedMap, wall: VirtualWall) {
 }
 
 private fun drawPath(canvas: Canvas, map: ParsedMap, palette: MapPalette) {
-    val gfxPath = Path()
-    var started = false
-    for (point in map.pathMm) {
-        val (cellX, cellY) = map.mmToCell(point.x, point.y).let { it.x to it.y }
-        if (cellX !in 0f..map.width.toFloat() || cellY !in 0f..map.height.toFloat()) {
-            started = false
-            continue
+    // Cleaning is a solid line; travel between areas and to the dock is dotted, as in the official app.
+    val cleaning = Path()
+    val travel = Path()
+    val flags = map.pathTravel
+    var previous: Offset? = null
+    map.pathMm.forEachIndexed { i, point ->
+        val cell = map.mmToCell(point.x, point.y)
+        if (cell.x !in 0f..map.width.toFloat() || cell.y !in 0f..map.height.toFloat()) {
+            previous = null
+            return@forEachIndexed
         }
-        if (!started) {
-            gfxPath.moveTo(cellX, cellY)
-            started = true
-        } else {
-            gfxPath.lineTo(cellX, cellY)
+        val from = previous
+        if (from != null) {
+            val target = if (flags != null && flags[i]) travel else cleaning
+            target.moveTo(from.x, from.y)
+            target.lineTo(cell.x, cell.y)
         }
+        previous = cell
     }
     // About 15 mm wide, white and (in dark mode) see-through, as in the official app.
-    val pathPaint = Paint().apply {
+    val solid = Paint().apply {
         color = palette.path
         style = PaintingStyle.Stroke
         strokeWidth = 0.3f
@@ -517,7 +522,17 @@ private fun drawPath(canvas: Canvas, map: ParsedMap, palette: MapPalette) {
         strokeJoin = androidx.compose.ui.graphics.StrokeJoin.Round
         isAntiAlias = true
     }
-    canvas.drawPath(gfxPath, pathPaint)
+    canvas.drawPath(cleaning, solid)
+    val dotted = Paint().apply {
+        color = palette.path
+        style = PaintingStyle.Stroke
+        strokeWidth = 0.6f
+        strokeCap = StrokeCap.Round
+        isAntiAlias = true
+        // Round caps on near-zero dashes make dots: 3 cm dots 10 cm apart, as the official map spaces them.
+        pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.01f, 2f), 0f)
+    }
+    canvas.drawPath(travel, dotted)
 }
 
 private fun drawMarker(

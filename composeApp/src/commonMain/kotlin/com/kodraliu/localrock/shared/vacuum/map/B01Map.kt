@@ -92,6 +92,11 @@ data class ParsedMap(
     val chargerMm: ParsedMapPoint? = null,
     val robotMm: ParsedMapPoint? = null,
     val pathMm: List<ParsedMapPoint> = emptyList(),
+    /**
+     * Per [pathMm] point, true where the robot was travelling rather than cleaning (legacy map block 18,
+     * bit 1: the trips between areas and to the dock). Null when the map has no such flags.
+     */
+    val pathTravel: BooleanArray? = null,
     val noGoZones: List<MapZone> = emptyList(),
     val noMopZones: List<MapZone> = emptyList(),
     val virtualWalls: List<VirtualWall> = emptyList(),

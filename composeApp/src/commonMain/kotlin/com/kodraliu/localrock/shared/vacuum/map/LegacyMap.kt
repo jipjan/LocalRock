@@ -17,6 +17,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
     var charger: ParsedMapPoint? = null
     var robot: ParsedMapPoint? = null
     var path: List<ParsedMapPoint> = emptyList()
+    var pathFlags: ByteArray? = null
     var noGoZones: List<MapZone> = emptyList()
     var noMopZones: List<MapZone> = emptyList()
     var virtualWalls: List<VirtualWall> = emptyList()
@@ -80,6 +81,10 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
                         angle = u32(bytes, body + 8),
                     )
                 }
+            }
+            BLOCK_PATH_FLAGS -> {
+                val body = off + blockHeaderLen
+                if (body + blockDataLen <= bytes.size) pathFlags = bytes.copyOfRange(body, body + blockDataLen)
             }
             BLOCK_PATH -> {
 
@@ -200,6 +205,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         chargerMm = charger,
         robotMm = robot,
         pathMm = path,
+        pathTravel = pathFlags?.takeIf { it.size == path.size }?.let { f -> BooleanArray(f.size) { (f[it].toInt() and PATH_FLAG_TRAVEL) != 0 } },
         noGoZones = noGoZones,
         noMopZones = noMopZones,
         virtualWalls = virtualWalls,
@@ -357,6 +363,9 @@ private const val MAGIC_1 = 0x72.toByte()
 private const val BLOCK_CHARGER = 1
 private const val BLOCK_IMAGE = 2
 private const val BLOCK_PATH = 3
+/** One byte per path point (the plugin's `mopPath`); bit 1 is set while travelling, not cleaning. */
+private const val BLOCK_PATH_FLAGS = 18
+private const val PATH_FLAG_TRAVEL = 0x02
 private const val BLOCK_ROBOT_POSITION = 8
 private const val BLOCK_FORBIDDEN_ZONES = 9        // persistent no-go zones
 private const val BLOCK_VIRTUAL_WALLS = 10

@@ -288,4 +288,16 @@ class LegacyMapTest {
         b[off + 2] = ((v ushr 16) and 0xff).toByte()
         b[off + 3] = ((v ushr 24) and 0xff).toByte()
     }
+
+    @Test
+    fun path_points_carry_the_travel_flag() {
+        val map = parseLegacyMap(raw)
+        val travel = assertNotNull(map.pathTravel)
+        assertEquals(map.pathMm.size, travel.size)
+        assertEquals(5307, travel.size)
+        // Block 18 bytes with bit 1 set: 0x0a x676, 0x02 x14, 0x0e x6, 0x0b x1.
+        assertEquals(697, travel.count { it })
+        // The run from the dock starts as cleaning (0x0c) for 7 points, then travels.
+        assertEquals(List(7) { false } + true, travel.take(8).toList())
+    }
 }
