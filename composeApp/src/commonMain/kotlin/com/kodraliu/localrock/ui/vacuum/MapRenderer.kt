@@ -101,12 +101,12 @@ internal fun ParsedMap.roomColorIndex(): Map<Int, Int> =
  * the raw system setting, so the map never disagrees with the surface it sits on.
  */
 @Composable
-fun rememberMapBitmap(map: ParsedMap, drawRestrictions: Boolean = true): ImageBitmap {
+fun rememberMapBitmap(map: ParsedMap, drawRestrictions: Boolean = true, drawRobot: Boolean = true): ImageBitmap {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val outlines by LocalAppContainer.current.appSettings.mapRoomOutlines.collectAsState()
     // The first bitmap is drawn at once so there is something to show; later ones (a map poll every few
     // seconds while cleaning) are drawn off the main thread, and the previous one stays until it is ready.
-    val first = remember { renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions, outlines) }
+    val first = remember { renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions, outlines, drawRobot) }
     val firstKey = remember { listOf(map, dark, drawRestrictions, outlines) }
     var shown by remember { mutableStateOf(first) }
     LaunchedEffect(map, dark, drawRestrictions, outlines) {
@@ -114,7 +114,7 @@ fun rememberMapBitmap(map: ParsedMap, drawRestrictions: Boolean = true): ImageBi
             shown = first
             return@LaunchedEffect
         }
-        shown = withContext(Dispatchers.Default) { renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions, outlines) }
+        shown = withContext(Dispatchers.Default) { renderMap(map, if (dark) DarkPalette else LightPalette, drawRestrictions, outlines, drawRobot) }
     }
     return shown
 }
@@ -181,7 +181,7 @@ private const val MAX_RENDER_SCALE = 4
 private const val MAX_MAP_BITMAP_PX = 2048
 
 /** [drawRestrictions] is false for the editor, which draws the shapes it is editing itself. */
-private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boolean, roomOutlines: Boolean = true): ImageBitmap {
+private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boolean, roomOutlines: Boolean = true, drawRobot: Boolean = true): ImageBitmap {
     val s = mapRenderScale(map)
     val bitmap = ImageBitmap(map.width * s, map.height * s)
     val canvas = Canvas(bitmap)
@@ -304,7 +304,8 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
     // Green dock, white robot in a green ring: the official app's colours. Square and round still
     // tell them apart without colour.
     map.chargerMm?.let { drawMarker(canvas, map, it, palette.charger, Color.White, square = true) }
-    map.robotMm?.let { drawMarker(canvas, map, it, palette.robot, palette.markerRing, square = false) }
+    // The live map draws the robot itself, as a pin of a fixed size (drawRobotPin).
+    if (drawRobot) map.robotMm?.let { drawMarker(canvas, map, it, palette.robot, palette.markerRing, square = false) }
     return bitmap
 }
 

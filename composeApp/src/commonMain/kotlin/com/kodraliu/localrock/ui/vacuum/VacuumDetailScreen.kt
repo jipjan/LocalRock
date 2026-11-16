@@ -1,5 +1,9 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.material.icons.filled.Cyclone
 import com.kodraliu.localrock.shared.vacuum.CleanTimelineEntry
 import com.kodraliu.localrock.shared.vacuum.currentCleanRoom
 import com.kodraliu.localrock.shared.vacuum.describeCleanEvents
@@ -793,16 +797,16 @@ private fun MapHeroSection(
             MapEmptyState(busy = busy, onLoadMap = onLoadMap, onRecover = onRecover, modifier = Modifier.fillMaxSize())
         }
 
-        // Refresh and Edit map are the only controls on top of the map; camera, remote and map
-        // recovery live in the More sheet so the hero reads as one surface. Edit sits in the
-        // opposite corner so the two can't be confused, and only once there is a map to edit.
-        if (parsedMap != null) {
-            FilledTonalIconButton(
-                onClick = onEditMap,
-                modifier = Modifier.align(Alignment.BottomStart).padding(12.dp).size(48.dp),
-            ) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit map", modifier = Modifier.size(22.dp))
-            }
+        // Refresh is the only button on the map; editing is in the top bar, as in the official app,
+        // and the map's name sits in the bottom-left corner where the official app shows it.
+        if (floorMaps.size > 1) {
+            FloorPicker(
+                floorMaps = floorMaps,
+                currentFloorFlag = currentFloorFlag,
+                enabled = !busy,
+                onFloorSwitch = onFloorSwitch,
+                modifier = Modifier.align(Alignment.BottomStart).padding(start = 12.dp, bottom = 16.dp),
+            )
         }
 
         FilledTonalIconButton(
@@ -820,14 +824,6 @@ private fun MapHeroSection(
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            if (floorMaps.size > 1) {
-                FloorPicker(
-                    floorMaps = floorMaps,
-                    currentFloorFlag = currentFloorFlag,
-                    enabled = !busy,
-                    onFloorSwitch = onFloorSwitch,
-                )
-            }
             if (sessionRoomNames.isNotEmpty()) {
                 SessionRoomsBadge(roomNames = sessionRoomNames)
             }
@@ -842,31 +838,31 @@ private fun FloorPicker(
     currentFloorFlag: Int,
     enabled: Boolean,
     onFloorSwitch: (Int) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val current = floorMaps.find { it.mapFlag == currentFloorFlag }
-    Box {
+    Box(modifier) {
+        // Plain text with a small arrow, as the official app's "Kaart2 ▾", not a chip.
         Surface(
             onClick = { expanded = true },
             enabled = enabled,
             shape = MaterialTheme.shapes.small,
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+            color = Color.Transparent,
             modifier = Modifier.widthIn(max = 220.dp),
         ) {
             Row(
-                modifier = Modifier.padding(start = 10.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Icon(Icons.Default.Layers, contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(
                     current?.name ?: "Choose map",
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
                 )
-                Icon(Icons.Default.ArrowDropDown, contentDescription = "Switch map")
+                Icon(Icons.Default.ArrowDropDown, contentDescription = "Switch map", modifier = Modifier.size(20.dp))
             }
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -885,6 +881,32 @@ private fun FloorPicker(
                 )
             }
         }
+    }
+}
+
+/**
+ * The robot as the official app shows it: a small white dot where it is, and over it a green pin with
+ * a white swirl, of a fixed size so it stays visible at any zoom.
+ */
+private fun DrawScope.drawRobotPin(at: Offset, icon: Painter) {
+    val green = Color(0xFF2BBF8A)
+    drawCircle(Color.Black.copy(alpha = 0.25f), radius = 5.5.dp.toPx(), center = at)
+    drawCircle(Color.White, radius = 4.dp.toPx(), center = at)
+    val r = 13.dp.toPx()
+    val center = Offset(at.x, at.y - 9.dp.toPx() - r)
+    val tip = Path().apply {
+        moveTo(center.x - r * 0.45f, center.y + r * 0.8f)
+        lineTo(center.x, at.y - 5.dp.toPx())
+        lineTo(center.x + r * 0.45f, center.y + r * 0.8f)
+        close()
+    }
+    drawPath(tip, Color.White)
+    drawCircle(Color.Black.copy(alpha = 0.2f), radius = r + 3.dp.toPx(), center = center.copy(y = center.y + 1.dp.toPx()))
+    drawCircle(Color.White, radius = r + 2.dp.toPx(), center = center)
+    drawCircle(green, radius = r, center = center)
+    val size = r * 1.3f
+    translate(left = center.x - size / 2f, top = center.y - size / 2f) {
+        with(icon) { draw(Size(size, size), colorFilter = ColorFilter.tint(Color.White)) }
     }
 }
 
@@ -923,7 +945,8 @@ private fun VacuumMapImage(
     viewportScope: Any? = null,
     providedMapViewport: LiveMapViewport? = null,
 ) {
-    val bitmap = rememberMapBitmap(map)
+    val bitmap = rememberMapBitmap(map, drawRobot = false)
+    val robotIcon = rememberVectorPainter(Icons.Default.Cyclone)
     val labelRooms = remember(map.rooms) { map.rooms.filter { it.labelNormX != null && it.labelNormY != null } }
     val textMeasurer = rememberTextMeasurer()
     // Labels follow the scheme rather than being a fixed black scrim: over a light map a dark
@@ -1021,6 +1044,15 @@ private fun VacuumMapImage(
 
             // Under the labels, so a name is never hidden by a badge. A tap still opens the obstacle first.
             drawObstacles(map, content, mapViewport.offset, mapViewport.scale)
+
+            map.robotMm?.let { robot ->
+                val cell = map.mmToCell(robot.x, robot.y)
+                val at = Offset(
+                    mapViewport.offset.x + cell.x / map.width * content.width * mapViewport.scale,
+                    mapViewport.offset.y + cell.y / map.height * content.height * mapViewport.scale,
+                )
+                drawRobotPin(at, robotIcon)
+            }
 
             // Labels are drawn outside the zoom transform so they stay a constant, legible size
             // instead of growing to 8x with the map. Selected rooms carry their cleaning order,
