@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.devices
 
+import com.kodraliu.localrock.shared.vacuum.taskPausedAtDock
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.text.style.TextOverflow
@@ -400,12 +401,16 @@ private fun DeviceCard(
 private fun LiveRobotPanel(status: VacuumStatus, onAction: (AppContainer.QuickAction) -> Unit) {
     val state = status.state ?: return
     val cleaning = state in ACTIVE_CLEANING_STATES
-    val paused = state == VacuumStateCodes.PAUSED
+    val paused = state == VacuumStateCodes.PAUSED || status.taskPausedAtDock
     val minutes = status.cleanTime?.takeIf { (cleaning || paused) && it > 0 }?.let { it / 60 }
     Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                if (status.dryStatus == 1 && !cleaning) "Drying mop" else VacuumStateCodes.describe(state),
+                when {
+                    status.taskPausedAtDock -> "Paused at the dock"
+                    status.dryStatus == 1 && !cleaning -> "Drying mop"
+                    else -> VacuumStateCodes.describe(state)
+                },
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f),

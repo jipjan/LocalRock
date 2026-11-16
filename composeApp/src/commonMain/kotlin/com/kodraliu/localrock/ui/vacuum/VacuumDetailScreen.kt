@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.shared.vacuum.taskPausedAtDock
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material3.SecondaryScrollableTabRow
@@ -1198,6 +1199,7 @@ private fun StatusBar(
     val headline = when {
         errorCode != 0 -> VacuumErrorCodes.describe(errorCode)
         drying -> dryingLabel(status.remainingDryTimeSec)
+        status.taskPausedAtDock -> "Paused at the dock"
         else -> stateLabel(status.state)
     }
     val headlineColor = when {
@@ -1354,7 +1356,7 @@ private fun ControlBar(
     modifier: Modifier = Modifier,
 ) {
     val isCleaning = status.state in ACTIVE_CLEANING_STATES
-    val isPaused = status.state == VacuumStateCodes.PAUSED
+    val isPaused = status.state == VacuumStateCodes.PAUSED || status.taskPausedAtDock
     val mopping = (status.waterBoxCustomMode ?: WaterBoxMode.OFF) != WaterBoxMode.OFF
 
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {

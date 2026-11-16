@@ -104,6 +104,15 @@ object DockErrorCodes {
 }
 
 
+/**
+ * A clean that is still open while the robot sits on the dock, e.g. after a mid-clean return to empty
+ * the bin (a296: state 26, back_type 4, then 22, then 8 with in_cleaning still 1). The official app
+ * shows it as paused, with Resume.
+ */
+val VacuumStatus.taskPausedAtDock: Boolean
+    get() = (inCleaning ?: 0) != 0 &&
+        state in setOf(VacuumStateCodes.CHARGING, VacuumStateCodes.CHARGING_COMPLETE, VacuumStateCodes.IDLE)
+
 object VacuumStateCodes {
     const val STARTING = 1
     const val CHARGER_DISCONNECTED = 2

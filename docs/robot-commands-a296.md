@@ -301,3 +301,27 @@ Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47
   - `lds_lift_status` is 1 with the LiDAR lowered and 2 in the dock.
   - `home_sec_status` is 1 while a live view runs.
 
+## Recorded from the official app, 2026-11-16
+
+| Feature | Command | Notes |
+|---|---|---|
+| Start a full clean | `app_start [{"clean_mop":0}]` | LocalRock sends `app_start` without the parameter. |
+| Add an area during a clean ("Gebied toevoegen") | `app_start_replenish_clean_area {"source":2,"zones":[[x1,y1,x2,y1,x2,y2,x1,y2]]}` | The zone's four corners in mm. The clean continues afterwards; the status event is `clean_added_finish`. |
+| Skip the current area ("Gebied overslaan") | `app_skip_current_cleaning_area {"source":2}` | Asks first; the status event is `jump_over`. |
+| Mid-clean return to empty | `app_start_collect_dust []` while the clean is paused | See the status sequence below. |
+| Mid-clean return to wash the mop | offered in the same back-to-dock sheet | Not captured. |
+| Pin & Go | `app_goto_target [x, y]` | The page also has "spot clean" (1.5 × 1.5 m around the pin). |
+| Cruise ("Navigeren", in the live view) | `app_start_patrol {"map_index":1,"points":[[x,y],…]}` | Points tapped on the map, numbered. Pause `app_pause`, end `app_stop`. |
+| Find the pet ("Zoek het huisdier") | `app_start_pet_patrol {}` | End with `app_stop`. |
+| Talk-back (live view, green phone) | `start_voice_chat {"play":true,"record":true}`, `set_voice_chat_volume {"volume":0}`; `stop_voice_chat {}` | No renegotiation: the audio uses the offer's two-way audio track. Needs microphone permission. |
+| Leaving the live view | `app_rc_end`, `stop_camera_preview {"client_id"}` | |
+
+- **The History tab "Navigeren"** lists cruises and pet searches, not Pin & Go. Only the most recent is kept (`patrol_count` in `get_clean_summary`).
+- **A mid-clean return to empty** goes through these states:
+  1. state 26 with `in_returning` 1 and `back_type` 4;
+  2. state 22 (emptying);
+  3. state 8 with `in_cleaning` still 1.
+
+  The clean then waits on the dock as paused; the official app offers Resume. LocalRock shows it as "Paused at the dock".
+- **The relocation view:** after Pin & Go and a cruise, a new clean first showed "Nieuwe kaart" and then "Positionering…" for about a minute, before the robot recognised Map 2.
+
