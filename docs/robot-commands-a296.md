@@ -289,4 +289,15 @@ Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47
   - Bit 0 marks mopping.
 - **Settings during a clean.** `app_set_robot_setting` answers -10007 "invalid status" while a task runs
   (seen with `restrict_low_area_access_status`). The official app asks to end the task before changing it.
+- **Robot states 30–43** (plugin state list): 30 Cupid mode, 32 patrol, 33 reinstalling mop mounts,
+  34 detaching mop mounts, 36 exhibition, 37 dance, 40 emergency stop, 41 arm resetting, 42 program
+  mode, 43 changing mop. The plugin also names 28 "voice chatting".
+  - State 33 was seen after a clean (2026-11-16): `lock_status` went to 1, then
+    `water_box_carriage_status` went 0 → 1.
+  - The earlier "state 34 = duct blockage" was a mix-up with dock error 34.
+- **During a clean, from the status:**
+  - A clean starts with about 150 s of mop pre-washing in the dock (state 23, `wash_phase` 10/11/12,
+    `extra_time` counting up).
+  - `lds_lift_status` is 1 with the LiDAR lowered and 2 in the dock.
+  - `home_sec_status` is 1 while a live view runs.
 

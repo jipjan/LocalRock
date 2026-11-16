@@ -133,6 +133,18 @@ object VacuumStateCodes {
     const val RETURNING_TO_DOCK_FOR_DRYING = 28
     /** Captured 2026-09-29: the robot reports 29 for the whole app_start_build_map run. */
     const val MAPPING = 29
+    // From the a296 plugin's state list (2026-11-16). 33 was seen after a clean: the robot refits its
+    // mop mounts in the dock (lock_status 1, then water_box_carriage_status 0 -> 1).
+    const val CUPID_MODE = 30
+    const val PATROL = 32
+    const val REINSTALLING_MOP_MOUNTS = 33
+    const val DETACHING_MOP_MOUNTS = 34
+    const val EXHIBITION_MODE = 36
+    const val DANCING = 37
+    const val EMERGENCY_STOP = 40
+    const val ARM_RESETTING = 41
+    const val PROGRAM_MODE = 42
+    const val CHANGING_MOP = 43
     const val CHARGING_COMPLETE = 100
 
     fun describe(state: Int): String = when (state) {
@@ -161,6 +173,16 @@ object VacuumStateCodes {
         DRYING_MOP -> "Drying mop"
         RETURNING_TO_DOCK_FOR_DRYING -> "Returning to dock"
         EMPTYING_BIN -> "Emptying the bin"
+        CUPID_MODE -> "Cupid mode"
+        PATROL -> "Patrolling"
+        REINSTALLING_MOP_MOUNTS -> "Reinstalling mop mounts"
+        DETACHING_MOP_MOUNTS -> "Detaching mop mounts"
+        EXHIBITION_MODE -> "Exhibition mode"
+        DANCING -> "Dancing"
+        EMERGENCY_STOP -> "Emergency stop"
+        ARM_RESETTING -> "Resetting the arm"
+        PROGRAM_MODE -> "Program mode"
+        CHANGING_MOP -> "Changing mop"
         CHARGING_COMPLETE -> "Fully charged"
         else -> "State $state"
     }
