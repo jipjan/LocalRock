@@ -358,11 +358,15 @@ class VacuumRepository(
     private fun resolveRoomName(room: ParsedMapRoom): String =
         segmentToRoomId[room.id]?.let { homeRoomNames[it] } ?: room.name
 
+    /** The room type the robot stores for this segment (`get_room_mapping`'s third column). */
+    private fun resolveRoomTag(room: ParsedMapRoom): Int? =
+        rawSegmentTable?.firstOrNull { it.segment == room.id }?.tagId?.takeIf { it > 0 } ?: room.tag
+
     private fun applyRoomNames() {
         _parsedMap.update { pm ->
-            pm?.copy(rooms = pm.rooms.map { it.copy(name = resolveRoomName(it)) })
+            pm?.copy(rooms = pm.rooms.map { it.copy(name = resolveRoomName(it), tag = resolveRoomTag(it)) })
         }
-        _rooms.update { list -> list.map { it.copy(name = resolveRoomName(it)) } }
+        _rooms.update { list -> list.map { it.copy(name = resolveRoomName(it), tag = resolveRoomTag(it)) } }
     }
 
     /**

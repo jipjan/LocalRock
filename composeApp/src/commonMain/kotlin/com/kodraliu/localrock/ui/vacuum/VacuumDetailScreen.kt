@@ -136,6 +136,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -912,6 +915,9 @@ private fun VacuumMapImage(
     val darkMap = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val roomColors = remember(map) { map.roomColorIndex() }
     val badgeStyle = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+    // Painters for the room-type badges, made once per set of types on the map.
+    val tagIcons = remember(labelRooms) { labelRooms.mapNotNull { it.tag }.distinct() }
+        .associateWith { roomTagIcon(it)?.let { icon -> rememberVectorPainter(icon) } }
     val bgColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
     val selectedBgColor = MaterialTheme.colorScheme.primary
     // In dark mode `primary` is a bright cyan, so white-on-primary would be unreadable.
@@ -1013,8 +1019,16 @@ private fun VacuumMapImage(
                     val total = r * 2 + gap + measured.size.width
                     val left = cx - total / 2
                     drawCircle(color = tag, radius = r, center = Offset(left + r, cy))
-                    val initial = textMeasurer.measure(room.name.take(1).uppercase(), badgeStyle)
-                    drawText(initial, topLeft = Offset(left + r - initial.size.width / 2f, cy - initial.size.height / 2f))
+                    val icon = room.tag?.let { tagIcons[it] }
+                    if (icon != null) {
+                        val iconSize = r * 1.25f
+                        translate(left = left + r - iconSize / 2f, top = cy - iconSize / 2f) {
+                            with(icon) { draw(Size(iconSize, iconSize), colorFilter = ColorFilter.tint(Color.White)) }
+                        }
+                    } else {
+                        val initial = textMeasurer.measure(room.name.take(1).uppercase(), badgeStyle)
+                        drawText(initial, topLeft = Offset(left + r - initial.size.width / 2f, cy - initial.size.height / 2f))
+                    }
                     drawText(measured, topLeft = Offset(left + r * 2 + gap, cy - measured.size.height / 2f))
                     continue
                 }

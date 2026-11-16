@@ -305,6 +305,8 @@ data class ParsedMapRoom(
     val name: String,
     val labelNormX: Float? = null,
     val labelNormY: Float? = null,
+    /** Room type from `get_room_mapping` (1 bedroom, 10 hallway, 14 kitchen, ...), or null if unknown. */
+    val tag: Int? = null,
 )
 
 /** A room's floor-plan outline: corners in robot mm, and per corner the robot's flag for the edge from it. */
