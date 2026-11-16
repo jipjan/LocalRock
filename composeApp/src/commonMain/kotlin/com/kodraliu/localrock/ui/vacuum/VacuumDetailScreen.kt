@@ -1,5 +1,10 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.SecondaryScrollableTabRow
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -86,6 +91,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -191,6 +197,7 @@ import com.kodraliu.localrock.ui.AppColors
 import com.kodraliu.localrock.ui.adaptive.LocalWindowLayout
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 private val FAN_OPTIONS = listOf(
@@ -1346,20 +1353,9 @@ private fun ControlBar(
     val isPaused = status.state == VacuumStateCodes.PAUSED
     val mopping = (status.waterBoxCustomMode ?: WaterBoxMode.OFF) != WaterBoxMode.OFF
 
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            AssistChip(
-                onClick = onCleaningMode,
-                label = {
-                    Text(cleanModeLabel(status))
-                },
-                leadingIcon = {
-                    Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
-                },
-            )
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // What the official app has no place for: the room selection, stop and the other actions.
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             // Tapping rooms on the map used to have no visible consequence. The selection now
             // surfaces here and retargets the primary action.
             if (selectedRoomCount > 0) {
@@ -1378,61 +1374,100 @@ private fun ControlBar(
                     },
                 )
             }
-        }
-
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            // One prominent button per view: its label and target follow the robot's state.
-            val primaryLabel = when {
-                isCleaning -> "Pause"
-                selectedRoomCount > 0 -> "Clean rooms"
-                isPaused -> "Resume"
-                else -> "Clean"
-            }
-            Button(
-                onClick = {
-                    when {
-                        isCleaning -> onPause()
-                        selectedRoomCount > 0 -> onCleanRooms()
-                        isPaused -> onResume()
-                        else -> onClean()
-                    }
-                },
-                enabled = !busy,
-                modifier = Modifier.weight(1f).height(56.dp),
-                shape = MaterialTheme.shapes.extraLarge,
-            ) {
-                Icon(
-                    if (isCleaning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp),
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    primaryLabel,
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            Spacer(Modifier.weight(1f))
             if (isCleaning || isPaused) {
-                FilledTonalIconButton(
-                    onClick = onStop,
-                    enabled = !busy,
-                    modifier = Modifier.size(56.dp),
-                ) {
-                    Icon(Icons.Default.Stop, contentDescription = "Stop cleaning", modifier = Modifier.size(24.dp))
+                FilledTonalIconButton(onClick = onStop, enabled = !busy, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Default.Stop, contentDescription = "Stop cleaning", modifier = Modifier.size(20.dp))
                 }
             }
-            FilledTonalIconButton(
-                onClick = onDock,
-                enabled = !busy,
-                modifier = Modifier.size(56.dp),
-            ) {
-                Icon(Icons.Default.Home, contentDescription = "Return to dock", modifier = Modifier.size(24.dp))
+            FilledTonalIconButton(onClick = onMore, modifier = Modifier.size(40.dp)) {
+                Icon(Icons.Default.MoreHoriz, contentDescription = "More actions", modifier = Modifier.size(20.dp))
             }
-            FilledTonalIconButton(onClick = onMore, modifier = Modifier.size(56.dp)) {
-                Icon(Icons.Default.MoreHoriz, contentDescription = "More actions", modifier = Modifier.size(24.dp))
+        }
+
+        // The official app's bar: mode on the left, a large round start/pause in the middle with the
+        // clean's progress around it, back to the dock on the right.
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(Modifier.padding(horizontal = 8.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                BarAction(
+                    icon = Icons.Default.Tune,
+                    label = cleanModeLabel(status),
+                    onClick = onCleaningMode,
+                    modifier = Modifier.weight(1f),
+                )
+                val primaryLabel = when {
+                    isCleaning -> "Pause"
+                    selectedRoomCount > 0 -> "Clean rooms"
+                    isPaused -> "Resume"
+                    else -> "Clean"
+                }
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(84.dp)) {
+                    val progress = status.cleanPercent?.takeIf { (isCleaning || isPaused) && it in 0..100 }
+                    if (progress != null) {
+                        CircularProgressIndicator(
+                            progress = { progress / 100f },
+                            modifier = Modifier.fillMaxSize(),
+                            strokeWidth = 4.dp,
+                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        )
+                    }
+                    FilledIconButton(
+                        onClick = {
+                            when {
+                                isCleaning -> onPause()
+                                selectedRoomCount > 0 -> onCleanRooms()
+                                isPaused -> onResume()
+                                else -> onClean()
+                            }
+                        },
+                        enabled = !busy,
+                        modifier = Modifier.size(68.dp),
+                    ) {
+                        Icon(
+                            if (isCleaning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = primaryLabel,
+                            modifier = Modifier.size(34.dp),
+                        )
+                    }
+                }
+                BarAction(
+                    icon = Icons.Default.Home,
+                    label = "Return to dock",
+                    onClick = onDock,
+                    enabled = !busy,
+                    modifier = Modifier.weight(1f),
+                )
             }
+        }
+        if (selectedRoomCount > 0 && !isCleaning) {
+            Text(
+                "Start cleans the selected rooms",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+        }
+    }
+}
+
+/** An icon with its name under it, for the sides of the control bar. */
+@Composable
+private fun BarAction(icon: ImageVector, label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    Surface(onClick = onClick, enabled = enabled, shape = MaterialTheme.shapes.large, color = Color.Transparent, modifier = modifier) {
+        Column(Modifier.padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(26.dp), tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
@@ -1638,9 +1673,28 @@ private fun CleaningModeSheetContent(
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
         Spacer(Modifier.height(12.dp))
         if (plans.size > 1) {
-            Box(Modifier.padding(horizontal = 24.dp).padding(bottom = 12.dp)) {
-                ModeOptionSelector("Mode", plans.map { it.label }, plans.indexOf(plan), !busy) {
-                    if (plans[it] != plan) onPlanSelected(plans[it])
+            // The plans as the official sheet's large text tabs, the chosen one bright.
+            Row(
+                Modifier.padding(horizontal = 16.dp).padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                plans.forEach { p ->
+                    val chosen = p == plan
+                    Surface(
+                        onClick = { if (!busy && !chosen) onPlanSelected(p) },
+                        shape = MaterialTheme.shapes.medium,
+                        color = Color.Transparent,
+                    ) {
+                        Text(
+                            p.label,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = if (chosen) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (chosen) MaterialTheme.colorScheme.onSurface
+                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        )
+                    }
                 }
             }
         }
@@ -1670,25 +1724,61 @@ private fun CleaningModeSheetContent(
                 )
             }
         } else {
-            SecondaryTabRow(selectedTabIndex = selectedTab) {
-                listOf("Vac & Mop", "Mop", "Vacuum").forEachIndexed { i, title ->
+            val pages = buildList {
+                if (vacuumThenMop != null) add(ModePage.VAC_THEN_MOP)
+                add(ModePage.VAC_AND_MOP); add(ModePage.MOP); add(ModePage.VACUUM)
+            }
+            val startPage = when {
+                initialTab == 0 && vacuumThenMop == true -> ModePage.VAC_THEN_MOP
+                initialTab == 0 -> ModePage.VAC_AND_MOP
+                initialTab == 1 -> ModePage.MOP
+                else -> ModePage.VACUUM
+            }
+            val pagerState = rememberPagerState(initialPage = pages.indexOf(startPage)) { pages.size }
+            val pagerScope = rememberCoroutineScope()
+            // Only a page the user settles on changes the robot; opening the sheet sends nothing.
+            var appliedPage by remember { mutableStateOf(startPage) }
+            // The collector below lives as long as the sheet; it must see the robot's current values,
+            // not the ones from when the sheet opened (switching back sent nothing otherwise).
+            val water by rememberUpdatedState(currentWaterMode)
+            val fan by rememberUpdatedState(currentFanPower)
+            val thenMop by rememberUpdatedState(vacuumThenMop)
+            val setWater by rememberUpdatedState(onWaterModeSelected)
+            val setFan by rememberUpdatedState(onFanPowerSelected)
+            val setThenMop by rememberUpdatedState(onVacuumThenMopChange)
+            LaunchedEffect(pagerState) {
+                snapshotFlow { pagerState.settledPage }.collect { index ->
+                    val page = pages[index]
+                    if (page == appliedPage) return@collect
+                    appliedPage = page
+                    selectedTab = page.tab
+                    val waterOff = (water ?: WaterBoxMode.OFF) == WaterBoxMode.OFF
+                    val fanOff = fan == VacuumFanPower.OFF
+                    when (page) {
+                        ModePage.VAC_THEN_MOP, ModePage.VAC_AND_MOP -> {
+                            if (waterOff) setWater(WaterBoxMode.LOW)
+                            if (fanOff) setFan(VacuumFanPower.BALANCED)
+                            val wantThenMop = page == ModePage.VAC_THEN_MOP
+                            val now = thenMop
+                            if (now != null && now != wantThenMop) setThenMop(wantThenMop)
+                        }
+                        ModePage.MOP -> { if (waterOff) setWater(WaterBoxMode.LOW); setFan(VacuumFanPower.OFF) }
+                        ModePage.VACUUM -> { if (fanOff) setFan(VacuumFanPower.BALANCED); setWater(WaterBoxMode.OFF) }
+                    }
+                }
+            }
+            SecondaryScrollableTabRow(selectedTabIndex = pagerState.currentPage, edgePadding = 16.dp) {
+                pages.forEachIndexed { i, page ->
                     Tab(
-                        selected = selectedTab == i,
-                        onClick = {
-                            selectedTab = i
-                            val waterOff = (currentWaterMode ?: WaterBoxMode.OFF) == WaterBoxMode.OFF
-                            val fanOff = currentFanPower == VacuumFanPower.OFF
-                            when (i) {
-                                0 -> { if (waterOff) onWaterModeSelected(WaterBoxMode.LOW); if (fanOff) onFanPowerSelected(VacuumFanPower.BALANCED) }
-                                1 -> { if (waterOff) onWaterModeSelected(WaterBoxMode.LOW); onFanPowerSelected(VacuumFanPower.OFF) }
-                                2 -> { if (fanOff) onFanPowerSelected(VacuumFanPower.BALANCED); onWaterModeSelected(WaterBoxMode.OFF) }
-                            }
-                        },
-                        text = { Text(title) },
+                        selected = pagerState.currentPage == i,
+                        onClick = { pagerScope.launch { pagerState.animateScrollToPage(i) } },
+                        text = { Text(page.title) },
                     )
                 }
             }
 
+            HorizontalPager(state = pagerState, verticalAlignment = Alignment.Top) { pageIndex ->
+            val pageTab = pages[pageIndex].tab
             Box(Modifier.fillMaxWidth().heightIn(min = 380.dp)) {
                 Column(
                     modifier = Modifier
@@ -1696,8 +1786,8 @@ private fun CleaningModeSheetContent(
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
-                    val subtitle = when (selectedTab) {
-                        0 -> "Vac & Mop for daily clean"
+                    val subtitle = when (pageTab) {
+                        0 -> if (pages[pageIndex] == ModePage.VAC_THEN_MOP) "Vacuums everything first, then mops it" else "Vac & Mop for daily clean"
                         1 -> "Mop only for delicate floors"
                         else -> "Vacuum only mode"
                     }
@@ -1716,9 +1806,8 @@ private fun CleaningModeSheetContent(
                         ModeOptionSelector("Route", routes.map { it.second }, routes.indexOfFirst { it.first == currentRoute }, !busy, icons = routes.map { routeIcon(it.first) }) { onRouteSelected(routes[it].first) }
                     }
 
-                    when (selectedTab) {
+                    when (pageTab) {
                         0 -> {
-                            if (vacuumThenMop != null) VacuumThenMopRow(vacuumThenMop, !busy, onVacuumThenMopChange)
                             suction(); water(); CountSelector(cleaningCount, onCountChange); route()
                             cornerClean?.let { CornerCleanRow(it, !busy, onCornerCleanChange) }
                         }
@@ -1726,6 +1815,7 @@ private fun CleaningModeSheetContent(
                         2 -> { suction(); CountSelector(cleaningCount, onCountChange); route() }
                     }
                 }
+            }
             }
         }
         onMoreSettings?.let { open ->
@@ -1744,10 +1834,19 @@ private fun CleaningModeSheetContent(
     }
 }
 
+/** The official app's three plans: SmartPlan, General (one mode for all) and Custom (per room). */
 private enum class CleanPlan(val label: String) {
     SMART("SmartPlan"),
-    MANUAL("Manual"),
-    PER_ROOM("Per room"),
+    MANUAL("General"),
+    PER_ROOM("Custom"),
+}
+
+/** The modes of the General plan, as the official sheet's swipeable strip. */
+private enum class ModePage(val title: String, val tab: Int) {
+    VAC_THEN_MOP("Vacuum, then mop", 0),
+    VAC_AND_MOP("Vac & Mop", 0),
+    MOP("Mop", 1),
+    VACUUM("Vacuum", 2),
 }
 
 private fun roomModeSummary(mode: RoomCleanMode): String {
