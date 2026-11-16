@@ -222,6 +222,13 @@ suspend fun VacuumSession.setWaterBoxDistanceOff(distance: Int): V1Response =
 suspend fun VacuumSession.getCleanDetail(begin: Long, from: Int): V1Response =
     sendCommandRaw("get_clean_detail", cleanDetailParams(begin, from))
 
+/**
+ * The running clean's events so far, from index [from] (`{"from":0,"type":0}`), in the same format as
+ * `get_clean_detail`. The official app asks from 0 once, then only for what came after (a296).
+ */
+suspend fun VacuumSession.getRtCleanDetail(from: Int): V1Response =
+    sendCommandRaw("get_rt_clean_detail", JsonObject(mapOf("from" to JsonPrimitive(from), "type" to JsonPrimitive(0))))
+
 suspend fun VacuumSession.getCurrentSound(): V1Response = sendCommand("get_current_sound")
 suspend fun VacuumSession.getSoundProgress(): V1Response = sendCommand("get_sound_progress")
 suspend fun VacuumSession.installSound(pack: VoicePack): V1Response =

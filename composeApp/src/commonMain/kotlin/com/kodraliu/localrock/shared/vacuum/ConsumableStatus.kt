@@ -27,3 +27,25 @@ data class ConsumableStatus(
         const val CLEANING_BRUSH_LIFETIME_S = 300L * 3600
     }
 }
+
+/**
+ * One line for the Maintenance entry, as the official app's "Normaal": the part that is worn out, the
+ * one closest to it when it has under 10% left, or "Normal". Null before the robot has answered.
+ */
+fun ConsumableStatus.summary(): String? {
+    val parts = listOfNotNull(
+        mainBrushWorkTime?.let { Triple("Main brush", it, ConsumableStatus.MAIN_BRUSH_LIFETIME_S) },
+        sideBrushWorkTime?.let { Triple("Side brush", it, ConsumableStatus.SIDE_BRUSH_LIFETIME_S) },
+        filterWorkTime?.let { Triple("Filter", it, ConsumableStatus.FILTER_LIFETIME_S) },
+        sensorDirtyTime?.let { Triple("Sensors", it, ConsumableStatus.SENSOR_LIFETIME_S) },
+    )
+    if (parts.isEmpty()) return null
+    val (name, used, life) = parts.maxBy { (_, used, life) -> used.toDouble() / life }
+    val left = 100 - (used * 100 / life)
+    return when {
+        left <= 0 -> if (name == "Sensors") "Clean the sensors" else "Replace the ${name.lowercase()}"
+        left < 10 -> "$name: $left% left"
+        else -> "Normal"
+    }
+}
+

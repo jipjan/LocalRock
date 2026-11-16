@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.shared.vacuum.summary
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Bedtime
@@ -125,6 +126,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kodraliu.localrock.shared.vacuum.AdvertisedFeature
 import com.kodraliu.localrock.shared.vacuum.BetaFeatureState
 import com.kodraliu.localrock.shared.vacuum.CleanRecord
@@ -179,6 +181,7 @@ private sealed interface SettingsRoute {
 fun VacuumSettingsScreen(
     viewModel: VacuumViewModel,
     onBack: () -> Unit,
+    onSchedule: () -> Unit = {},
 ) {
     val repository = viewModel.repository
     var route by remember { mutableStateOf<SettingsRoute>(SettingsRoute.Root) }
@@ -208,9 +211,22 @@ fun VacuumSettingsScreen(
         runCatching { repository.fetchBetaFeatures(viewModel.betaFeatureDefs) }
     }
 
+    val cleanHistory by repository.cleanHistory.collectAsState()
+    val cleanSummary by repository.cleanSummary.collectAsState()
+    LaunchedEffect(Unit) {
+        // For the cards at the top of Settings, as the official app opens it.
+        runCatching { repository.fetchCleanSummary() }
+        runCatching { repository.fetchConsumableStatus() }
+        runCatching { repository.fetchCleanHistory() }
+    }
+
     Box(Modifier.fillMaxSize()) {
     when (route) {
         SettingsRoute.Root -> SettingsRootScreen(
+            lastClean = cleanHistory.maxByOrNull { it.beginEpoch },
+            summary = cleanSummary,
+            maintenanceSummary = consumables?.summary(),
+            onSchedule = onSchedule,
             modelName = viewModel.modelName,
             firmwareVersion = viewModel.firmwareVersion,
             firmwareUpdate = firmwareUpdate,
@@ -404,6 +420,10 @@ fun VacuumHistoryScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsRootScreen(
+    lastClean: CleanRecord?,
+    summary: CleanSummary?,
+    maintenanceSummary: String?,
+    onSchedule: () -> Unit,
     modelName: String?,
     firmwareVersion: String?,
     firmwareUpdate: FirmwareUpdateState,
@@ -433,13 +453,15 @@ private fun SettingsRootScreen(
     ) { padding ->
         CenteredContent {
             LazyColumn(contentPadding = padding) {
+                // As the official app: the last clean and the totals first, then schedules and maintenance.
+                item { HistoryOverviewCard(lastClean = lastClean, summary = summary, onClick = onHistory) }
                 item {
                     SettingsCategoryRow(
-                        icon = Icons.Default.History,
-                        iconTint = AppColors.AccentCyan,
-                        title = "Cleaning history",
-                        subtitle = "Past cleaning sessions and totals",
-                        onClick = onHistory,
+                        icon = Icons.Default.Schedule,
+                        iconTint = AppColors.Water,
+                        title = "Schedules",
+                        subtitle = "Clean at set times",
+                        onClick = onSchedule,
                     )
                 }
                 item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
@@ -448,7 +470,7 @@ private fun SettingsRootScreen(
                         icon = Icons.Default.Build,
                         iconTint = AppColors.Good,
                         title = "Maintenance",
-                        subtitle = "Brush life and consumables",
+                        subtitle = maintenanceSummary ?: "Brush life and consumables",
                         onClick = onMaintenance,
                     )
                 }
@@ -895,6 +917,69 @@ private fun NumberStepper2(label: String, value: Int, range: IntRange, step: Int
 }
 
 @Composable
+private fun HistoryOverviewCard(lastClean: CleanRecord?, summary: CleanSummary?, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.History, null, tint = AppColors.AccentCyan)
+                Spacer(Modifier.width(12.dp))
+                Text("Cleaning history", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                HistoryTile(
+                    value = lastClean?.let { "${it.durationSeconds / 60}" } ?: "–",
+                    unit = "min",
+                    label = "Last clean took",
+                    modifier = Modifier.weight(1f),
+                )
+                HistoryTile(
+                    value = lastClean?.let { oneDecimal(it.areaMm2 / 1_000_000f) } ?: "–",
+                    unit = "m²",
+                    label = "Last clean covered",
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            summary?.let { s ->
+                Row(
+                    Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.medium)
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Total", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    Text(
+                        "${s.totalTimeSec / 60} min · ${(s.totalAreaMm2 / 1_000_000f).roundToInt()} m² · ${s.totalCount} cleans",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryTile(value: String, unit: String, label: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.shapes.medium).padding(14.dp),
+    ) {
+        Text(
+            buildAnnotatedString {
+                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, fontSize = 26.sp)) { append(value) }
+                append(" $unit")
+            },
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
 private fun SettingsCategoryRow(
     icon: ImageVector,
     iconTint: Color,
@@ -1328,7 +1413,7 @@ private fun CleanRecordDetailScreen(
  * in between, the main step's details in a card, and a step in between with its time under it.
  */
 @Composable
-private fun TimelineRow(entry: CleanTimelineEntry, first: Boolean, last: Boolean) {
+internal fun TimelineRow(entry: CleanTimelineEntry, first: Boolean, last: Boolean) {
     val line = MaterialTheme.colorScheme.primary
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(horizontal = 16.dp)) {
         Text(
@@ -1447,7 +1532,11 @@ private fun CleanRecordRow(record: CleanRecord) {
             }
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(dateStr, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(
+                listOfNotNull(dateStr, record.typeLabel).joinToString(" · "),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
                     buildAnnotatedString {

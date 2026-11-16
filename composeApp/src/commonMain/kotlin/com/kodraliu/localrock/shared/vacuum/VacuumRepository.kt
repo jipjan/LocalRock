@@ -628,6 +628,7 @@ class VacuumRepository(
                 washCount = (element["wash_count"] as? JsonPrimitive)?.intOrNull,
                 dustCollected = (element["dust_collection_status"] as? JsonPrimitive)?.intOrNull?.let { it == 1 },
                 passes = (element["clean_times"] as? JsonPrimitive)?.intOrNull,
+                cleanType = (element["clean_type"] as? JsonPrimitive)?.intOrNull,
             )
             else -> null
         }
@@ -1622,6 +1623,39 @@ class VacuumRepository(
         val resp = runCatching { session.fetchCleanRecordMap(createSecurityData(rriotKeyProvider()), begin) }.getOrNull()
             ?: return@withLock null
         runCatching { parseB01Map(resp.data) }.getOrNull() ?: runCatching { parseLegacyMap(resp.data) }.getOrNull()
+    }
+
+    private val _liveCleanEvents = MutableStateFlow<List<CleanEvent>>(emptyList())
+    /** The running clean's events so far ([refreshLiveCleanEvents]); empty when nothing is running. */
+    val liveCleanEvents: StateFlow<List<CleanEvent>> = _liveCleanEvents
+    private var liveCleanBegin: Long? = null
+    private var liveCleanCursor = 0
+    private val liveCleanMutex = Mutex()
+
+    /**
+     * Reads the running clean's new events (`get_rt_clean_detail`), page by page from where the last
+     * read stopped, as the official app does. A clean with another start time starts the list again.
+     */
+    suspend fun refreshLiveCleanEvents() = liveCleanMutex.withLock {
+        repeat(20) {
+            val result = session.getRtCleanDetail(liveCleanCursor).requireOk("get_rt_clean_detail").result
+            val obj = (if (result is JsonArray) result.firstOrNull() else result) as? JsonObject ?: return@withLock
+            val begin = (obj["begin"] as? JsonPrimitive)?.longOrNull
+            if (begin != liveCleanBegin) {
+                liveCleanBegin = begin
+                if (liveCleanCursor != 0) {
+                    // Another clean: read it from its first event.
+                    liveCleanCursor = 0
+                    _liveCleanEvents.value = emptyList()
+                    return@repeat
+                }
+                _liveCleanEvents.value = emptyList()
+            }
+            val page = parseCleanEventPage(result) ?: return@withLock
+            if (page.events.isNotEmpty()) _liveCleanEvents.update { it + page.events }
+            liveCleanCursor += page.rawCount
+            if (!page.more || page.rawCount == 0) return@withLock
+        }
     }
 
     /** Every event of a past clean, page by page as the robot hands them out (at most 20 pages). */

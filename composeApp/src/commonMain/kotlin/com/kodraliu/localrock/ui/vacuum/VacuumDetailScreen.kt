@@ -1,5 +1,8 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.shared.vacuum.CleanTimelineEntry
+import com.kodraliu.localrock.shared.vacuum.currentCleanRoom
+import com.kodraliu.localrock.shared.vacuum.describeCleanEvents
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -515,6 +518,21 @@ fun VacuumDetailScreen(
         }
     }
 
+    // The running clean's events, read as the official app does while its card is open (and now and
+    // then otherwise, for the room name on the card).
+    val liveEvents by viewModel.repository.liveCleanEvents.collectAsState()
+    var statusExpanded by remember { mutableStateOf(false) }
+    val cleaningNow = status.state in ACTIVE_CLEANING_STATES
+    LaunchedEffect(cleaningNow, statusExpanded) {
+        while (cleaningNow) {
+            runCatching { viewModel.repository.refreshLiveCleanEvents() }
+            delay(if (statusExpanded) 5_000 else 15_000)
+        }
+    }
+    val roomNameOf: (Int) -> String? = { id -> parsedMap?.rooms?.firstOrNull { it.id == id }?.name?.takeIf { it.isNotBlank() } }
+    val liveTimeline = remember(liveEvents, parsedMap) { if (cleaningNow) describeCleanEvents(liveEvents, roomNameOf) else emptyList() }
+    val liveRoom = remember(liveEvents, parsedMap) { if (cleaningNow) currentCleanRoom(liveEvents)?.let(roomNameOf) else null }
+
     // Status + controls live in one band so the phone and two-pane layouts cannot silently diverge.
     val ControlBand: @Composable () -> Unit = {
         StatusBar(
@@ -522,6 +540,10 @@ fun VacuumDetailScreen(
             lastCleanArea = lastCleanArea,
             onHistory = onHistory,
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp),
+            currentRoom = liveRoom,
+            timeline = liveTimeline,
+            expanded = statusExpanded,
+            onToggleExpanded = { statusExpanded = !statusExpanded },
         )
 
         ControlBar(
@@ -1106,6 +1128,12 @@ private fun StatusBar(
     lastCleanArea: Long?,
     onHistory: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The room being cleaned now, from the running clean's events. */
+    currentRoom: String? = null,
+    /** The running clean's timeline; the card opens on it while cleaning, as the official app's does. */
+    timeline: List<CleanTimelineEntry> = emptyList(),
+    expanded: Boolean = false,
+    onToggleExpanded: () -> Unit = {},
 ) {
     // clean_area is reported in mm²; show m² with one decimal.
     val area = lastCleanArea?.let { mm2 ->
@@ -1136,6 +1164,11 @@ private fun StatusBar(
 
     val cleaningNow = status.state in ACTIVE_CLEANING_STATES
     val detail = buildList {
+        // While cleaning, lead with where and how, as the official app's card does.
+        if (cleaningNow) {
+            currentRoom?.let { add(it) }
+            add(cleanModeLabel(status))
+        }
         if (area != null) add(if (cleaningNow) "$area so far" else "$area last clean")
         if (time != null) add(time)
     }.joinToString(" · ").ifEmpty { "No cleaning recorded yet" }
@@ -1155,12 +1188,13 @@ private fun StatusBar(
     }
 
     Surface(
-        onClick = onHistory,
+        onClick = if (cleaningNow) onToggleExpanded else onHistory,
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         shape = MaterialTheme.shapes.large,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
+      Column {
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -1212,11 +1246,50 @@ private fun StatusBar(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
+                if (cleaningNow) {
+                    Icon(
+                        if (expanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                        contentDescription = if (expanded) "Hide the clean's timeline" else "Show the clean's timeline",
+                        modifier = Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         }
+        if (cleaningNow && expanded) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Column(
+                Modifier.fillMaxWidth().heightIn(max = 360.dp).verticalScroll(rememberScrollState()).padding(vertical = 8.dp),
+            ) {
+                if (timeline.isEmpty()) {
+                    Text(
+                        "Reading the clean's timeline…",
+                        modifier = Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                timeline.forEachIndexed { i, entry ->
+                    TimelineRow(entry, first = i == 0, last = i == timeline.lastIndex)
+                }
+            }
+        }
+      }
     }
 }
 
+
+/** The cleaning mode as the mode button names it: SmartPlan, per room, Mop, Vac & Mop or Vacuum. */
+private fun cleanModeLabel(status: VacuumStatus): String {
+    val mopping = (status.waterBoxCustomMode ?: WaterBoxMode.OFF) != WaterBoxMode.OFF
+    return when {
+        isSmartModeSet(status.fanPower, status.waterBoxCustomMode, null) -> CleanPlan.SMART.label
+        isCustomizeModeSet(status.fanPower, status.waterBoxCustomMode, null) -> CleanPlan.PER_ROOM.label
+        mopping && status.fanPower == VacuumFanPower.OFF -> "Mop"
+        mopping -> "Vac & Mop"
+        else -> "Vacuum"
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1247,15 +1320,7 @@ private fun ControlBar(
             AssistChip(
                 onClick = onCleaningMode,
                 label = {
-                    Text(
-                        when {
-                            isSmartModeSet(status.fanPower, status.waterBoxCustomMode, null) -> CleanPlan.SMART.label
-                            isCustomizeModeSet(status.fanPower, status.waterBoxCustomMode, null) -> CleanPlan.PER_ROOM.label
-                            mopping && status.fanPower == VacuumFanPower.OFF -> "Mop"
-                            mopping -> "Vac & Mop"
-                            else -> "Vacuum"
-                        }
-                    )
+                    Text(cleanModeLabel(status))
                 },
                 leadingIcon = {
                     Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))

@@ -197,6 +197,7 @@ fun AppNavHost() {
                 VacuumSettingsScreen(
                     viewModel = viewModel,
                     onBack = { navController.popBackStack() },
+                    onSchedule = { navController.navigate(VacuumSchedule) },
                 )
             }
 

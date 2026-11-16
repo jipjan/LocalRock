@@ -156,3 +156,20 @@ fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): L
         }
     }
 }
+
+/**
+ * The room the running clean is on: the last room started (event 41 or 42, field 2 the segment) that
+ * has not been finished since (event 43). From the a296's `get_rt_clean_detail`.
+ */
+fun currentCleanRoom(events: List<CleanEvent>): Int? {
+    var room: Int? = null
+    for (e in events.sortedBy { it.epoch }) {
+        val seg = (e.fields["2"] as? JsonPrimitive)?.intOrNull ?: continue
+        when (e.type) {
+            41, 42 -> room = seg
+            43 -> if (room == seg) room = null
+        }
+    }
+    return room
+}
+
