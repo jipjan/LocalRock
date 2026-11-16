@@ -18,12 +18,13 @@ class LegacyMapTest {
     @Test
     fun parses_real_map_sample() {
         val map = parseLegacyMap(raw)
-        // Self-pinned against the captured real_map_sample.bin (480239 bytes).
-        assertEquals(439, map.width)
-        assertEquals(516, map.height)
-        assertEquals(439 * 516, map.grid.size)
-        assertEquals(315, map.pixelOffsetLeft)
-        assertEquals(142, map.pixelOffsetTop)
+        // Self-pinned against the captured real_map_sample.bin (480239 bytes): a 439 x 516 image at
+        // (315, 142), with the 6-cell border the parser adds on every side.
+        assertEquals(439 + 12, map.width)
+        assertEquals(516 + 12, map.height)
+        assertEquals((439 + 12) * (516 + 12), map.grid.size)
+        assertEquals(315 - 6, map.pixelOffsetLeft)
+        assertEquals(142 - 6, map.pixelOffsetTop)
         assertEquals(0.05f, map.resolution)
     }
 
@@ -37,7 +38,8 @@ class LegacyMapTest {
             128 -> floor++
         }
         // Captured fixture: floor is low3==7; cells with a room id but other low bits are outside the walls.
-        assertEquals(176278, outside)
+        // The border adds (451 x 528 - 439 x 516) outside cells.
+        assertEquals(176278 + (451 * 528 - 439 * 516), outside)
         assertEquals(4580, wall)
         assertEquals(45666, floor)
     }

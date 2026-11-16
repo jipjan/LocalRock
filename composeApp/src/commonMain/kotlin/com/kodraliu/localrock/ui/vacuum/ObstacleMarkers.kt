@@ -51,9 +51,9 @@ internal fun ParsedMap.obstacleAt(tap: Offset, content: Size, offset: Offset, sc
         ?.second
 
 /**
- * Obstacles as small round badges with a traffic cone, as the Roborock app draws them, of a fixed size
- * like the room labels. A dark halo keeps one visible on light and dark maps; one with a photo is a
- * little larger with a white ring, so it reads as something to open.
+ * Obstacles as small see-through grey badges with a traffic cone, as the Roborock app draws them, of a
+ * fixed size like the room labels. One with a photo is a little larger with a solid white ring, so it
+ * reads as something to open.
  */
 internal fun DrawScope.drawObstacles(map: ParsedMap, content: Size, offset: Offset, scale: Float) {
     for (o in map.obstacles) {
@@ -80,9 +80,10 @@ internal fun DrawScope.drawObstacles(map: ParsedMap, content: Size, offset: Offs
     }
 }
 
-private val OBSTACLE_HALO = Color.Black.copy(alpha = 0.35f)
-private val OBSTACLE_RING = Color(0xFFA7E3DB)
-private val OBSTACLE_FILL = Color(0xFF2A7F86)
+// The official app's obstacle badge: a see-through grey disc with a light rim, over any room colour.
+private val OBSTACLE_HALO = Color.Black.copy(alpha = 0.18f)
+private val OBSTACLE_RING = Color.White.copy(alpha = 0.55f)
+private val OBSTACLE_FILL = Color(0xFF5E666B).copy(alpha = 0.55f)
 
 /** What a tapped obstacle is, and its photo when the robot kept one. */
 @Composable

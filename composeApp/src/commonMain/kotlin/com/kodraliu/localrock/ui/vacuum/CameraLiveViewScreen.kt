@@ -1,6 +1,30 @@
 package com.kodraliu.localrock.ui.vacuum
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.automirrored.filled.RotateLeft
+import androidx.compose.material.icons.automirrored.filled.RotateRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +76,7 @@ import com.kodraliu.localrock.ui.LocalAppContainer
 fun CameraLiveViewScreen(
     viewModel: VacuumViewModel,
     onBack: () -> Unit,
+    onPinGo: () -> Unit = {},
 ) {
     val container = LocalAppContainer.current
     val duid = viewModel.repository.duid
@@ -62,8 +87,12 @@ fun CameraLiveViewScreen(
     var pin by remember { mutableStateOf(container.appSettings.cameraPin(duid) ?: "") }
     var autoStarted by remember { mutableStateOf(false) }
 
+    val drive = remember { LiveDrive(viewModel.repository) }
     DisposableEffect(Unit) {
-        onDispose { liveSession.dispose() }
+        onDispose {
+            liveSession.dispose()
+            drive.dispose()
+        }
     }
 
     // If a PIN is already saved, connect immediately.
@@ -139,6 +168,7 @@ fun CameraLiveViewScreen(
                         color = Color.White,
                         style = MaterialTheme.typography.labelSmall,
                     )
+                    LiveViewControls(drive = drive, onPinGo = onPinGo)
                 }
 
                 is CameraLiveSession.State.Failed -> {
@@ -242,5 +272,103 @@ private fun CameraMessage(icon: @Composable () -> Unit, text: String) {
         icon()
         Spacer(Modifier.height(12.dp))
         Text(text, color = Color.White, textAlign = TextAlign.Center)
+    }
+}
+
+
+/**
+ * Drives the robot from the live view, as the official app's video screen does: hold an arrow to keep
+ * moving. Remote control starts on the first press (`app_rc_start`) and ends when the screen closes.
+ */
+private class LiveDrive(private val repository: com.kodraliu.localrock.shared.vacuum.VacuumRepository) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var started = false
+    private var holding: Job? = null
+
+    fun hold(velocity: Double, omega: Double) {
+        holding?.cancel()
+        holding = scope.launch {
+            if (!started) {
+                runCatching { repository.startRemoteControl() }
+                started = true
+            }
+            while (isActive) {
+                runCatching { repository.moveRemote(velocity, omega, MOVE_MS) }
+                delay(REPEAT_MS)
+            }
+        }
+    }
+
+    fun release() {
+        holding?.cancel()
+        holding = null
+    }
+
+    fun dispose() {
+        release()
+        if (started) scope.launch(NonCancellable) { runCatching { repository.stopRemoteControl() } }
+            .invokeOnCompletion { scope.cancel() }
+        else scope.cancel()
+    }
+
+    private companion object {
+        const val MOVE_MS = 600
+        const val REPEAT_MS = 400L
+    }
+}
+
+@Composable
+private fun BoxScope.LiveViewControls(drive: LiveDrive, onPinGo: () -> Unit) {
+    FilledTonalButton(
+        onClick = onPinGo,
+        modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+        colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color.Black.copy(alpha = 0.45f), contentColor = Color.White),
+    ) {
+        Icon(Icons.Default.Place, null, Modifier.size(18.dp))
+        Spacer(Modifier.width(6.dp))
+        Text("Pin & Go")
+    }
+    HoldButton(
+        icon = Icons.Default.KeyboardArrowUp,
+        label = "Drive forward",
+        modifier = Modifier.align(Alignment.BottomStart).padding(24.dp),
+        onPress = { drive.hold(0.3, 0.0) },
+        onRelease = drive::release,
+    )
+    Row(
+        modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        HoldButton(Icons.AutoMirrored.Filled.RotateLeft, "Turn left", onPress = { drive.hold(0.0, 0.5) }, onRelease = drive::release)
+        HoldButton(Icons.AutoMirrored.Filled.RotateRight, "Turn right", onPress = { drive.hold(0.0, -0.5) }, onRelease = drive::release)
+    }
+}
+
+@Composable
+private fun HoldButton(
+    icon: ImageVector,
+    label: String,
+    modifier: Modifier = Modifier,
+    onPress: () -> Unit,
+    onRelease: () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .size(64.dp)
+            .background(Color.Black.copy(alpha = 0.45f), CircleShape)
+            .semantics { contentDescription = label }
+            .pointerInput(Unit) {
+                detectTapGestures(onPress = {
+                    onPress()
+                    try {
+                        tryAwaitRelease()
+                    } finally {
+                        onRelease()
+                    }
+                })
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, null, Modifier.size(32.dp), tint = Color.White)
     }
 }

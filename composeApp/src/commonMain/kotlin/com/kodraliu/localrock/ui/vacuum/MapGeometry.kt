@@ -95,14 +95,17 @@ internal fun zoomMap(
 }
 
 /** Scale and offset that fit [bounds] (the floor plan) in the middle of the viewport. */
+private const val FRAME_FILL = 0.9f
+
 internal fun frameMap(bounds: MapContentBounds, content: Size, viewport: Size): Pair<Float, Offset> {
     if (!bounds.isUsable || content.width <= 0f || content.height <= 0f) {
         return 1f to clampMapOffset(Offset.Zero, 1f, content, viewport)
     }
-    val scale = minOf(
+    // A margin around the floor plan, as the official app leaves.
+    val scale = (FRAME_FILL * minOf(
         viewport.width / (bounds.width * content.width),
         viewport.height / (bounds.height * content.height),
-    ).coerceIn(1f, MAX_MAP_SCALE)
+    )).coerceIn(1f, MAX_MAP_SCALE)
     val cx = (bounds.left + bounds.right) / 2f * content.width
     val cy = (bounds.top + bounds.bottom) / 2f * content.height
     val offset = Offset(viewport.width / 2f - cx * scale, viewport.height / 2f - cy * scale)

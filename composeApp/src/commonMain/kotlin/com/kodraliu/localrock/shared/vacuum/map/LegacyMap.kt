@@ -189,7 +189,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         ParsedMapRoom(id = roomId, name = "Room $roomId", labelNormX = cx, labelNormY = cy)
     }
 
-    return ParsedMap(
+    val parsed = ParsedMap(
         width = imageWidth,
         height = imageHeight,
         grid = grid,
@@ -219,6 +219,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         furniture = furniture,
         originalGrid = pixels,
     )
+    return parsed.withBorder(MAP_BORDER_CELLS)
 }
 
 private fun quadAt(bytes: ByteArray, p: Int, kind: ZoneKind, extra: List<Int>) = MapZone(
@@ -412,3 +413,37 @@ private fun u32(b: ByteArray, off: Int): Int =
         ((b[off + 1].toInt() and 0xff) shl 8) or
         ((b[off + 2].toInt() and 0xff) shl 16) or
         ((b[off + 3].toInt() and 0xff) shl 24)
+
+
+/**
+ * Room outlines (block 55) run along the outer edge of their floor cells, and the robot crops its
+ * image to those cells, so an outline on the image edge was cut off. An empty border around the
+ * image, as the official app leaves, keeps it and its wall line whole.
+ */
+private const val MAP_BORDER_CELLS = 6
+
+/** This map with [cells] empty cells on every side; mm coordinates keep their place on it. */
+internal fun ParsedMap.withBorder(cells: Int): ParsedMap {
+    if (cells <= 0) return this
+    val w = width + cells * 2
+    val h = height + cells * 2
+    fun pad(src: ByteArray): ByteArray {
+        val out = ByteArray(w * h)
+        for (y in 0 until height) src.copyInto(out, (y + cells) * w + cells, y * width, y * width + width)
+        return out
+    }
+    return copy(
+        width = w,
+        height = h,
+        grid = pad(grid),
+        originalGrid = originalGrid?.let(::pad),
+        pixelOffsetLeft = pixelOffsetLeft - cells,
+        pixelOffsetTop = pixelOffsetTop - cells,
+        rooms = rooms.map { room ->
+            room.copy(
+                labelNormX = room.labelNormX?.let { (it * width + cells) / w },
+                labelNormY = room.labelNormY?.let { (it * height + cells) / h },
+            )
+        },
+    )
+}

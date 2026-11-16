@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.shared.vacuum.map.officialRoomColorIndex
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -47,7 +48,10 @@ private val THRESHOLD_STROKE = Color(0xffffb300)
 private class MapPalette(
     val wall: Color,
     val floor: Color,
+    /** The official app's four room colours, for colour index 1–4 ([officialRoomColorIndex]). */
     val rooms: List<Color>,
+    /** A room with no colour index (or a map without room data): the official app's grey. */
+    val unassigned: Color,
     val path: Color,
     val charger: Color,
     val robot: Color,
@@ -57,37 +61,39 @@ private class MapPalette(
     val texture: Color,
 )
 
-// Light is NOT the dark palette inverted: the rooms have to sit *above* their container, so the
-// hero behind them is near-white and these tints carry enough weight to advance against it.
+// Colours from the official a296 plugin: room fills are its `mapBlockHLColor` (light `colorBubble`,
+// dark `colorBubbleDark`), path and wall its map theme's `pathColor` and `wallColor`.
 private val LightPalette = MapPalette(
-    // A softer slate than near-black: at 1px over pastel, near-black reads as harsh scratchy noise.
-    wall = Color(0xFF3A4A52),
+    wall = Color(0xFF6B7174),
     floor = Color(0xFFE9EFEE),
-    rooms = listOf(
-        Color(0xFFBFE0DC), Color(0xFFC8DCEF), Color(0xFFCBE3C4), Color(0xFFEBDCC4),
-        Color(0xFFD8D2E8), Color(0xFFC9E2E4), Color(0xFFEBD5CC), Color(0xFFD3E0D0),
-    ),
-    // Deep enough to read as ink rather than neon against the pastels.
-    path = Color(0xFFC75B00),
-    charger = Color(0xFF1565C0),
-    robot = Color(0xFF00595A),
-    markerRing = Color(0xFFFFFFFF),
+    rooms = listOf(Color(0xFF98C9FF), Color(0xFFFFB196), Color(0xFF1FE7DB), Color(0xFFFFDD63)),
+    unassigned = Color(0x88BBBBBB),
+    path = Color(0xFFFFFFFF),
+    charger = Color(0xFF2BBF8A),
+    robot = Color(0xFFFFFFFF),
+    markerRing = Color(0xFF2BBF8A),
     texture = Color(0x14000000),
 )
 
 private val DarkPalette = MapPalette(
-    wall = Color(0xFF070B0C),
+    wall = Color(0xFF6D7476),
     floor = Color(0xFF17201F),
-    rooms = listOf(
-        Color(0xFF1E3A38), Color(0xFF1F3140), Color(0xFF24382A), Color(0xFF3A3328),
-        Color(0xFF2E2A3B), Color(0xFF1C3639), Color(0xFF38292A), Color(0xFF26332A),
-    ),
-    path = Color(0xFFFFD54F),
-    charger = Color(0xFF64B5F6),
-    robot = Color(0xFF4CDADA),
-    markerRing = Color(0xFF0B1112),
-    texture = Color(0x1AFFFFFF),
+    rooms = listOf(Color(0xFF73AAE9), Color(0xFFD97E5F), Color(0xFF25D1C7), Color(0xFFE5BE5A)),
+    unassigned = Color(0x88BBBBBB),
+    path = Color(0x99FFFFFF),
+    charger = Color(0xFF2BBF8A),
+    robot = Color(0xFFFFFFFF),
+    markerRing = Color(0xFF2BBF8A),
+    texture = Color(0x1A000000),
 )
+
+/** Label colours per colour index, from the plugin's `tagTintColors` (light, dark). */
+internal val RoomTagLight = listOf(Color(0xFF1F558E), Color(0xFFA0432B), Color(0xFF0B5D54), Color(0xFF7E5C00))
+internal val RoomTagDark = listOf(Color(0xFF143357), Color(0xFF752C1A), Color(0xFF005558), Color(0xFF664300))
+
+/** The official colour index (1–4) per room id of [map], or empty without room data. */
+internal fun ParsedMap.roomColorIndex(): Map<Int, Int> =
+    originalGrid?.let { officialRoomColorIndex(it, width, height) } ?: emptyMap()
 
 /**
  * Follows whatever scheme is actually applied — including platform dynamic colour — rather than
@@ -142,11 +148,22 @@ fun ParsedMap.contentBoundsNorm(): MapContentBounds {
         }
     }
     if (maxX < 0 || maxY < 0) return MapContentBounds(0f, 0f, 1f, 1f)
+    var left = minX.toFloat()
+    var top = minY.toFloat()
+    var right = (maxX + 1).toFloat()
+    var bottom = (maxY + 1).toFloat()
+    // Room outlines (block 55) can reach past the robot's cells; frame them too, or a room is cut off.
+    for (room in floorPlanPolygons(this)) {
+        left = minOf(left, room.minX)
+        top = minOf(top, room.minY)
+        right = maxOf(right, room.maxX)
+        bottom = maxOf(bottom, room.maxY)
+    }
     return MapContentBounds(
-        left = minX.toFloat() / width,
-        top = minY.toFloat() / height,
-        right = (maxX + 1).toFloat() / width,
-        bottom = (maxY + 1).toFloat() / height,
+        left = (left / width).coerceIn(0f, 1f),
+        top = (top / height).coerceIn(0f, 1f),
+        right = (right / width).coerceIn(0f, 1f),
+        bottom = (bottom / height).coerceIn(0f, 1f),
     )
 }
 
@@ -176,8 +193,10 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
 
     fun kind(x: Int, y: Int): Int = if (x in 0 until w && y in 0 until h) grid[y * w + x].toInt() and 0xff else 0
     fun room(x: Int, y: Int): Int = if (raw != null) (raw[y * w + x].toInt() ushr 3) and 0x1f else -1
+    val colorIndex = map.roomColorIndex()
+    fun roomFill(id: Int): Color = colorIndex[id]?.let { palette.rooms[it - 1] } ?: palette.unassigned
     fun floorColor(x: Int, y: Int): Color =
-        if (raw != null) palette.rooms[room(x, y) % palette.rooms.size] else palette.floor
+        if (raw != null) roomFill(room(x, y)) else palette.floor
 
     val fill = Paint().apply { isAntiAlias = true }
     val boundaryPaint = Paint()
@@ -190,7 +209,7 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
     fun inside(x: Int, y: Int) = x in 0 until w && y in 0 until h && inPlan[y * w + x] >= 0
     fun nearPlan(x: Int, y: Int) = (-2..2).any { dy -> (-2..2).any { dx -> inside(x + dx, y + dy) } }
     for (room in plan) {
-        fill.color = palette.rooms[room.roomId % palette.rooms.size]
+        fill.color = roomFill(room.roomId)
         canvas.drawPath(room.path, fill)
     }
     // Floor: a cell surrounded by the same room is a plain square; an edge cell is drawn as a round
@@ -222,7 +241,7 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
             if (borderRoom) {
                 // Where two rooms meet, colour each sub-pixel by the room with the most weight among
                 // the cells around it, so the boundary curves instead of stepping cell by cell.
-                drawRoomBoundaryCell(canvas, x, y, drawY, s, ::kind, ::room, boundaryPaint, roomWeights) { palette.rooms[it % palette.rooms.size] }
+                drawRoomBoundaryCell(canvas, x, y, drawY, s, ::kind, ::room, boundaryPaint, roomWeights) { roomFill(it) }
             } else if (inner) {
                 canvas.drawRect(Rect(x.toFloat(), drawY, x + 1f, drawY + 1f), fill)
             } else {
@@ -266,7 +285,7 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
         val outline = Paint().apply {
             color = palette.wall
             style = PaintingStyle.Stroke
-            strokeWidth = 0.6f
+            strokeWidth = 1.0f
             strokeJoin = StrokeJoin.Round
             isAntiAlias = true
         }
@@ -281,7 +300,9 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
         map.virtualWalls.forEach { drawWall(canvas, map, it) }
     }
     // Square dock, round robot: the two markers stay distinguishable without relying on colour.
-    map.chargerMm?.let { drawMarker(canvas, map, it, palette.charger, palette.markerRing, square = true) }
+    // Green dock, white robot in a green ring: the official app's colours. Square and round still
+    // tell them apart without colour.
+    map.chargerMm?.let { drawMarker(canvas, map, it, palette.charger, Color.White, square = true) }
     map.robotMm?.let { drawMarker(canvas, map, it, palette.robot, palette.markerRing, square = false) }
     return bitmap
 }
@@ -487,9 +508,9 @@ private fun drawPath(canvas: Canvas, map: ParsedMap, palette: MapPalette) {
             gfxPath.lineTo(cellX, cellY)
         }
     }
-    // About 15 mm wide and half see-through, so the rooms show through the path as in the official app.
+    // About 15 mm wide, white and (in dark mode) see-through, as in the official app.
     val pathPaint = Paint().apply {
-        color = palette.path.copy(alpha = 0.7f)
+        color = palette.path
         style = PaintingStyle.Stroke
         strokeWidth = 0.3f
         strokeCap = StrokeCap.Round

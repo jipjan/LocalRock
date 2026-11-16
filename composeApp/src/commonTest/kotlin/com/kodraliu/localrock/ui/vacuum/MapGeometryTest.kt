@@ -204,10 +204,11 @@ class MapGeometryTest {
     @Test
     fun framing_fits_the_floor_plan_in_the_middle_of_the_view() {
         val content = narrow.fittedSize(view)
-        // Floor plan in the top half of the map: 250 x 500 at zoom 1, so it fits at 2x.
+        // Floor plan in the top half of the map: 250 x 500 at zoom 1, so it fits at 2x; framing
+        // leaves a 10% margin, so 1.8x, centred across and held at the top edge.
         val (scale, offset) = frameMap(MapContentBounds(0f, 0f, 1f, 0.5f), content, view)
-        assertEquals(2f, scale)
-        assertEquals(Offset(250f, 0f), offset)
+        assertEquals(1.8f, scale, 1e-4f)
+        assertEquals(Offset(275f, 0f), offset)
         // No usable floor plan: the whole map, centred.
         assertEquals(1f to Offset(375f, 0f), frameMap(MapContentBounds(0f, 0f, 0f, 0f), content, view))
     }

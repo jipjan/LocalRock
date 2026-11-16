@@ -41,6 +41,7 @@ import androidx.compose.material.icons.automirrored.filled.BatteryUnknown
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.EditLocationAlt
 import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Battery1Bar
@@ -348,7 +349,7 @@ fun VacuumDetailScreen(
 
     val PanelBody: @Composable (DetailPanel) -> Unit = { currentPanel ->
         when (currentPanel) {
-            DetailPanel.More -> MoreActionsSheetContent(hasCamera = viewModel.hasCamera, onAction = onMoreAction)
+            DetailPanel.More -> MoreActionsSheetContent(onAction = onMoreAction)
 
             DetailPanel.Routines -> RoutinesSheetContent(
                 state = routines,
@@ -561,7 +562,16 @@ fun VacuumDetailScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back")
                     }
                 },
+                // Same three icons, in the same order, as the official app's robot page.
                 actions = {
+                    if (viewModel.hasCamera) {
+                        IconButton(onClick = onCamera) {
+                            Icon(Icons.Default.Videocam, contentDescription = "Live view")
+                        }
+                    }
+                    IconButton(onClick = onMapEdit) {
+                        Icon(Icons.Default.EditLocationAlt, contentDescription = "Edit map")
+                    }
                     IconButton(onClick = onSettings) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
@@ -623,7 +633,7 @@ fun VacuumDetailScreen(
                             }
                             PanelBody(headed)
                         } else {
-                            MoreActionsSheetContent(hasCamera = viewModel.hasCamera, onAction = onMoreAction)
+                            MoreActionsSheetContent(onAction = onMoreAction)
                         }
                     }
 
@@ -733,7 +743,8 @@ private fun MapHeroSection(
 ) {
     val scheme = MaterialTheme.colorScheme
     val heroBackground = if (scheme.surface.luminance() < 0.5f) {
-        scheme.surfaceVariant
+        // Black behind the map, as the official app's dark map.
+        Color.Black
     } else {
         // Near-white, so the tinted rooms advance instead of sinking into a grey slab.
         scheme.surfaceContainerLowest
@@ -893,10 +904,14 @@ private fun VacuumMapImage(
     // Labels follow the scheme rather than being a fixed black scrim: over a light map a dark
     // scrim reads as a scattering of heavy blobs and dominates the surface it sits on.
     val labelStyle = TextStyle(
-        fontSize = 11.sp,
-        fontWeight = FontWeight.SemiBold,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Medium,
         color = MaterialTheme.colorScheme.onSurface,
     )
+    // As in the official app: the name in a dark shade of its room's colour, after a round badge.
+    val darkMap = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    val roomColors = remember(map) { map.roomColorIndex() }
+    val badgeStyle = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
     val bgColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
     val selectedBgColor = MaterialTheme.colorScheme.primary
     // In dark mode `primary` is a bright cyan, so white-on-primary would be unreadable.
@@ -990,6 +1005,19 @@ private fun VacuumMapImage(
                 if (cx < 0f || cx > size.width || cy < 0f || cy > size.height) continue
                 val order = selectedRoomIds.indexOf(room.id)
                 val selected = order >= 0
+                val tag = roomColors[room.id]?.let { (if (darkMap) RoomTagDark else RoomTagLight)[it - 1] }
+                if (!selected && tag != null) {
+                    val measured = textMeasurer.measure(room.name, labelStyle.copy(color = tag))
+                    val r = 9.dp.toPx()
+                    val gap = 4.dp.toPx()
+                    val total = r * 2 + gap + measured.size.width
+                    val left = cx - total / 2
+                    drawCircle(color = tag, radius = r, center = Offset(left + r, cy))
+                    val initial = textMeasurer.measure(room.name.take(1).uppercase(), badgeStyle)
+                    drawText(initial, topLeft = Offset(left + r - initial.size.width / 2f, cy - initial.size.height / 2f))
+                    drawText(measured, topLeft = Offset(left + r * 2 + gap, cy - measured.size.height / 2f))
+                    continue
+                }
                 val text = if (selected) "${order + 1} · ${room.name}" else room.name
                 val style = if (selected) selectedLabelStyle else labelStyle
                 val measured = textMeasurer.measure(text, style)
@@ -1300,7 +1328,7 @@ private fun ControlBar(
 private enum class MoreAction { ROOMS, ZONES, PIN_GO, REMOTE, SCHEDULE, CAMERA, DOCK, HISTORY, MAPS, EDIT_MAP, ROUTINES }
 
 @Composable
-private fun MoreActionsSheetContent(hasCamera: Boolean, onAction: (MoreAction) -> Unit) {
+private fun MoreActionsSheetContent(onAction: (MoreAction) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1333,11 +1361,7 @@ private fun MoreActionsSheetContent(hasCamera: Boolean, onAction: (MoreAction) -
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             MoreActionItem(Modifier.weight(1f), Icons.AutoMirrored.Filled.PlaylistPlay, "Routines", MaterialTheme.colorScheme.secondary) { onAction(MoreAction.ROUTINES) }
-            if (hasCamera) {
-                MoreActionItem(Modifier.weight(1f), Icons.Default.Videocam, "Live view", AppColors.AccentRed) { onAction(MoreAction.CAMERA) }
-            } else {
-                Spacer(Modifier.weight(1f))
-            }
+            Spacer(Modifier.weight(1f))
             Spacer(Modifier.weight(1f))
         }
     }
