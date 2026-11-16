@@ -11,7 +11,9 @@ class FeatureSectionsTest {
     fun features_sit_on_the_page_the_official_app_puts_them() {
         assertEquals(FeatureSection.CARPET, section("carpet_deep_clean"))
         assertEquals(FeatureSection.FLOOR, section("corner_mop_stretch"))
-        assertEquals(FeatureSection.FLOOR, section("pet_supplies_deep_clean"))
+        assertEquals(FeatureSection.PETS, section("pet_supplies_deep_clean"))
+        assertEquals(FeatureSection.PETS, section("have_pets"))
+        assertEquals(FeatureSection.PETS, section("pet_snaps"))
         assertEquals(FeatureSection.OBSTACLE, section("avoid_collision"))
         assertEquals(FeatureSection.DOCK, section("dust_collection_switch"))
         assertEquals(FeatureSection.ROBOT, section("voice_control_led"))

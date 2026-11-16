@@ -25,6 +25,7 @@ import com.kodraliu.localrock.ui.onboarding.ServerSetupScreen
 import com.kodraliu.localrock.ui.settings.APP_VERSION
 import com.kodraliu.localrock.ui.settings.SettingsScreen
 import com.kodraliu.localrock.ui.vacuum.CameraLiveViewScreen
+import com.kodraliu.localrock.ui.vacuum.DetailPanel
 import com.kodraliu.localrock.ui.vacuum.ScheduleScreen
 import com.kodraliu.localrock.ui.vacuum.VacuumDetailScreen
 import com.kodraliu.localrock.ui.vacuum.VacuumHistoryScreen
@@ -198,6 +199,13 @@ fun AppNavHost() {
                     viewModel = viewModel,
                     onBack = { navController.popBackStack() },
                     onSchedule = { navController.navigate(VacuumSchedule) },
+                    onMaps = {
+                        viewModel.requestPanel(DetailPanel.Maps)
+                        navController.popBackStack()
+                    },
+                    onLiveView = if (viewModel.hasCamera) ({ navController.navigate(VacuumCamera) }) else null,
+                    onPinGo = { navController.navigate(VacuumPinGo) },
+                    onRemote = { navController.navigate(VacuumRemote) },
                 )
             }
 

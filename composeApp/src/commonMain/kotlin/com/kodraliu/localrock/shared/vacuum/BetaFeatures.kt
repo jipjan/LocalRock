@@ -14,7 +14,7 @@ import kotlinx.serialization.json.intOrNull
  * shape of the get reply (see [parseBetaReply] and [encodeBetaSetParams]).
  */
 /** The settings page a feature is shown on, following the official app's grouping. */
-enum class FeatureSection { CARPET, FLOOR, OBSTACLE, DOCK, ROBOT, BETA }
+enum class FeatureSection { CARPET, FLOOR, OBSTACLE, PETS, DOCK, ROBOT, BETA }
 
 /**
  * [choices], when set, makes the feature a picker of those values instead of an on/off switch.
@@ -155,7 +155,7 @@ val BetaFeatureDefs = listOf(
         bit = 43,
         getMethod = "get_pet_supplies_deep_clean_status",
         setMethod = "set_pet_supplies_deep_clean_status",
-        section = FeatureSection.FLOOR,
+        section = FeatureSection.PETS,
     ),
     BetaFeatureDef(
         id = "dirty_object_detect",
@@ -376,12 +376,12 @@ val BetaFeatureDefs = listOf(
     cameraBitSwitch(
         id = "have_pets", bitIndex = 5,
         title = "I have pets", description = "Watches out for pet waste and cleans pet areas with more care",
-        bit = null, section = FeatureSection.OBSTACLE,
+        bit = null, section = FeatureSection.PETS,
     ),
     cameraBitSwitch(
         id = "pet_snaps", bitIndex = 12,
         title = "Pet Snaps", description = "Takes photos of your pets while cleaning",
-        bit = 50, section = FeatureSection.OBSTACLE,
+        bit = 50, section = FeatureSection.PETS,
     ),
     BetaFeatureDef(
         id = "voice_assistant",

@@ -270,6 +270,10 @@ fun VacuumDetailScreen(
 
     var sessionRoomIds by remember { mutableStateOf(emptyList<Int>()) }
     var panel by remember { mutableStateOf<DetailPanel?>(null) }
+    val requestedPanel by viewModel.requestedPanel.collectAsState()
+    LaunchedEffect(requestedPanel) {
+        requestedPanel?.let { panel = it; viewModel.requestPanel(null) }
+    }
     var openObstacle by remember { mutableStateOf<MapObstacle?>(null) }
     val twoPane = LocalWindowLayout.current.twoPane
     BackHandler(enabled = twoPane && sidePaneShowsPanel(panel)) { panel = null }

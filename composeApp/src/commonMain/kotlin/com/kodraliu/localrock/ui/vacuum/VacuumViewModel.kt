@@ -56,6 +56,11 @@ class VacuumViewModel(
     val carpetModes = carpetModeOptions(device.newFeatureSet)
     /** Remote viewing: TwoKeyRealTimeVideo (32) or TwoKeyRTVInCharging (33). */
     val hasCamera = newFeatureBit(device.newFeatureSet, 32) || newFeatureBit(device.newFeatureSet, 33)
+    private val _requestedPanel = kotlinx.coroutines.flow.MutableStateFlow<DetailPanel?>(null)
+    /** A sheet another screen asked the robot page to open (Settings → Maps); taken once by that page. */
+    internal val requestedPanel: kotlinx.coroutines.flow.StateFlow<DetailPanel?> = _requestedPanel
+    internal fun requestPanel(panel: DetailPanel?) { _requestedPanel.value = panel }
+
     val showsBetaFeatures = betaFeatureDefs.any { it.section == FeatureSection.BETA && it.bit != null } || unlistedFeatures.isNotEmpty()
     val repository: VacuumRepository = container.vacuumRepositoryFor(device).also { it.restoreCachedFeatures(betaFeatureDefs) }
 
@@ -377,4 +382,5 @@ private fun describe(e: Throwable): String {
         current = current.cause?.takeIf { it !== current }
     }
     return parts.distinct().joinToString(" → ")
+
 }

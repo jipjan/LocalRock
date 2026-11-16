@@ -1,5 +1,15 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.material.icons.filled.Gamepad
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.Search
 import com.kodraliu.localrock.shared.vacuum.summary
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material.icons.filled.Route
@@ -168,6 +178,7 @@ private sealed interface SettingsRoute {
     data object Carpet : SettingsRoute
     data object Floor : SettingsRoute
     data object Obstacle : SettingsRoute
+    data object Pets : SettingsRoute
     data object Valley : SettingsRoute
     data object BetaFeatures : SettingsRoute
     data object History : SettingsRoute
@@ -182,6 +193,10 @@ fun VacuumSettingsScreen(
     viewModel: VacuumViewModel,
     onBack: () -> Unit,
     onSchedule: () -> Unit = {},
+    onMaps: () -> Unit = {},
+    onLiveView: (() -> Unit)? = null,
+    onPinGo: () -> Unit = {},
+    onRemote: () -> Unit = {},
 ) {
     val repository = viewModel.repository
     var route by remember { mutableStateOf<SettingsRoute>(SettingsRoute.Root) }
@@ -223,6 +238,48 @@ fun VacuumSettingsScreen(
     Box(Modifier.fillMaxSize()) {
     when (route) {
         SettingsRoute.Root -> SettingsRootScreen(
+            onPets = if (betaFeatures.inSection(FeatureSection.PETS).isEmpty()) null else ({ route = SettingsRoute.Pets }),
+            onMaps = onMaps,
+            onVoice = {
+                scope.launch { runCatching { repository.fetchRobotSettings() } }
+                route = SettingsRoute.RobotSettings
+            },
+            onLiveView = onLiveView,
+            onPinGo = onPinGo,
+            onRemote = onRemote,
+            searchEntries = settingsSearchIndex(
+                features = betaFeatures,
+                openSection = { section ->
+                    route = when (section) {
+                        FeatureSection.CARPET -> SettingsRoute.Carpet
+                        FeatureSection.FLOOR -> SettingsRoute.Floor
+                        FeatureSection.OBSTACLE -> SettingsRoute.Obstacle
+                        FeatureSection.PETS -> SettingsRoute.Pets
+                        FeatureSection.DOCK -> SettingsRoute.DockSettings
+                        FeatureSection.ROBOT -> SettingsRoute.RobotSettings
+                        FeatureSection.BETA -> SettingsRoute.BetaFeatures
+                    }
+                },
+                pages = listOf(
+                    "Cleaning history" to { route = SettingsRoute.History },
+                    "Schedules" to onSchedule,
+                    "Maintenance" to { route = SettingsRoute.Maintenance },
+                    "Carpet cleaning" to { route = SettingsRoute.Carpet },
+                    "Floor cleaning" to { route = SettingsRoute.Floor },
+                    "Dock settings" to { route = SettingsRoute.DockSettings },
+                    "Obstacle avoidance" to { route = SettingsRoute.Obstacle },
+                    "Pets" to { route = SettingsRoute.Pets },
+                    "Maps" to onMaps,
+                    "Voice assistant" to { route = SettingsRoute.RobotSettings },
+                    "Voice pack" to { route = SettingsRoute.VoicePack },
+                    "More options" to { route = SettingsRoute.RobotSettings },
+                    "Do Not Disturb" to { route = SettingsRoute.DndMode },
+                    "Off-peak charging" to { route = SettingsRoute.Valley },
+                    "Beta features" to { route = SettingsRoute.BetaFeatures },
+                    "Pin & Go" to onPinGo,
+                    "Remote control" to onRemote,
+                ) + listOfNotNull(onLiveView?.let { "Live view" to it }),
+            ),
             lastClean = cleanHistory.maxByOrNull { it.beginEpoch },
             summary = cleanSummary,
             maintenanceSummary = consumables?.summary(),
@@ -274,6 +331,12 @@ fun VacuumSettingsScreen(
         SettingsRoute.Floor -> FeatureSectionScreen(
             title = "Floor cleaning",
             features = betaFeatures.inSection(FeatureSection.FLOOR),
+            onToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
+            onBack = { route = SettingsRoute.Root },
+        )
+        SettingsRoute.Pets -> FeatureSectionScreen(
+            title = "Pets",
+            features = betaFeatures.inSection(FeatureSection.PETS),
             onToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
             onBack = { route = SettingsRoute.Root },
         )
@@ -417,7 +480,32 @@ fun VacuumHistoryScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** A Settings entry or option the search can find: where it is and how to get there. */
+internal data class SettingsSearchEntry(val title: String, val where: String, val open: () -> Unit)
+
+/** Every page and every option the robot reports, for the Settings search. */
+private fun settingsSearchIndex(
+    features: List<BetaFeatureState>,
+    openSection: (FeatureSection) -> Unit,
+    pages: List<Pair<String, () -> Unit>>,
+): List<SettingsSearchEntry> {
+    val sectionName = mapOf(
+        FeatureSection.CARPET to "Carpet cleaning", FeatureSection.FLOOR to "Floor cleaning",
+        FeatureSection.OBSTACLE to "Obstacle avoidance", FeatureSection.PETS to "Pets",
+        FeatureSection.DOCK to "Dock settings", FeatureSection.ROBOT to "More options",
+        FeatureSection.BETA to "Beta features",
+    )
+    return pages.map { (title, open) -> SettingsSearchEntry(title, "Settings", open) } +
+        features.filter { it.answered }.map { f ->
+            val section = f.def.section
+            SettingsSearchEntry(f.def.title, "${sectionName[section] ?: "Settings"} · ${f.def.description}") { openSection(section) }
+        }
+}
+
+/** One row of a group card. */
+private class GroupRow(val icon: ImageVector, val tint: Color, val title: String, val subtitle: String?, val onClick: () -> Unit)
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun SettingsRootScreen(
     lastClean: CleanRecord?,
@@ -434,160 +522,158 @@ private fun SettingsRootScreen(
     onCarpet: () -> Unit,
     onFloor: (() -> Unit)?,
     onObstacle: (() -> Unit)?,
+    onPets: (() -> Unit)?,
     onDockSettings: () -> Unit,
+    onMaps: () -> Unit,
+    onVoice: () -> Unit,
+    onLiveView: (() -> Unit)?,
     onRobotSettings: () -> Unit,
     onDndMode: () -> Unit,
     onBetaFeatures: (() -> Unit)?,
+    onPinGo: () -> Unit,
+    onRemote: () -> Unit,
+    searchEntries: List<SettingsSearchEntry>,
 ) {
+    var searching by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    BackHandler(enabled = searching) { searching = false; query = "" }
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = {
+                    if (searching) {
+                        val focus = remember { FocusRequester() }
+                        LaunchedEffect(Unit) { focus.requestFocus() }
+                        TextField(
+                            value = query,
+                            onValueChange = { query = it },
+                            placeholder = { Text("Search settings") },
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                            ),
+                            modifier = Modifier.fillMaxWidth().focusRequester(focus),
+                        )
+                    } else {
+                        Text("Settings")
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { if (searching) { searching = false; query = "" } else onBack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    // As the official app: search at the top right.
+                    if (!searching) {
+                        IconButton(onClick = { searching = true }) {
+                            Icon(Icons.Default.Search, contentDescription = "Search settings")
+                        }
                     }
                 },
             )
         },
     ) { padding ->
         CenteredContent {
+            if (searching) {
+                val terms = query.trim().lowercase().split(' ').filter { it.isNotEmpty() }
+                // Each typed word has to start a word ("pet" finds Pets, not carpet).
+                val hits = if (terms.isEmpty()) emptyList() else searchEntries.filter { e ->
+                    val words = (e.title + " " + e.where).lowercase().split(Regex("[^\\p{L}\\p{N}&+]+"))
+                    terms.all { term -> words.any { it.startsWith(term) } }
+                }
+                LazyColumn(contentPadding = padding) {
+                    if (terms.isNotEmpty() && hits.isEmpty()) {
+                        item { Text("Nothing found for \"${query.trim()}\".", Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    }
+                    items(hits.size) { i ->
+                        val hit = hits[i]
+                        Surface(onClick = { searching = false; query = ""; hit.open() }, color = Color.Transparent) {
+                            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                                Text(hit.title, style = MaterialTheme.typography.bodyLarge)
+                                Text(hit.where, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
+                return@CenteredContent
+            }
             LazyColumn(contentPadding = padding) {
                 // As the official app: the last clean and the totals first, then schedules and maintenance.
                 item { HistoryOverviewCard(lastClean = lastClean, summary = summary, onClick = onHistory) }
                 item {
-                    SettingsCategoryRow(
-                        icon = Icons.Default.Schedule,
-                        iconTint = AppColors.Water,
-                        title = "Schedules",
-                        subtitle = "Clean at set times",
-                        onClick = onSchedule,
-                    )
+                    SettingsGroup(listOf(
+                        GroupRow(Icons.Default.Schedule, AppColors.Water, "Schedules", "Clean at set times", onSchedule),
+                        GroupRow(Icons.Default.Build, AppColors.Good, "Maintenance", maintenanceSummary ?: "Brush life and consumables", onMaintenance),
+                    ))
                 }
-                item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
                 item {
-                    SettingsCategoryRow(
-                        icon = Icons.Default.Build,
-                        iconTint = AppColors.Good,
-                        title = "Maintenance",
-                        subtitle = maintenanceSummary ?: "Brush life and consumables",
-                        onClick = onMaintenance,
-                    )
+                    SettingsGroup(listOfNotNull(
+                        GroupRow(Icons.Default.GridView, AppColors.Good, "Carpet cleaning", "Carpet mode and deep cleaning", onCarpet),
+                        onFloor?.let { GroupRow(Icons.Default.CleaningServices, AppColors.AccentCyan, "Floor cleaning", "Floor types, FlexiArm and gaps", it) },
+                        GroupRow(Icons.Default.Home, AppColors.Water, "Dock settings", "Auto-empty, wash and dry options", onDockSettings),
+                        onObstacle?.let { GroupRow(Icons.Default.Sensors, AppColors.AccentYellow, "Obstacle avoidance", "Collision and object detection", it) },
+                        onPets?.let { GroupRow(Icons.Default.Pets, AppColors.AccentPurple, "Pets", "Pet care and Pet Snaps", it) },
+                    ))
                 }
-                item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
                 item {
-                    SettingsCategoryRow(
-                        icon = Icons.Default.GridView,
-                        iconTint = AppColors.Good,
-                        title = "Carpet cleaning",
-                        subtitle = "Carpet mode and deep cleaning",
-                        onClick = onCarpet,
-                    )
+                    SettingsGroup(listOfNotNull(
+                        GroupRow(Icons.Default.Map, AppColors.Warn, "Maps", "Saved maps, floors and backups", onMaps),
+                        GroupRow(Icons.Default.RecordVoiceOver, AppColors.AccentIndigo, "Voice assistant", "Voice, volume and language", onVoice),
+                        onLiveView?.let { GroupRow(Icons.Default.Videocam, AppColors.AccentRed, "Live view", "See through the robot's camera", it) },
+                        GroupRow(Icons.Default.Settings, AppColors.AccentPurple, "More options", "Child lock, lights and more", onRobotSettings),
+                        GroupRow(Icons.Default.Bedtime, AppColors.AccentIndigo, "Do Not Disturb", "Set quiet hours for cleaning", onDndMode),
+                        onBetaFeatures?.let { GroupRow(Icons.Default.Science, AppColors.AccentCyan, "Beta features", "Other options your robot reports", it) },
+                    ))
                 }
-                if (onFloor != null) {
-                    item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
-                    item {
-                        SettingsCategoryRow(
-                            icon = Icons.Default.CleaningServices,
-                            iconTint = AppColors.AccentCyan,
-                            title = "Floor cleaning",
-                            subtitle = "Floor types, FlexiArm and pet areas",
-                            onClick = onFloor,
-                        )
+                item {
+                    SettingsGroup(listOf(
+                        GroupRow(Icons.Default.Place, AppColors.AccentPurple, "Pin & Go", "Send the robot to a spot on the map", onPinGo),
+                        GroupRow(Icons.Default.Gamepad, AppColors.AccentCyan, "Remote control", "Drive the robot by hand", onRemote),
+                    ))
+                }
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                    ) {
+                        Column {
+                            SettingRowInfo(icon = Icons.Default.Router, iconTint = AppColors.AccentIndigo, title = "Model", value = modelName ?: "Unknown")
+                            HorizontalDivider(Modifier.padding(start = 72.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                            SettingRowInfo(icon = Icons.Default.Memory, iconTint = AppColors.AccentCyan, title = "Firmware version", value = firmwareVersion ?: "Unknown")
+                            // The update check is hidden for now; FirmwareUpdateRow and the view model stay in place.
+                            if (SHOW_FIRMWARE_UPDATE_CHECK) {
+                                HorizontalDivider(Modifier.padding(start = 72.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                                FirmwareUpdateRow(state = firmwareUpdate, onCheck = onCheckUpdate)
+                            }
+                        }
                     }
                 }
-                item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
-                item {
-                    SettingsCategoryRow(
-                        icon = Icons.Default.Home,
-                        iconTint = AppColors.Water,
-                        title = "Dock settings",
-                        subtitle = "Auto-empty, wash and dry options",
-                        onClick = onDockSettings,
-                    )
-                }
-                if (onObstacle != null) {
-                    item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
-                    item {
-                        SettingsCategoryRow(
-                            icon = Icons.Default.Sensors,
-                            iconTint = AppColors.AccentYellow,
-                            title = "Obstacle avoidance",
-                            subtitle = "Collision and object detection",
-                            onClick = onObstacle,
-                        )
-                    }
-                }
-                item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
-                item {
-                    SettingsCategoryRow(
-                        icon = Icons.Default.Settings,
-                        iconTint = AppColors.AccentPurple,
-                        title = "Robot settings",
-                        subtitle = "Volume, child lock and more",
-                        onClick = onRobotSettings,
-                    )
-                }
-                item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
-                item {
-                    SettingsCategoryRow(
-                        icon = Icons.Default.Schedule,
-                        iconTint = AppColors.AccentIndigo,
-                        title = "Do Not Disturb",
-                        subtitle = "Set quiet hours for cleaning",
-                        onClick = onDndMode,
-                    )
-                }
-                if (onBetaFeatures != null) {
-                    item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
-                    item {
-                        SettingsCategoryRow(
-                            icon = Icons.Default.Science,
-                            iconTint = AppColors.AccentCyan,
-                            title = "Beta features",
-                            subtitle = "Other options your robot reports",
-                            onClick = onBetaFeatures,
-                        )
-                    }
-                }
-
-                item {
-                    Text(
-                        "Firmware",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 4.dp),
-                    )
-                }
-                item {
-                    SettingRowInfo(
-                        icon = Icons.Default.Router,
-                        iconTint = AppColors.AccentIndigo,
-                        title = "Model",
-                        value = modelName ?: "Unknown",
-                    )
-                }
-                item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
-                item {
-                    SettingRowInfo(
-                        icon = Icons.Default.Memory,
-                        iconTint = AppColors.AccentCyan,
-                        title = "Firmware version",
-                        value = firmwareVersion ?: "Unknown",
-                    )
-                }
-                // The update check is hidden for now; FirmwareUpdateRow and the view model stay in place.
-                if (SHOW_FIRMWARE_UPDATE_CHECK) {
-                    item { HorizontalDivider(Modifier.padding(start = 72.dp)) }
-                    item {
-                        FirmwareUpdateRow(state = firmwareUpdate, onCheck = onCheckUpdate)
-                    }
-                }
+                item { Spacer(Modifier.height(16.dp)) }
             }
         }
     }
 }
 
+/** Rows in one rounded card, as the official app groups its settings. */
+@Composable
+private fun SettingsGroup(rows: List<GroupRow>) {
+    if (rows.isEmpty()) return
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column {
+            rows.forEachIndexed { i, row ->
+                if (i > 0) HorizontalDivider(Modifier.padding(start = 72.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsCategoryRow(icon = row.icon, iconTint = row.tint, title = row.title, subtitle = row.subtitle ?: "", onClick = row.onClick)
+            }
+        }
+    }
+}
 
 private const val SHOW_FIRMWARE_UPDATE_CHECK = false
 
@@ -2108,6 +2194,7 @@ private fun FeatureToggleRow(f: BetaFeatureState, onToggle: (String, Int) -> Uni
         FeatureSection.CARPET -> Icons.Default.GridView
         FeatureSection.FLOOR -> Icons.Default.CleaningServices
         FeatureSection.OBSTACLE -> Icons.Default.Sensors
+        FeatureSection.PETS -> Icons.Default.Pets
         FeatureSection.DOCK -> Icons.Default.Home
         FeatureSection.ROBOT -> Icons.Default.Settings
         FeatureSection.BETA -> Icons.Default.Science
