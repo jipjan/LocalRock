@@ -1,6 +1,10 @@
 package com.kodraliu.localrock.ui.vacuum
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
@@ -169,6 +173,22 @@ fun CameraLiveViewScreen(
                         style = MaterialTheme.typography.labelSmall,
                     )
                     LiveViewControls(drive = drive, onPinGo = onPinGo)
+                    // The official live view keeps a small map in the corner, with the robot on it.
+                    val miniMap by viewModel.repository.parsedMap.collectAsState()
+                    miniMap?.let { map ->
+                        SavedMapImage(
+                            map = map,
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 40.dp, end = 12.dp)
+                                .size(width = 150.dp, height = 112.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.Black.copy(alpha = 0.55f))
+                                .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                                .clickable(onClickLabel = "Back to the map", onClick = onBack)
+                                .padding(6.dp),
+                        )
+                    }
                 }
 
                 is CameraLiveSession.State.Failed -> {

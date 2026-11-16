@@ -1290,6 +1290,12 @@ class VacuumRepository(
             }
         }
         if (updated != null && featuresRead) persist()
+        // The robot refuses settings during a task with -10007 "invalid status"; the official app asks
+        // to end the current task first (a296, restrict_low_area_access_status, 2026-11-16).
+        val busy = (_status.value.inCleaning ?: 0) != 0 || _status.value.state in ACTIVE_STATES
+        if (busy && last?.error?.get("code")?.jsonPrimitive?.intOrNull == -10007) {
+            throw IllegalStateException("The robot can't change this while it is cleaning. Finish or stop the current clean first.")
+        }
         last?.requireOk(current.def.setMethod)
         if (updated != null && updated.value != value) {
             throw IllegalStateException("The robot accepted the change but still reports the old setting.")
