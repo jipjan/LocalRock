@@ -152,14 +152,27 @@ class CameraLiveSession(private val session: VacuumSession) {
             val other = firstObject(status?.result)?.get("client_id")?.jsonPrimitive?.contentOrNull
             // The robot reports the literal "none" when no client holds the camera. Treating that
             // as a rival made us fire stop_camera_preview five times before every start.
-            if (other.isNullOrBlank() || other == NO_CLIENT || other == CLIENT_ID) break
+            if (other.isNullOrBlank() || other == NO_CLIENT) break
+            // Our own id here is a session that never closed (the app was killed or reinstalled while
+            // streaming); the robot refuses a new start until it is stopped (-10013).
             runCatching { session.stopCameraPreview(other) }
+            if (other == CLIENT_ID) {
+                delay(500)
+                break
+            }
             delay(1_000)
             kicks++
         }
 
         _state.value = State.Connecting("Starting camera…")
-        val startResp = session.startCameraPreview(CLIENT_ID, passwordMd5)
+        var startResp = session.startCameraPreview(CLIENT_ID, passwordMd5)
+        if (errorCode(startResp.error) == ERR_ALREADY_IN_PREVIEW) {
+            // Still held by a session the status did not show: stop the one the robot names, then retry once.
+            val holder = startResp.error?.get("client_id")?.jsonPrimitive?.contentOrNull ?: CLIENT_ID
+            runCatching { session.stopCameraPreview(holder) }
+            delay(1_000)
+            startResp = session.startCameraPreview(CLIENT_ID, passwordMd5)
+        }
         if (startResp.error != null) {
             if (errorCode(startResp.error) == ERR_CAMERA_PREVIEW_DENIED) {
                 val status = runCatching { firstInt(session.getCameraStatus().result) }.getOrNull()
@@ -310,6 +323,9 @@ class CameraLiveSession(private val session: VacuumSession) {
                 "(TURN) support, and the robot must be paired so it can find it: on a Saros 20 or Qrevo MaxV, " +
                 "pair with a camera domain and \"Also use as the robot's server name\" turned on. See the " +
                 "server's camera documentation."
+
+        /** Robot error "robot is already in preview"; it names the holding `client_id`. */
+        const val ERR_ALREADY_IN_PREVIEW = -10013
 
         /** `client_id` the robot returns when the camera is free. */
         const val NO_CLIENT = "none"
