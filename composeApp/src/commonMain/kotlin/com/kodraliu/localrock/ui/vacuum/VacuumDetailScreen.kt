@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.painter.Painter
@@ -433,6 +434,7 @@ fun VacuumDetailScreen(
                     viewModel.run(successMessage, onError = { modeError = it }, action = action)
                 }
                 CleaningModeSheetContent(
+                    onMoreSettings = { panel = null; onSettings() },
                     currentFanPower = status.fanPower,
                     currentWaterMode = status.waterBoxCustomMode,
                     currentRoute = mopMode,
@@ -1609,6 +1611,8 @@ private fun CleaningModeSheetContent(
     /** The custom water flow as a distance; null when the robot cannot set one. */
     waterDistance: Int? = null,
     onWaterDistanceChange: (Int) -> Unit = {},
+    /** Opens the carpet, floor and dock settings, as the official sheet's "More cleaning settings". */
+    onMoreSettings: (() -> Unit)? = null,
 ) {
     val initialTab = when {
         (currentWaterMode ?: WaterBoxMode.OFF) == WaterBoxMode.OFF -> 2
@@ -1700,7 +1704,7 @@ private fun CleaningModeSheetContent(
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                     val suction = @Composable {
-                        ModeOptionSelector("Suction power", FAN_OPTIONS.map { it.second }, FAN_OPTIONS.indexOfFirst { it.first == currentFanPower }, !busy) { onFanPowerSelected(FAN_OPTIONS[it].first) }
+                        ModeOptionSelector("Suction power", FAN_OPTIONS.map { it.second }, FAN_OPTIONS.indexOfFirst { it.first == currentFanPower }, !busy, icons = FAN_OPTIONS.map { suctionIcon(it.first) }) { onFanPowerSelected(FAN_OPTIONS[it].first) }
                     }
                     val water = @Composable {
                         if (waterSlide) WaterSlideSelector(currentWaterMode, !busy, onWaterModeSelected)
@@ -1709,7 +1713,7 @@ private fun CleaningModeSheetContent(
                     }
                     val routes = routeChoices(routeOptions, currentRoute)
                     val route = @Composable {
-                        ModeOptionSelector("Route", routes.map { it.second }, routes.indexOfFirst { it.first == currentRoute }, !busy) { onRouteSelected(routes[it].first) }
+                        ModeOptionSelector("Route", routes.map { it.second }, routes.indexOfFirst { it.first == currentRoute }, !busy, icons = routes.map { routeIcon(it.first) }) { onRouteSelected(routes[it].first) }
                     }
 
                     when (selectedTab) {
@@ -1721,6 +1725,19 @@ private fun CleaningModeSheetContent(
                         1 -> { water(); CountSelector(cleaningCount, onCountChange); route(); cornerClean?.let { CornerCleanRow(it, !busy, onCornerCleanChange) } }
                         2 -> { suction(); CountSelector(cleaningCount, onCountChange); route() }
                     }
+                }
+            }
+        }
+        onMoreSettings?.let { open ->
+            Surface(
+                onClick = open,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 16.dp),
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) {
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("More cleaning settings", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
                 }
             }
         }
@@ -1791,7 +1808,7 @@ private fun RoomCleanModesEditor(
                 }
                 if (open) {
                     Column(Modifier.padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                        ModeOptionSelector("Suction power", ROOM_FAN_OPTIONS.map { it.second }, ROOM_FAN_OPTIONS.indexOfFirst { it.first == mode.fanPower }, !busy) {
+                        ModeOptionSelector("Suction power", ROOM_FAN_OPTIONS.map { it.second }, ROOM_FAN_OPTIONS.indexOfFirst { it.first == mode.fanPower }, !busy, icons = ROOM_FAN_OPTIONS.map { suctionIcon(it.first) }) {
                             val fan = ROOM_FAN_OPTIONS[it].first
                             // A room with neither suction nor water would not be cleaned at all.
                             val water = if (fan == VacuumFanPower.OFF && mode.waterBoxMode == WaterBoxMode.OFF) WaterBoxMode.LOW else mode.waterBoxMode
@@ -1825,12 +1842,31 @@ private fun RoomCleanModesEditor(
 }
 
 @Composable
-private fun ModeOptionSelector(label: String, options: List<String>, selectedIndex: Int, enabled: Boolean, onSelect: (Int) -> Unit) {
+private fun ModeOptionSelector(
+    label: String,
+    options: List<String>,
+    selectedIndex: Int,
+    enabled: Boolean,
+    /** One icon per option: drawn as the official app's icon segments, the name stays in the title. */
+    icons: List<ImageVector?>? = null,
+    onSelect: (Int) -> Unit,
+) {
     val currentValue = options.getOrElse(selectedIndex) { "" }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Text(currentValue, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        }
+        if (icons != null && icons.size == options.size && icons.all { it != null }) {
+            SegmentedChoice(options.size, selectedIndex, enabled, onSelect) { index, selected ->
+                Icon(
+                    icons[index]!!,
+                    contentDescription = options[index],
+                    modifier = Modifier.size(24.dp),
+                    tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            return@Column
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             options.forEachIndexed { index, option ->
@@ -1845,6 +1881,32 @@ private fun ModeOptionSelector(label: String, options: List<String>, selectedInd
                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                         color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center)
+                }
+            }
+        }
+    }
+}
+
+/** The official app's segmented control: one rounded track with the chosen segment filled. */
+@Composable
+private fun SegmentedChoice(
+    count: Int,
+    selectedIndex: Int,
+    enabled: Boolean,
+    onSelect: (Int) -> Unit,
+    content: @Composable (index: Int, selected: Boolean) -> Unit,
+) {
+    Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.fillMaxWidth()) {
+        Row(Modifier.padding(4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            for (index in 0 until count) {
+                val selected = index == selectedIndex
+                Surface(
+                    onClick = { if (enabled && !selected) onSelect(index) },
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = CircleShape,
+                    color = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                ) {
+                    Box(contentAlignment = Alignment.Center) { content(index, selected) }
                 }
             }
         }
@@ -1912,18 +1974,26 @@ private fun WaterSlideSelector(current: Int?, enabled: Boolean, onSelect: (Int) 
             Text("Water flow", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Text(WaterBoxMode.slideLabel(code).orEmpty(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
-        Slider(
-            value = position,
-            onValueChange = { position = it },
-            // Read the state here: a tap ends before a recomposition, so a captured `code` would be stale.
-            onValueChangeFinished = {
-                val chosen = position.roundToInt().coerceIn(range)
-                if (chosen != current) onSelect(chosen)
-            },
-            valueRange = range.first.toFloat()..range.last.toFloat(),
-            steps = range.last - range.first - 1,
-            enabled = enabled,
-        )
+        // Less water on the left, more on the right, as the official slider's two drops show.
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Icon(Icons.Outlined.WaterDrop, contentDescription = "Less water", modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Slider(
+                value = position,
+                onValueChange = { position = it },
+                // Read the state here: a tap ends before a recomposition, so a captured `code` would be stale.
+                onValueChangeFinished = {
+                    val chosen = position.roundToInt().coerceIn(range)
+                    if (chosen != current) onSelect(chosen)
+                },
+                valueRange = range.first.toFloat()..range.last.toFloat(),
+                steps = range.last - range.first - 1,
+                enabled = enabled,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(Icons.Default.WaterDrop, contentDescription = "More water", modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 
@@ -1934,17 +2004,10 @@ private fun CountSelector(selected: Int, onSelect: (Int) -> Unit) {
             Text("Cleaning count", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Text(if (selected == 1) "once" else "twice", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(1, 2).forEach { count ->
-                val isSelected = selected == count
-                Surface(onClick = { onSelect(count) }, modifier = Modifier.weight(1f), shape = CircleShape,
-                    color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh) {
-                    Text("×$count", modifier = Modifier.padding(vertical = 14.dp), style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center)
-                }
-            }
+        SegmentedChoice(2, selected - 1, enabled = true, onSelect = { onSelect(it + 1) }) { index, isSelected ->
+            Text("×${index + 1}", style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
