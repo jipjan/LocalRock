@@ -88,10 +88,13 @@ final class WebRtcPeer: NSObject, RtcNativePeer, RTCPeerConnectionDelegate {
         peerConnection.offer(for: constraints) { [weak self] sdp, error in
             guard let self = self else { return }
             if let error = error { onError(error.localizedDescription); return }
-            guard let sdp = sdp else { onError("createOffer returned a nil description"); return }
-            self.peerConnection.setLocalDescription(sdp) { error in
+            guard let offer = sdp else { onError("createOffer returned a nil description"); return }
+            // Only H264 and Opus, as the official app offers: the Saros 20 (a296) never answers the
+            // full offer. Same trimming as Android (shared keepRobotCodecs).
+            let trimmed = RTCSessionDescription(type: offer.type, sdp: SdpCodecsKt.keepRobotCodecs(sdp: offer.sdp))
+            self.peerConnection.setLocalDescription(trimmed) { error in
                 if let error = error { onError(error.localizedDescription); return }
-                onSuccess(sdp.sdp)
+                onSuccess(trimmed.sdp)
             }
         }
     }

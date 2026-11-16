@@ -272,3 +272,21 @@ cleaning). An 11 with 112 = 10 is shown as "Pauzeren" (paused). Water in 25/42 o
 is the slider code minus 200 (35 = 235, the medium mark).
 
 Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47 (room queue), 51, 54, 61, 62.
+
+## Map drawing as the official app does it (2026-11-16, from plugin 7052)
+
+- **Room colours.** Four colours; the plugin's `getNeighboursInfo` and `getColorData` pick one per room.
+  - Two rooms are neighbours when their cells touch directly (through a doorway).
+  - The largest room gets colour 1. The others follow, most neighbours first, each taking the lowest
+    colour no neighbour has.
+  - Empty colours are then filled from fuller ones.
+  - LocalRock: `officialRoomColorIndex`. The colours are `mapBlockHLColor`, label text is `tagTintColors`,
+    the path is `pathColor` (white, 60% in dark mode) and walls are `#6B7174`.
+- **Room type icons.** The badge icon comes from `get_room_mapping`'s third column (1 bedroom, 10 hallway,
+  13 dining room, 14 kitchen, 15 toilet, …). The plugin has artwork for 1–3, 6–10 and 12–15.
+- **Travel path.** Map block 18 (`mopPath`) has one byte per path point.
+  - Bit 1 (`0x02`) is set while the robot travels between areas or to the dock; that part is drawn dotted.
+  - Bit 0 marks mopping.
+- **Settings during a clean.** `app_set_robot_setting` answers -10007 "invalid status" while a task runs
+  (seen with `restrict_low_area_access_status`). The official app asks to end the task before changing it.
+

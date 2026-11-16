@@ -68,7 +68,7 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Stemassistent: Taal (voice pack) | Built, served by the local server. |
 | Stemassistent: Volume | Built (robot volume). `set_voice_chat_volume {"volume"}` is not this: in the plugin it is the talk-back volume of the remote-viewing screen, so it comes with remote viewing. |
 | Stemassistent: Chatgeschiedenis (chat history) | Missing: `get_voice_history`, `get_voice_history_summary`, `delete_all_voice_history`. |
-| Kijken op afstand (remote viewing) | Built: More actions → Live view (needs the server's TURN relay, pairing with a short server name, and the pattern set in the official app). |
+| Kijken op afstand (remote viewing) | Built: the camera icon at the top right, as in the official app, with drive buttons, Pin & Go and a mini map (needs the server's TURN relay, pairing with a short server name, and the pattern set in the official app). Missing: talk-back, Navigate, Find the pet. |
 | Verbinding maken met Matter | Not possible locally (needs Roborock's cloud and a Matter hub). |
 | Meer opties: DND, oplaadmodus, knopverlichting, kinderslot, offline kaart | Built (charging mode = off-peak charging on or off). |
 | Pin n Go, Afstandsbediening | Built. |
@@ -108,6 +108,8 @@ Intensive corner mopping (`set_corner_clean_mode`) and the distance-based custom
      candidates, then base64 JSON candidates)
   7. `stop_camera_preview`
 - Tested with the phone on the same network as the robot only; the TURN relay from outside is not proven.
+- A live view left open when the app is killed keeps the robot in preview under LocalRock's client id;
+  the next start got -10013 "robot is already in preview". LocalRock now stops that session first.
 - LocalRock live view works (2026-11-15, tested on the emulator): More actions → Live view, draw the
   pattern. The a296 answers `send_sdp_to_robot` with "ok" but never produces an answer to an offer whose
   first m-line is video, or one that lists every codec. LocalRock now offers audio first and only H264
