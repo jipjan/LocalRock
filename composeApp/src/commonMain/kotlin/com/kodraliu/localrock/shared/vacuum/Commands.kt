@@ -42,15 +42,16 @@ suspend fun VacuumSession.appStartCollectDust(): V1Response = sendCommand("app_s
 suspend fun VacuumSession.appStartWash(): V1Response = sendCommand("app_start_wash")
 suspend fun VacuumSession.appStopWash(): V1Response = sendCommand("app_stop_wash")
 
-suspend fun VacuumSession.getStatus(): VacuumStatus? {
-    val resp = sendCommand("get_status")
-    val result = resp.result ?: return null
+suspend fun VacuumSession.getStatus(): VacuumStatus? = parseStatusResult(sendCommand("get_status").result)
+
+/** A `get_status` result (`[{...}]` or `{...}`) as a [VacuumStatus], or null if it is not one. */
+fun parseStatusResult(result: JsonElement?): VacuumStatus? {
     val obj: JsonObject = when (result) {
-        is JsonArray -> result.firstOrNull()?.jsonObject ?: return null
+        is JsonArray -> (result.firstOrNull() as? JsonObject) ?: return null
         is JsonObject -> result
         else -> return null
     }
-    return StatusJson.decodeFromJsonElement(VacuumStatus.serializer(), obj)
+    return runCatching { StatusJson.decodeFromJsonElement(VacuumStatus.serializer(), obj) }.getOrNull()
 }
 
 suspend fun VacuumSession.getRoomMapping(): V1Response = sendCommand("get_room_mapping")

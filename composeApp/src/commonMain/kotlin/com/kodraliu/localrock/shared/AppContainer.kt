@@ -1,5 +1,13 @@
 package com.kodraliu.localrock.shared
 
+import com.kodraliu.localrock.shared.vacuum.requireOk
+import com.kodraliu.localrock.shared.vacuum.getStatus
+import com.kodraliu.localrock.shared.vacuum.appStart
+import com.kodraliu.localrock.shared.vacuum.appCharge
+import com.kodraliu.localrock.shared.vacuum.appPause
+import com.kodraliu.localrock.shared.vacuum.VacuumStateCodes
+import com.kodraliu.localrock.shared.vacuum.parseStatusResult
+import com.kodraliu.localrock.shared.vacuum.VacuumStatus
 import com.kodraliu.localrock.shared.vacuum.CapabilityCacheStore
 import com.russhwolf.settings.Settings
 import com.kodraliu.localrock.shared.auth.AuthRepository
@@ -358,7 +366,7 @@ class AppContainer(
      * True if the robot answers a status request, false if it stays silent. Throws when the
      * question could not be put at all, which callers must not read as "offline".
      */
-    private suspend fun probeDevice(device: Device): Boolean {
+    private suspend fun probeDevice(device: Device): VacuumStatus? {
         // The loop below does its own, shorter wait for the link.
         startMqtt()
         val started = TimeSource.Monotonic.markNow()
@@ -375,8 +383,9 @@ class AppContainer(
                 try {
                     withTimeoutOrNull(PROBE_LINK_WAIT_MS) { mqttClient.connected.first { it } }
                         ?: throw MqttClientException("MQTT link is down")
-                    session.sendCommand("get_status", timeoutMs = PROBE_TIMEOUT_MS)
-                    return true
+                    val reply = session.sendCommand("get_status", timeoutMs = PROBE_TIMEOUT_MS)
+                    // The status feeds the home page's card; a reply that can't be read still means online.
+                    return parseStatusResult(reply.result) ?: VacuumStatus()
                 } catch (e: TimeoutCancellationException) {
                     silences++
                     println("[VacLocal] probe ${device.duid}: no reply within ${PROBE_TIMEOUT_MS}ms")
@@ -393,7 +402,39 @@ class AppContainer(
                     silences--
                 }
             }
-            return false
+            return null
+        } finally {
+            withContext(NonCancellable) { session.close() }
+        }
+    }
+
+    /** What the home page's card buttons do, without opening the robot's page. */
+    enum class QuickAction { START_OR_RESUME, PAUSE, DOCK }
+
+    /**
+     * Runs a card button on [device] over a short session of its own: start a full clean, resume the
+     * paused task (as the robot page does, by its `in_cleaning`), pause, or send it to the dock.
+     */
+    suspend fun quickAction(device: Device, action: QuickAction) {
+        startMqtt()
+        val session = sessionFor(device, VacuumSession.PROBE_REQUEST_IDS)
+        session.start()
+        try {
+            withTimeoutOrNull(PROBE_LINK_WAIT_MS) { mqttClient.connected.first { it } }
+                ?: throw MqttClientException("MQTT link is down")
+            when (action) {
+                QuickAction.PAUSE -> session.appPause().requireOk("app_pause")
+                QuickAction.DOCK -> session.appCharge().requireOk("app_charge")
+                QuickAction.START_OR_RESUME -> {
+                    val status = session.getStatus()
+                    val paused = status?.state == VacuumStateCodes.PAUSED
+                    when (if (paused) status?.inCleaning else null) {
+                        2 -> session.sendCommand("resume_zoned_clean").requireOk("resume_zoned_clean")
+                        3 -> session.sendCommand("resume_segment_clean").requireOk("resume_segment_clean")
+                        else -> session.appStart().requireOk("app_start")
+                    }
+                }
+            }
         } finally {
             withContext(NonCancellable) { session.close() }
         }

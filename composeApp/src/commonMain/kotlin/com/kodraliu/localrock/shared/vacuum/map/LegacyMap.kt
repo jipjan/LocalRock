@@ -206,6 +206,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         robotMm = robot,
         pathMm = path,
         pathTravel = pathFlags?.takeIf { it.size == path.size }?.let { f -> BooleanArray(f.size) { (f[it].toInt() and PATH_FLAG_TRAVEL) != 0 } },
+        pathMop = pathFlags?.takeIf { it.size == path.size }?.let { f -> BooleanArray(f.size) { (f[it].toInt() and PATH_FLAG_MOP) != 0 } },
         noGoZones = noGoZones,
         noMopZones = noMopZones,
         virtualWalls = virtualWalls,
@@ -366,6 +367,8 @@ private const val BLOCK_PATH = 3
 /** One byte per path point (the plugin's `mopPath`); bit 1 is set while travelling, not cleaning. */
 private const val BLOCK_PATH_FLAGS = 18
 private const val PATH_FLAG_TRAVEL = 0x02
+/** Bit 0: the mops were down (the plugin draws these points as its wide mop path). */
+private const val PATH_FLAG_MOP = 0x01
 private const val BLOCK_ROBOT_POSITION = 8
 private const val BLOCK_FORBIDDEN_ZONES = 9        // persistent no-go zones
 private const val BLOCK_VIRTUAL_WALLS = 10

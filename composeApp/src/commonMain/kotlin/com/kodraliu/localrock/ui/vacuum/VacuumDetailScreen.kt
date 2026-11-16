@@ -230,7 +230,7 @@ private val DEEP_ROUTES = setOf(MopRoute.DEEP, MopRoute.DEEP_PLUS)
 private fun routeChoices(offered: Set<Int>?, current: Int?): List<Pair<Int, String>> =
     ROUTE_OPTIONS.filter { offered == null || it.first in offered || it.first == current }
 
-private val ACTIVE_CLEANING_STATES = setOf(
+internal val ACTIVE_CLEANING_STATES = setOf(
     VacuumStateCodes.CLEANING, VacuumStateCodes.SEGMENT_CLEANING,
     VacuumStateCodes.ZONED_CLEANING, VacuumStateCodes.SPOT_CLEANING,
 )

@@ -97,6 +97,8 @@ data class ParsedMap(
      * bit 1: the trips between areas and to the dock). Null when the map has no such flags.
      */
     val pathTravel: BooleanArray? = null,
+    /** Per [pathMm] point, true where the robot was mopping (legacy block 18, bit 0); null without flags. */
+    val pathMop: BooleanArray? = null,
     val noGoZones: List<MapZone> = emptyList(),
     val noMopZones: List<MapZone> = emptyList(),
     val virtualWalls: List<VirtualWall> = emptyList(),

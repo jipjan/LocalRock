@@ -297,6 +297,8 @@ class LegacyMapTest {
         assertEquals(5307, travel.size)
         // Block 18 bytes with bit 1 set: 0x0a x676, 0x02 x14, 0x0e x6, 0x0b x1.
         assertEquals(697, travel.count { it })
+        // Bit 0 (mops down): 0x01 x3281, 0x09 x274, 0x0b x1.
+        assertEquals(3556, assertNotNull(map.pathMop).count { it })
         // The run from the dock starts as cleaning (0x0c) for 7 points, then travels.
         assertEquals(List(7) { false } + true, travel.take(8).toList())
     }

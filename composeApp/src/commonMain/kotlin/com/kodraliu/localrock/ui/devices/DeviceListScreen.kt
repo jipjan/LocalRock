@@ -1,5 +1,18 @@
 package com.kodraliu.localrock.ui.devices
 
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.LinearProgressIndicator
+import com.kodraliu.localrock.ui.vacuum.ACTIVE_CLEANING_STATES
+import com.kodraliu.localrock.shared.AppContainer
+import com.kodraliu.localrock.shared.vacuum.VacuumStateCodes
+import com.kodraliu.localrock.shared.vacuum.VacuumStatus
 import com.kodraliu.localrock.ui.exceptBottom
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -72,6 +85,15 @@ fun DeviceListScreen(
     val devices by viewModel.devices.collectAsState()
     val products by viewModel.productsByDuid.collectAsState()
     val reachability by viewModel.reachability.collectAsState()
+    val statuses by viewModel.statuses.collectAsState()
+    val actionError by viewModel.actionError.collectAsState()
+    // Keep the cards current while the list is on screen, as the official app's home page does.
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(15_000)
+            viewModel.refreshStatuses()
+        }
+    }
     val refreshing by viewModel.refreshing.collectAsState()
     val error by viewModel.error.collectAsState()
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -149,6 +171,9 @@ fun DeviceListScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
+                        actionError?.let { msg ->
+                            item(span = { GridItemSpan(maxLineSpan) }) { ErrorCard(message = msg, onRetry = viewModel::refresh) }
+                        }
                         error?.let { msg ->
                             item(span = { GridItemSpan(maxLineSpan) }) {
                                 ErrorCard(message = msg, onRetry = viewModel::refresh)
@@ -159,6 +184,8 @@ fun DeviceListScreen(
                                 device = device,
                                 model = products[device.duid]?.model.orEmpty(),
                                 reachability = reachability[device.duid],
+                                status = statuses[device.duid],
+                                onAction = { viewModel.quickAction(device, it) },
                                 onClick = { onDeviceClick(device) },
                             )
                         }
@@ -258,7 +285,14 @@ private fun ErrorCard(message: String, onRetry: () -> Unit) {
 }
 
 @Composable
-private fun DeviceCard(device: Device, model: String, reachability: Reachability?, onClick: () -> Unit) {
+private fun DeviceCard(
+    device: Device,
+    model: String,
+    reachability: Reachability?,
+    status: VacuumStatus?,
+    onAction: (AppContainer.QuickAction) -> Unit,
+    onClick: () -> Unit,
+) {
     // Without a local key there is nothing to talk to, so say that instead of silently ignoring taps.
     val notPaired = device.localKey == null
     // The robot's own answer wins; the server's flag is only used when the robot could not be asked.
@@ -287,6 +321,7 @@ private fun DeviceCard(device: Device, model: String, reachability: Reachability
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
+      Column {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -348,6 +383,56 @@ private fun DeviceCard(device: Device, model: String, reachability: Reachability
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+        }
+        if (online && !notPaired && status?.state != null) {
+            LiveRobotPanel(status, onAction)
+        }
+      }
+    }
+}
+
+/**
+ * What the robot is doing, as the official app's home card shows it: the task, how long it has been
+ * running, the battery and progress, with start or pause and back to the dock at hand.
+ */
+@Composable
+private fun LiveRobotPanel(status: VacuumStatus, onAction: (AppContainer.QuickAction) -> Unit) {
+    val state = status.state ?: return
+    val cleaning = state in ACTIVE_CLEANING_STATES
+    val paused = state == VacuumStateCodes.PAUSED
+    val minutes = status.cleanTime?.takeIf { (cleaning || paused) && it > 0 }?.let { it / 60 }
+    Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                if (status.dryStatus == 1 && !cleaning) "Drying mop" else VacuumStateCodes.describe(state),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            minutes?.let { Text("$it min", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            status.battery?.let { Text("$it%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        }
+        val percent = status.cleanPercent?.takeIf { (cleaning || paused) && it in 0..100 }
+        if (percent != null) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                LinearProgressIndicator(progress = { percent / 100f }, modifier = Modifier.weight(1f))
+                Text("$percent%", style = MaterialTheme.typography.labelLarge)
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            FilledTonalButton(
+                onClick = { onAction(if (cleaning) AppContainer.QuickAction.PAUSE else AppContainer.QuickAction.START_OR_RESUME) },
+                modifier = Modifier.weight(1f),
+            ) {
+                Icon(if (cleaning) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(if (cleaning) "Pause" else if (paused) "Resume" else "Clean")
+            }
+            FilledTonalIconButton(onClick = { onAction(AppContainer.QuickAction.DOCK) }) {
+                Icon(Icons.Default.Home, contentDescription = "Return to dock")
             }
         }
     }

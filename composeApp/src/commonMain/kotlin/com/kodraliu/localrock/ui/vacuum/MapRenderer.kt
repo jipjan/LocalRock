@@ -60,6 +60,8 @@ private class MapPalette(
     val markerRing: Color,
     /** Plank and tile lines: a faint shade that shows on the room tints of this palette. */
     val texture: Color,
+    /** The wide band where the robot mopped: the plugin's `mopPathColor`. */
+    val mopBand: Color,
 )
 
 // Colours from the official a296 plugin: room fills are its `mapBlockHLColor` (light `colorBubble`,
@@ -74,6 +76,7 @@ private val LightPalette = MapPalette(
     robot = Color(0xFFFFFFFF),
     markerRing = Color(0xFF2BBF8A),
     texture = Color(0x14000000),
+    mopBand = Color(0x66FFFFFF),
 )
 
 private val DarkPalette = MapPalette(
@@ -86,6 +89,7 @@ private val DarkPalette = MapPalette(
     robot = Color(0xFFFFFFFF),
     markerRing = Color(0xFF2BBF8A),
     texture = Color(0x1A000000),
+    mopBand = Color(0x4CE5E5E5),
 )
 
 /** Label colours per colour index, from the plugin's `tagTintColors` (light, dark). */
@@ -494,11 +498,16 @@ private fun drawWall(canvas: Canvas, map: ParsedMap, wall: VirtualWall) {
     })
 }
 
+/** The mop band's width in 50 mm cells. */
+private const val MOP_BAND_CELLS = 5.6f
+
 private fun drawPath(canvas: Canvas, map: ParsedMap, palette: MapPalette) {
     // Cleaning is a solid line; travel between areas and to the dock is dotted, as in the official app.
     val cleaning = Path()
     val travel = Path()
+    val mopped = Path()
     val flags = map.pathTravel
+    val mopFlags = map.pathMop
     var previous: Offset? = null
     map.pathMm.forEachIndexed { i, point ->
         val cell = map.mmToCell(point.x, point.y)
@@ -511,8 +520,24 @@ private fun drawPath(canvas: Canvas, map: ParsedMap, palette: MapPalette) {
             val target = if (flags != null && flags[i]) travel else cleaning
             target.moveTo(from.x, from.y)
             target.lineTo(cell.x, cell.y)
+            if (mopFlags != null && mopFlags[i] && (flags == null || !flags[i])) {
+                mopped.moveTo(from.x, from.y)
+                mopped.lineTo(cell.x, cell.y)
+            }
         }
         previous = cell
+    }
+    // Under the line, the mopped strip as a wide translucent band, about the mops' width (28 cm).
+    if (mopFlags != null) {
+        val band = Paint().apply {
+            color = palette.mopBand
+            style = PaintingStyle.Stroke
+            strokeWidth = MOP_BAND_CELLS
+            strokeCap = StrokeCap.Round
+            strokeJoin = androidx.compose.ui.graphics.StrokeJoin.Round
+            isAntiAlias = true
+        }
+        canvas.drawPath(mopped, band)
     }
     // About 15 mm wide, white and (in dark mode) see-through, as in the official app.
     val solid = Paint().apply {

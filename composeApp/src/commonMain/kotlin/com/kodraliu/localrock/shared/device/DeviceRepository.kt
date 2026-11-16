@@ -17,6 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.kodraliu.localrock.shared.vacuum.VacuumStatus
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -24,8 +25,11 @@ class DeviceRepository(
     private val deviceApi: DeviceApi,
     private val authRepository: AuthRepository,
     private val isDemo: () -> Boolean = { false },
-    /** Asks one robot whether it is there: true on a reply, false on silence, throws if it could not ask. */
-    private val probe: suspend (Device) -> Boolean = { it.online },
+    /**
+     * Asks one robot whether it is there: its status on a reply (an empty one if the reply could not
+     * be read), null on silence; throws if it could not ask.
+     */
+    private val probe: suspend (Device) -> VacuumStatus? = { if (it.online) VacuumStatus() else null },
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -42,6 +46,10 @@ class DeviceRepository(
     /** Per duid; a robot with no entry has not been asked, so its server `online` flag is all there is. */
     private val _reachability = MutableStateFlow<Map<String, Reachability>>(emptyMap())
     val reachability: StateFlow<Map<String, Reachability>> = _reachability.asStateFlow()
+
+    /** Each robot's status from its last reachability check, for the home page's cards. */
+    private val _statuses = MutableStateFlow<Map<String, VacuumStatus>>(emptyMap())
+    val statuses: StateFlow<Map<String, VacuumStatus>> = _statuses.asStateFlow()
 
     private var probeJob: Job? = null
 
@@ -63,7 +71,9 @@ class DeviceRepository(
         probeJob = scope.launch {
             for (device in targets) launch {
                 val verdict = try {
-                    if (probe(device)) Reachability.ONLINE else Reachability.OFFLINE
+                    val status = probe(device)
+                    if (status != null) _statuses.update { it + (device.duid to status) }
+                    if (status != null) Reachability.ONLINE else Reachability.OFFLINE
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Throwable) {
