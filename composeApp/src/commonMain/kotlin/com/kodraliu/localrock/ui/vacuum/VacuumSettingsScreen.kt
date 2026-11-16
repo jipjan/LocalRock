@@ -87,10 +87,12 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -1158,7 +1160,6 @@ private fun MaintenanceScreen(
                             onReset = { onReset("main_brush_work_time") },
                         )
                     }
-                    item { HorizontalDivider(Modifier.padding(start = 76.dp)) }
                     item {
                         ConsumableItem(
                             icon = Icons.Default.Autorenew,
@@ -1169,7 +1170,6 @@ private fun MaintenanceScreen(
                             onReset = { onReset("side_brush_work_time") },
                         )
                     }
-                    item { HorizontalDivider(Modifier.padding(start = 76.dp)) }
                     item {
                         ConsumableItem(
                             icon = Icons.Default.Air,
@@ -1180,7 +1180,6 @@ private fun MaintenanceScreen(
                             onReset = { onReset("filter_work_time") },
                         )
                     }
-                    item { HorizontalDivider(Modifier.padding(start = 76.dp)) }
                     item {
                         ConsumableItem(
                             icon = Icons.Default.Sensors,
@@ -1192,8 +1191,7 @@ private fun MaintenanceScreen(
                         )
                     }
                     consumables.cleaningBrushWorkTime?.let { used ->
-                        item { HorizontalDivider(Modifier.padding(start = 76.dp)) }
-                        item {
+                            item {
                             ConsumableItem(
                                 icon = Icons.Default.CleaningServices,
                                 iconTint = AppColors.AccentCyan,
@@ -1206,25 +1204,27 @@ private fun MaintenanceScreen(
                     }
                     // Counted, not timed: shown as the official app does, with the count since the last reset.
                     consumables.strainerWorkTime?.let { count ->
-                        item { HorizontalDivider(Modifier.padding(start = 76.dp)) }
-                        item {
+                            item {
                             CountedConsumableItem(
                                 icon = Icons.Default.FilterAlt,
                                 iconTint = AppColors.AccentIndigo,
                                 title = "Strainer",
-                                detail = "Clean when needed · $count mop wash${if (count == 1L) "" else "es"} since reset",
+                                count = count,
+                                countLabel = "Mop washes since reset",
+                                advice = "Clean" to "when needed",
                                 onReset = { onReset("strainer_work_times") },
                             )
                         }
                     }
                     consumables.dustCollectionWorkTimes?.let { count ->
-                        item { HorizontalDivider(Modifier.padding(start = 76.dp)) }
-                        item {
+                            item {
                             CountedConsumableItem(
                                 icon = Icons.Default.Delete,
                                 iconTint = AppColors.Good,
                                 title = "Dust bag",
-                                detail = "Replace when needed · $count auto-empt${if (count == 1L) "y" else "ies"} since reset",
+                                count = count,
+                                countLabel = "Auto-empties since reset",
+                                advice = "Replace" to "when full",
                                 onReset = { onReset("dust_collection_work_times") },
                             )
                         }
@@ -1235,24 +1235,102 @@ private fun MaintenanceScreen(
     }
 }
 
-/** A part the robot counts uses of rather than timing: no lifetime, just the count and a reset. */
+/** How to look after each part, shown from its card's arrow, as the official app's part pages. */
+private val CARE_GUIDE = mapOf(
+    "Main Brush" to "Replace after about 300 hours of cleaning.\n\nOnce a week, take the brush out, cut away hair wound around it and clean the end caps. A worn brush leaves dust behind on carpets.",
+    "Side Brush" to "Replace after about 200 hours of cleaning.\n\nOnce a month, pull it off and remove hair from around its base. Replace it sooner when the bristles are bent.",
+    "Filter" to "Replace after about 150 hours of cleaning.\n\nOnce a week, tap the dust out of the filter over a bin. Rinse it only if it is a washable filter, and let it dry completely before putting it back.",
+    "Sensor" to "Clean after about 30 hours of cleaning.\n\nWipe the cliff sensors underneath, the wall sensor, the charging contacts and the camera window with a soft dry cloth, then reset the counter.",
+    "Maintenance Brush" to "Replace after about 300 hours.\n\nThis brush in the dock scrubs the mop wash tray. Rinse off hair and dirt when you clean the tray.",
+    "Strainer" to "Clean when needed; the robot counts mop washes since the last reset.\n\nTake out the strainer in the dock's wash tray, rinse it under the tap and put it back.",
+    "Dust bag" to "Replace when it is full; the dock warns you.\n\nThe robot counts how often the dock emptied it since the last reset, which gives an idea of how full it is.",
+)
+
+/** One part as the official app's maintenance card: picture, two figures, a reset and the care guide. */
 @Composable
-private fun CountedConsumableItem(icon: ImageVector, iconTint: Color, title: String, detail: String, onReset: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+private fun MaintenanceCard(
+    icon: ImageVector,
+    iconTint: Color,
+    title: String,
+    firstValue: String,
+    firstLabel: String,
+    secondValue: String,
+    secondLabel: String,
+    secondColor: Color? = null,
+    onReset: () -> Unit,
+) {
+    var confirm by remember { mutableStateOf(false) }
+    var guide by remember { mutableStateOf(false) }
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = MaterialTheme.shapes.extraLarge,
+        color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
-        Surface(shape = RoundedCornerShape(12.dp), color = iconTint.copy(alpha = 0.12f), modifier = Modifier.size(44.dp)) {
-            Box(contentAlignment = Alignment.Center) { Icon(icon, null, Modifier.size(22.dp), iconTint) }
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Surface(shape = RoundedCornerShape(20.dp), color = iconTint.copy(alpha = 0.12f), modifier = Modifier.size(84.dp)) {
+                    Box(contentAlignment = Alignment.Center) { Icon(icon, null, Modifier.size(44.dp), iconTint) }
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        MaintenanceFigure(firstValue, firstLabel, Modifier.weight(1f))
+                        Box(Modifier.width(1.dp).height(32.dp).background(MaterialTheme.colorScheme.outlineVariant))
+                        MaintenanceFigure(secondValue, secondLabel, Modifier.weight(1f).padding(start = 12.dp), secondColor)
+                    }
+                }
+                IconButton(onClick = { guide = true }) {
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "How to look after the ${title.lowercase()}")
+                }
+            }
+            // A light button, as the official card's: resetting is occasional and asks first.
+            FilledTonalButton(
+                onClick = { confirm = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                ),
+            ) { Text("Reset") }
         }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-            Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        TextButton(onClick = onReset) { Text("Reset", color = MaterialTheme.colorScheme.error) }
+    }
+    if (confirm) {
+        AlertDialog(
+            onDismissRequest = { confirm = false },
+            title = { Text("Reset the ${title.lowercase()}?") },
+            text = { Text("Do this after cleaning or replacing it. The counter starts again from zero.") },
+            confirmButton = { TextButton(onClick = { confirm = false; onReset() }) { Text("Reset") } },
+            dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } },
+        )
+    }
+    if (guide) {
+        AlertDialog(
+            onDismissRequest = { guide = false },
+            icon = { Icon(icon, null, tint = iconTint) },
+            title = { Text(title) },
+            text = { Text(CARE_GUIDE[title] ?: "Clean or replace it when it is worn.") },
+            confirmButton = { TextButton(onClick = { guide = false }) { Text("Close") } },
+        )
     }
 }
+
+@Composable
+private fun MaintenanceFigure(value: String, label: String, modifier: Modifier = Modifier, color: Color? = null) {
+    Column(modifier) {
+        Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, color = color ?: MaterialTheme.colorScheme.onSurface)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** A part the robot counts uses of rather than timing: no lifetime, just the count and a reset. */
+@Composable
+private fun CountedConsumableItem(icon: ImageVector, iconTint: Color, title: String, count: Long, countLabel: String, advice: Pair<String, String>, onReset: () -> Unit) =
+    MaintenanceCard(
+        icon = icon, iconTint = iconTint, title = title,
+        firstValue = "$count", firstLabel = countLabel,
+        secondValue = advice.first, secondLabel = advice.second,
+        onReset = onReset,
+    )
 
 @Composable
 private fun ConsumableItem(
@@ -1265,56 +1343,18 @@ private fun ConsumableItem(
 ) {
     val remaining = (maxSeconds - usedSeconds).coerceAtLeast(0L)
     val fraction = (remaining.toFloat() / maxSeconds).coerceIn(0f, 1f)
-    val remainingHours = remaining / 3600L
-    val remainingMinutes = (remaining % 3600L) / 60L
     val percent = (fraction * 100).toInt()
-    val progressColor = when {
+    val color = when {
         fraction > 0.5f -> AppColors.Good
         fraction > 0.2f -> AppColors.Warn
         else -> MaterialTheme.colorScheme.error
     }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = iconTint.copy(alpha = 0.12f),
-            modifier = Modifier.size(44.dp),
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(icon, null, Modifier.size(22.dp), iconTint)
-            }
-        }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                Text("$percent%", style = MaterialTheme.typography.labelMedium, color = progressColor, fontWeight = FontWeight.Bold)
-            }
-            LinearProgressIndicator(
-                progress = { fraction },
-                modifier = Modifier.fillMaxWidth(),
-                color = progressColor,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
-            )
-            Text(
-                if (remainingHours > 0) "${remainingHours}h ${remainingMinutes}m remaining"
-                else "${remainingMinutes}m remaining",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        TextButton(onClick = onReset, modifier = Modifier.padding(top = 4.dp)) {
-            Text("Reset", color = MaterialTheme.colorScheme.error)
-        }
-    }
+    MaintenanceCard(
+        icon = icon, iconTint = iconTint, title = title,
+        firstValue = "${usedSeconds / 3600} h", firstLabel = "Used",
+        secondValue = "$percent %", secondLabel = "Left", secondColor = color,
+        onReset = onReset,
+    )
 }
 
 
