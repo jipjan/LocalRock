@@ -57,6 +57,11 @@ import com.kodraliu.localrock.shared.vacuum.ZoneRect
 fun ZoneCleanScreen(
     viewModel: VacuumViewModel,
     onBack: () -> Unit,
+    /**
+     * Add one area to the running clean (the official app's "Add area"): one zone, cleaned now, after
+     * which the clean carries on.
+     */
+    addArea: Boolean = false,
 ) {
     val parsedMap by viewModel.repository.parsedMap.collectAsState()
     val busy by viewModel.busy.collectAsState()
@@ -72,7 +77,7 @@ fun ZoneCleanScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Zone Clean") },
+                title = { Text(if (addArea) "Add area" else "Zone Clean") },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
                 },
@@ -95,11 +100,20 @@ fun ZoneCleanScreen(
                     if (zones.isNotEmpty() && !sent) {
                         TextButton(enabled = !busy, onClick = {
                             val selectedZones = zones
-                            viewModel.run {
-                                it.cleanZones(selectedZones)
-                                sent = true
+                            if (addArea) {
+                                val z = selectedZones.last()
+                                viewModel.run("Area added to the clean") {
+                                    it.addCleanArea(listOf(z.x1, z.y1, z.x2, z.y1, z.x2, z.y2, z.x1, z.y2))
+                                    sent = true
+                                }
+                                onBack()
+                            } else {
+                                viewModel.run {
+                                    it.cleanZones(selectedZones)
+                                    sent = true
+                                }
                             }
-                        }) { Text("Start") }
+                        }) { Text(if (addArea) "Clean" else "Start") }
                     }
                 },
             )
@@ -167,7 +181,8 @@ fun ZoneCleanScreen(
                                             val mx2 = maxOf(a.first, b.first)
                                             val my2 = maxOf(a.second, b.second)
                                             if (mx2 - mx1 > 500 && my2 - my1 > 500) {
-                                                zones = zones + ZoneRect(mx1, my1, mx2, my2)
+                                                // Adding an area takes one zone; a new one replaces it.
+                                                zones = (if (addArea) emptyList() else zones) + ZoneRect(mx1, my1, mx2, my2)
                                             }
                                             dragStart = null
                                             dragCurrent = null

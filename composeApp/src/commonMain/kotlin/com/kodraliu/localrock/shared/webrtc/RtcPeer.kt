@@ -26,6 +26,12 @@ interface RtcPeer {
     suspend fun setRemoteAnswer(sdp: String)
     fun addRemoteCandidate(candidate: RtcIceCandidate)
     fun close()
+
+    /**
+     * Sends the microphone over the offer's two-way audio (talk-back), or stops sending it. Returns
+     * false where talk-back is not built.
+     */
+    fun setMicrophone(on: Boolean): Boolean = false
 }
 
 expect val liveViewSupported: Boolean

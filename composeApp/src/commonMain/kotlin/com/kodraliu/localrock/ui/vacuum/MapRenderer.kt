@@ -33,6 +33,8 @@ import com.kodraliu.localrock.shared.vacuum.map.VirtualWall
 // Zone overlays are translucent, so one pair reads over both the light and dark palettes.
 private val NO_GO_FILL = Color(0x33f44336)    // translucent red
 private val NO_GO_STROKE = Color(0xccf44336)
+private val CLIFF_FILL = Color(0xccf04438)
+private val CLIFF_STROKE = Color(0xffd92d20)
 private val NO_MOP_FILL = Color(0x332196f3)   // translucent blue
 private val NO_MOP_STROKE = Color(0xcc2196f3)
 private val WALL_STROKE = Color(0xffe53935)     // solid red, drawn as a line
@@ -302,6 +304,8 @@ private fun renderMap(map: ParsedMap, palette: MapPalette, drawRestrictions: Boo
         map.thresholds.forEach { drawZone(canvas, map, it, THRESHOLD_FILL, THRESHOLD_STROKE) }
         map.noMopZones.forEach { drawZone(canvas, map, it, NO_MOP_FILL, NO_MOP_STROKE) }
         map.noGoZones.forEach { drawZone(canvas, map, it, NO_GO_FILL, NO_GO_STROKE) }
+        // The robot's own no-go zones at a drop: solid red, as the official app marks them.
+        map.cliffZones.forEach { drawZone(canvas, map, it, CLIFF_FILL, CLIFF_STROKE) }
         map.virtualWalls.forEach { drawWall(canvas, map, it) }
     }
     // Square dock, round robot: the two markers stay distinguishable without relying on colour.

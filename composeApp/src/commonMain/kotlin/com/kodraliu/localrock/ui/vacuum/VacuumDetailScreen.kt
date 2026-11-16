@@ -1,5 +1,12 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.shared.vacuum.taskRunning
+import com.kodraliu.localrock.shared.vacuum.CleanRecord
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.AddBox
 import com.kodraliu.localrock.shared.vacuum.taskPausedAtDock
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.rememberCoroutineScope
@@ -23,6 +30,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -244,6 +252,7 @@ fun VacuumDetailScreen(
     onBack: () -> Unit,
     onSettings: () -> Unit,
     onZoneClean: () -> Unit,
+    onAddArea: () -> Unit = {},
     onMapEdit: () -> Unit,
     onSchedule: () -> Unit,
     onCamera: () -> Unit,
@@ -538,9 +547,16 @@ fun VacuumDetailScreen(
 
     // The running clean's events, read as the official app does while its card is open (and now and
     // then otherwise, for the room name on the card).
+    val isPausedNow = status.state == VacuumStateCodes.PAUSED || status.taskPausedAtDock
+    var confirmSkip by remember { mutableStateOf(false) }
+    var dockChoice by remember { mutableStateOf(false) }
+    var lastBubbleOpen by remember { mutableStateOf(true) }
+    val cleanHistory by viewModel.repository.cleanHistory.collectAsState()
+    val lastCleanForBubble = remember(cleanHistory) { cleanHistory.filter { !it.isPatrol }.maxByOrNull { it.beginEpoch } }
+    LaunchedEffect(Unit) { runCatching { viewModel.repository.fetchCleanHistory() } }
     val liveEvents by viewModel.repository.liveCleanEvents.collectAsState()
     var statusExpanded by remember { mutableStateOf(false) }
-    val cleaningNow = status.state in ACTIVE_CLEANING_STATES
+    val cleaningNow = status.state in ACTIVE_CLEANING_STATES || status.taskRunning
     LaunchedEffect(cleaningNow, statusExpanded) {
         while (cleaningNow) {
             runCatching { viewModel.repository.refreshLiveCleanEvents() }
@@ -587,12 +603,56 @@ fun VacuumDetailScreen(
                 viewModel.run { it.stopCleaning() }
             },
             onDock = {
-                sessionRoomIds = emptyList()
-                viewModel.run("Returning to dock") { it.dock() }
+                // During a clean the official app asks how: back to charge, or empty / wash and carry on.
+                if (viewModel.hasMidwayReturn && (cleaningNow || status.state == VacuumStateCodes.PAUSED)) {
+                    dockChoice = true
+                } else {
+                    sessionRoomIds = emptyList()
+                    viewModel.run("Returning to dock") { it.dock() }
+                }
             },
             onCleaningMode = { panel = DetailPanel.CleaningMode },
             onMore = { panel = DetailPanel.More },
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            onZoneClean = onZoneClean,
+            onRoutines = { panel = DetailPanel.Routines },
+        )
+    }
+
+    if (confirmSkip) {
+        AlertDialog(
+            onDismissRequest = { confirmSkip = false },
+            title = { Text("Skip this area?") },
+            text = { Text("The robot leaves the area it is cleaning now and goes on to the next. It is skipped this time only.") },
+            confirmButton = { TextButton(onClick = { confirmSkip = false; viewModel.run("Area skipped") { it.skipCleaningArea() } }) { Text("Skip") } },
+            dismissButton = { TextButton(onClick = { confirmSkip = false }) { Text("Cancel") } },
+        )
+    }
+    if (dockChoice) {
+        AlertDialog(
+            onDismissRequest = { dockChoice = false },
+            title = { Text("Back to the dock") },
+            text = {
+                Column {
+                    TextButton(onClick = {
+                        dockChoice = false
+                        sessionRoomIds = emptyList()
+                        viewModel.run("Returning to dock") { it.dock() }
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Return to charge (ends the clean)") }
+                    TextButton(onClick = {
+                        dockChoice = false
+                        viewModel.run("Returning to empty the bin") { it.returnMidClean(empty = true) }
+                    }, modifier = Modifier.fillMaxWidth()) { Text("Empty the bin, then carry on") }
+                    if (viewModel.dockCapabilities.washIntervals.isNotEmpty()) {
+                        TextButton(onClick = {
+                            dockChoice = false
+                            viewModel.run("Returning to wash the mop") { it.returnMidClean(empty = false) }
+                        }, modifier = Modifier.fillMaxWidth()) { Text("Wash the mop, then carry on") }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton(onClick = { dockChoice = false }) { Text("Cancel") } },
         )
     }
 
@@ -623,6 +683,31 @@ fun VacuumDetailScreen(
         },
     ) { paddingValues ->
         val dividerColor = MaterialTheme.colorScheme.outlineVariant
+        // Over the map, as the official app: add or skip an area while cleaning, the last clean's
+        // bubble while idle.
+        val MapOverlay: @Composable BoxScope.() -> Unit = {
+            if (cleaningNow) {
+                Column(
+                    Modifier.align(Alignment.CenterEnd).padding(end = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    MapSideAction(Icons.Default.AddBox, "Add area") { onAddArea() }
+                    MapSideAction(Icons.Default.Block, "Skip area") { confirmSkip = true }
+                }
+            } else if (!isPausedNow) {
+                val last = lastCleanForBubble
+                if (last != null && last.beginEpoch != viewModel.dismissedLastClean && lastBubbleOpen) {
+                    LastCleanBubble(
+                        record = last,
+                        onOpen = onHistory,
+                        onClose = { viewModel.dismissedLastClean = last.beginEpoch; lastBubbleOpen = false },
+                        modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+                    )
+                }
+            }
+        }
+
         val MapHero: @Composable (Modifier) -> Unit = { modifier ->
             MapHeroSection(
                 deviceId = viewModel.repository.duid,
@@ -640,6 +725,7 @@ fun VacuumDetailScreen(
                 onEditMap = onMapEdit,
                 mapViewport = mapViewport,
                 modifier = modifier,
+                overlay = { MapOverlay() },
             )
         }
 
@@ -783,6 +869,8 @@ private fun MapHeroSection(
     onEditMap: () -> Unit,
     mapViewport: LiveMapViewport,
     modifier: Modifier = Modifier,
+    /** Controls drawn over the map (add/skip area, the last clean's bubble). */
+    overlay: @Composable BoxScope.() -> Unit = {},
 ) {
     val scheme = MaterialTheme.colorScheme
     val heroBackground = if (scheme.surface.luminance() < 0.5f) {
@@ -842,6 +930,7 @@ private fun MapHeroSection(
                 SessionRoomsBadge(roomNames = sessionRoomNames)
             }
         }
+        overlay()
     }
 }
 
@@ -921,6 +1010,53 @@ private fun DrawScope.drawRobotPin(at: Offset, icon: Painter) {
     val size = r * 1.3f
     translate(left = center.x - size / 2f, top = center.y - size / 2f) {
         with(icon) { draw(Size(size, size), colorFilter = ColorFilter.tint(Color.White)) }
+    }
+}
+
+/** A round button with its name under it, beside the map, as the official app's Add area / Skip area. */
+@Composable
+private fun MapSideAction(icon: ImageVector, label: String, onClick: () -> Unit) {
+    // The caption is part of the button, as in the official app.
+    Column(
+        Modifier.clip(MaterialTheme.shapes.medium).clickable(onClickLabel = label, onClick = onClick).padding(4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        FilledTonalIconButton(onClick = onClick, modifier = Modifier.size(48.dp)) { Icon(icon, contentDescription = label) }
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+/** The official app's bubble over the map with how the last clean went; tap for History, × to close. */
+@Composable
+private fun LastCleanBubble(record: CleanRecord, onOpen: () -> Unit, onClose: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onOpen,
+        modifier = modifier.widthIn(max = 260.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.95f),
+        shadowElevation = 2.dp,
+    ) {
+        Row(Modifier.padding(start = 12.dp, top = 8.dp, bottom = 8.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                if (record.complete == 1) Icons.Default.CheckCircle else Icons.Default.Warning,
+                contentDescription = null,
+                tint = if (record.complete == 1) AppColors.Good else AppColors.Warn,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f, fill = false)) {
+                Text(formatCleanRecordTime(record.beginEpoch), style = MaterialTheme.typography.titleSmall)
+                Text(
+                    (if (record.complete == 1) "Cleaning completed" else "Cleaning ended early") +
+                        " · ${record.durationSeconds / 60} min · ${(record.areaMm2 / 1_000_000f).roundToInt()} m²",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
+                Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(18.dp))
+            }
+        }
     }
 }
 
@@ -1068,6 +1204,29 @@ private fun VacuumMapImage(
                 drawRobotPin(at, robotIcon)
             }
 
+            // The robot's no-go zones at a drop get a small red tag, as on the official map.
+            for (zone in map.cliffZones) {
+                val cx = (zone.x0 + zone.x1 + zone.x2 + zone.x3) / 4
+                val cy = (zone.y0 + zone.y1 + zone.y2 + zone.y3) / 4
+                val cell = map.mmToCell(cx, cy)
+                val at = Offset(
+                    mapViewport.offset.x + cell.x / map.width * content.width * mapViewport.scale,
+                    mapViewport.offset.y + cell.y / map.height * content.height * mapViewport.scale,
+                )
+                val tag = textMeasurer.measure("No-go: drop", badgeStyle)
+                val padX = 6.dp.toPx()
+                val padY = 3.dp.toPx()
+                val left = at.x - tag.size.width / 2f - padX
+                val top = at.y - 14.dp.toPx() - tag.size.height - padY * 2
+                drawRoundRect(
+                    color = Color(0xFFD92D20),
+                    topLeft = Offset(left, top),
+                    size = Size(tag.size.width + padX * 2, tag.size.height + padY * 2),
+                    cornerRadius = CornerRadius(8.dp.toPx()),
+                )
+                drawText(tag, topLeft = Offset(left + padX, top + padY))
+            }
+
             // Labels are drawn outside the zoom transform so they stay a constant, legible size
             // instead of growing to 8x with the map. Selected rooms carry their cleaning order,
             // so selection reads without relying on the highlight colour alone.
@@ -1200,6 +1359,7 @@ private fun StatusBar(
         errorCode != 0 -> VacuumErrorCodes.describe(errorCode)
         drying -> dryingLabel(status.remainingDryTimeSec)
         status.taskPausedAtDock -> "Paused at the dock"
+        status.state == VacuumStateCodes.GOING_TO_WASH_MOP && status.backType == 4 -> "Returning to empty the bin"
         else -> stateLabel(status.state)
     }
     val headlineColor = when {
@@ -1209,7 +1369,7 @@ private fun StatusBar(
         else -> MaterialTheme.colorScheme.onSurface
     }
 
-    val cleaningNow = status.state in ACTIVE_CLEANING_STATES
+    val cleaningNow = status.state in ACTIVE_CLEANING_STATES || status.taskRunning
     val detail = buildList {
         // While cleaning, lead with where and how, as the official app's card does.
         if (cleaningNow) {
@@ -1354,8 +1514,10 @@ private fun ControlBar(
     onCleaningMode: () -> Unit,
     onMore: () -> Unit,
     modifier: Modifier = Modifier,
+    onZoneClean: () -> Unit = {},
+    onRoutines: () -> Unit = {},
 ) {
-    val isCleaning = status.state in ACTIVE_CLEANING_STATES
+    val isCleaning = status.state in ACTIVE_CLEANING_STATES || status.taskRunning
     val isPaused = status.state == VacuumStateCodes.PAUSED || status.taskPausedAtDock
     val mopping = (status.waterBoxCustomMode ?: WaterBoxMode.OFF) != WaterBoxMode.OFF
 
@@ -1390,6 +1552,28 @@ private fun ControlBar(
                 Icon(Icons.Default.MoreHoriz, contentDescription = "More actions", modifier = Modifier.size(20.dp))
             }
         }
+
+        // While idle, what the start button cleans, as the official app's Full / Room / Zones / Routine.
+        var roomMode by remember { mutableStateOf(false) }
+        val idle = !isCleaning && !isPaused
+        if (idle) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                val roomsChosen = roomMode || selectedRoomCount > 0
+                StartModeTab("Full", selected = !roomsChosen) { roomMode = false; if (selectedRoomCount > 0) onClearSelection() }
+                StartModeTab("Room", selected = roomsChosen) { roomMode = true }
+                StartModeTab("Zones", selected = false, onClick = onZoneClean)
+                StartModeTab("Routine", selected = false, onClick = onRoutines)
+            }
+            if (roomMode && selectedRoomCount == 0) {
+                Text(
+                    "Tap the rooms on the map",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                )
+            }
+        }
+        val waitingForRooms = idle && roomMode && selectedRoomCount == 0
 
         // The official app's bar: mode on the left, a large round start/pause in the middle with the
         // clean's progress around it, back to the dock on the right.
@@ -1430,7 +1614,7 @@ private fun ControlBar(
                                 else -> onClean()
                             }
                         },
-                        enabled = !busy,
+                        enabled = !busy && !waitingForRooms,
                         modifier = Modifier.size(68.dp),
                     ) {
                         Icon(
@@ -1456,6 +1640,24 @@ private fun ControlBar(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
+        }
+    }
+}
+
+/** A text tab over the control bar: chosen in bold with a short line under it. */
+@Composable
+private fun StartModeTab(label: String, selected: Boolean, onClick: () -> Unit) {
+    Surface(onClick = onClick, color = Color.Transparent, shape = MaterialTheme.shapes.small) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                label,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Box(Modifier.padding(top = 3.dp).size(width = 18.dp, height = 3.dp).background(
+                if (selected) MaterialTheme.colorScheme.primary else Color.Transparent, CircleShape,
+            ))
         }
     }
 }

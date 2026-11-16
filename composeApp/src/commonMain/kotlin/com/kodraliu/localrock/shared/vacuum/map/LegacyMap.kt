@@ -18,6 +18,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
     var robot: ParsedMapPoint? = null
     var path: List<ParsedMapPoint> = emptyList()
     var pathFlags: ByteArray? = null
+    var cliffZones: List<MapZone> = emptyList()
     var noGoZones: List<MapZone> = emptyList()
     var noMopZones: List<MapZone> = emptyList()
     var virtualWalls: List<VirtualWall> = emptyList()
@@ -100,6 +101,8 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
                     path = pts
                 }
             }
+            BLOCK_CLIFF_ZONES ->
+                cliffZones = parseQuadZones(bytes, off, blockHeaderLen, blockDataLen, ZoneKind.NO_GO)
             BLOCK_FORBIDDEN_ZONES ->
                 noGoZones = parseQuadZones(bytes, off, blockHeaderLen, blockDataLen, ZoneKind.NO_GO)
             BLOCK_FORBIDDEN_MOP_ZONES ->
@@ -209,6 +212,7 @@ fun parseLegacyMap(bytes: ByteArray): ParsedMap {
         pathMop = pathFlags?.takeIf { it.size == path.size }?.let { f -> BooleanArray(f.size) { (f[it].toInt() and PATH_FLAG_MOP) != 0 } },
         noGoZones = noGoZones,
         noMopZones = noMopZones,
+        cliffZones = cliffZones,
         virtualWalls = virtualWalls,
         segmentMaterials = segmentMaterials,
         segmentMaterialDirections = segmentMaterialDirections,
@@ -364,6 +368,8 @@ private const val MAGIC_1 = 0x72.toByte()
 private const val BLOCK_CHARGER = 1
 private const val BLOCK_IMAGE = 2
 private const val BLOCK_PATH = 3
+/** The plugin's `clffbz`: no-go zones the robot sets at a cliff, `num` then 4 corners of u16 mm each. */
+private const val BLOCK_CLIFF_ZONES = 30
 /** One byte per path point (the plugin's `mopPath`); bit 1 is set while travelling, not cleaning. */
 private const val BLOCK_PATH_FLAGS = 18
 private const val PATH_FLAG_TRAVEL = 0x02
@@ -408,9 +414,9 @@ private const val BLOCK_IGNORED_CARPET_ZONES = 19
 private const val BLOCK_FLOOR_PLAN = 55
 
 /**
- * Restriction blocks that are not parsed: 19 no-carpet areas, 23 no-vacuum areas, 30 cliff areas,
- * 31 smart door-sill areas (block ids known from community Roborock map parsers). They are
- * only detected, never rewritten.
+ * Restriction blocks that are not rewritten: 19 no-carpet areas, 23 no-vacuum areas, 30 cliff areas,
+ * 31 smart door-sill areas (block ids known from community Roborock map parsers). 30 is parsed for
+ * drawing (ParsedMap.cliffZones) and then no longer counted here.
  */
 internal val UNMODELED_RESTRICTION_BLOCKS = setOf(19, 23, 30, 31)
 private const val BLOCK_DIGEST = 1024

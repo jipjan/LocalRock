@@ -1,5 +1,26 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import kotlin.time.TimeSource
+import com.kodraliu.localrock.ui.rememberMicrophonePermissionRequest
+import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
+import com.kodraliu.localrock.shared.vacuum.VacuumStateCodes
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.toSize
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.CallEnd
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -172,7 +193,80 @@ fun CameraLiveViewScreen(
                         color = Color.White,
                         style = MaterialTheme.typography.labelSmall,
                     )
-                    LiveViewControls(drive = drive, onPinGo = onPinGo)
+                    val robotStatus by viewModel.status.collectAsState()
+                    val liveMap by viewModel.repository.parsedMap.collectAsState()
+                    val talkScope = rememberCoroutineScope()
+                    var talking by remember { mutableStateOf(false) }
+                    var talkStarted by remember { mutableStateOf<TimeSource.Monotonic.ValueTimeMark?>(null) }
+                    var talkError by remember { mutableStateOf<String?>(null) }
+                    var cruisePicking by remember { mutableStateOf(false) }
+                    var patrolling by remember { mutableStateOf(false) }
+                    DisposableEffect(Unit) {
+                        onDispose { if (talking) talkScope.launch(NonCancellable) { runCatching { liveSession.setTalking(false) } } }
+                    }
+                    val askMic = rememberMicrophonePermissionRequest { granted ->
+                        if (!granted) {
+                            talkError = "Talk-back needs the microphone."
+                        } else {
+                            talkScope.launch {
+                                runCatching { liveSession.setTalking(true) }
+                                    .onSuccess { ok ->
+                                        talking = ok
+                                        talkStarted = TimeSource.Monotonic.markNow()
+                                        if (!ok) talkError = "Talk-back is not available on this device yet."
+                                    }
+                                    .onFailure { talkError = it.message }
+                            }
+                        }
+                    }
+                    // A cruise or pet search shows Pause / End / Dock instead of the drive buttons.
+                    val state = robotStatus.state
+                    if (state == VacuumStateCodes.PATROL) patrolling = true
+                    if (patrolling && state != VacuumStateCodes.PATROL && state != VacuumStateCodes.PAUSED) patrolling = false
+                    LiveViewControls(
+                        drive = drive,
+                        onPinGo = onPinGo,
+                        patrolling = patrolling,
+                        patrolPaused = patrolling && state == VacuumStateCodes.PAUSED,
+                        onCruise = { cruisePicking = true },
+                        onFindPet = { viewModel.run("Looking for the pet") { it.startPetSearch() } },
+                        onPatrolPause = { viewModel.run { it.pause() } },
+                        onPatrolResume = { viewModel.run { it.resumeCleaning() } },
+                        onPatrolEnd = { viewModel.run { it.stopTask() } },
+                        onPatrolDock = { viewModel.run("Returning to dock") { it.dock() } },
+                    )
+                    TalkButton(
+                        talking = talking,
+                        startedAt = talkStarted,
+                        modifier = Modifier.align(Alignment.CenterStart).padding(start = 12.dp),
+                        onClick = {
+                            talkError = null
+                            if (talking) {
+                                talking = false
+                                talkScope.launch { runCatching { liveSession.setTalking(false) } }
+                            } else askMic()
+                        },
+                    )
+                    talkError?.let { msg ->
+                        Text(
+                            msg,
+                            color = Color.White,
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp)
+                                .background(Color.Black.copy(alpha = 0.6f), MaterialTheme.shapes.small).padding(horizontal = 10.dp, vertical = 4.dp),
+                        )
+                    }
+                    val cruiseMap = liveMap
+                    if (cruisePicking && cruiseMap != null) {
+                        CruisePointsDialog(
+                            map = cruiseMap,
+                            onDismiss = { cruisePicking = false },
+                            onStart = { points ->
+                                cruisePicking = false
+                                viewModel.run("Cruise started") { it.startCruise(points) }
+                            },
+                        )
+                    }
                     // The official live view keeps a small map in the corner, with the robot on it.
                     val miniMap by viewModel.repository.parsedMap.collectAsState()
                     miniMap?.let { map ->
@@ -338,16 +432,46 @@ private class LiveDrive(private val repository: com.kodraliu.localrock.shared.va
 }
 
 @Composable
-private fun BoxScope.LiveViewControls(drive: LiveDrive, onPinGo: () -> Unit) {
-    FilledTonalButton(
-        onClick = onPinGo,
-        modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
-        colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color.Black.copy(alpha = 0.45f), contentColor = Color.White),
-    ) {
-        Icon(Icons.Default.Place, null, Modifier.size(18.dp))
-        Spacer(Modifier.width(6.dp))
-        Text("Pin & Go")
+private fun BoxScope.LiveViewControls(
+    drive: LiveDrive,
+    onPinGo: () -> Unit,
+    patrolling: Boolean = false,
+    patrolPaused: Boolean = false,
+    onCruise: () -> Unit = {},
+    onFindPet: () -> Unit = {},
+    onPatrolPause: () -> Unit = {},
+    onPatrolResume: () -> Unit = {},
+    onPatrolEnd: () -> Unit = {},
+    onPatrolDock: () -> Unit = {},
+) {
+    val glass = ButtonDefaults.filledTonalButtonColors(containerColor = Color.Black.copy(alpha = 0.45f), contentColor = Color.White)
+    // The official live view's actions: Pin & Go, a cruise past points (Navigate) and Find the pet;
+    // during a cruise or search they become Pause / End / Dock.
+    // A column, so the mini map in the other corner never covers a button in portrait.
+    Column(Modifier.align(Alignment.TopStart).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (patrolling) {
+            // Resuming a paused cruise is not captured yet (the official app's "Hervatten"), so a paused
+            // cruise or search can only be ended or sent to the dock.
+            if (!patrolPaused) {
+                FilledTonalButton(onClick = onPatrolPause, colors = glass) { Text("Pause") }
+            }
+            FilledTonalButton(onClick = onPatrolEnd, colors = glass) { Text("End") }
+            FilledTonalButton(onClick = onPatrolDock, colors = glass) { Text("Dock") }
+        } else {
+            FilledTonalButton(onClick = onPinGo, colors = glass) {
+                Icon(Icons.Default.Place, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Pin & Go")
+            }
+            FilledTonalButton(onClick = onCruise, colors = glass) { Text("Cruise") }
+            FilledTonalButton(onClick = onFindPet, colors = glass) {
+                Icon(Icons.Default.Pets, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Find pet")
+            }
+        }
     }
+    if (patrolling) return
     HoldButton(
         icon = Icons.Default.KeyboardArrowUp,
         label = "Drive forward",
@@ -391,4 +515,85 @@ private fun HoldButton(
     ) {
         Icon(icon, null, Modifier.size(32.dp), tint = Color.White)
     }
+}
+
+
+/** Talk-back as the official live view: a green phone to start, a red one with the time to hang up. */
+@Composable
+private fun TalkButton(talking: Boolean, startedAt: TimeSource.Monotonic.ValueTimeMark?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    var elapsed by remember { mutableStateOf(0L) }
+    LaunchedEffect(talking, startedAt) {
+        while (talking && startedAt != null) {
+            elapsed = startedAt.elapsedNow().inWholeSeconds
+            delay(1_000)
+        }
+    }
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(
+            Modifier.size(48.dp).background(if (talking) Color(0xFFE5484D) else Color(0xFF2BBF8A), CircleShape)
+                .semantics { contentDescription = if (talking) "Stop talking" else "Talk through the robot" }
+                .pointerInput(Unit) { detectTapGestures(onTap = { onClick() }) },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(if (talking) Icons.Default.CallEnd else Icons.Default.Call, null, tint = Color.White)
+        }
+        if (talking) {
+            val s = elapsed
+            Text(
+                "${(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}",
+                color = Color.White,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.background(Color.Black.copy(alpha = 0.45f), MaterialTheme.shapes.small).padding(horizontal = 8.dp, vertical = 2.dp),
+            )
+        }
+    }
+}
+
+/** Tap points on the map for a cruise, numbered in order, as the official live view's Navigate. */
+@Composable
+private fun CruisePointsDialog(map: ParsedMap, onDismiss: () -> Unit, onStart: (List<Pair<Int, Int>>) -> Unit) {
+    val bitmap = rememberMapBitmap(map)
+    var points by remember { mutableStateOf<List<Offset>>(emptyList()) }
+    var canvasSize by remember { mutableStateOf(Size.Zero) }
+    val numberMeasurer = rememberTextMeasurer()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cruise") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Tap the map to set the points to drive past, in order.", style = MaterialTheme.typography.bodySmall)
+                Canvas(
+                    Modifier.fillMaxWidth().height(300.dp)
+                        .onSizeChanged { canvasSize = it.toSize() }
+                        .pointerInput(Unit) { detectTapGestures { points = points + it } },
+                ) {
+                    val content = map.fittedSize(size)
+                    val origin = Offset((size.width - content.width) / 2f, (size.height - content.height) / 2f)
+                    drawImage(
+                        bitmap,
+                        dstOffset = IntOffset(origin.x.toInt(), origin.y.toInt()),
+                        dstSize = IntSize(content.width.toInt(), content.height.toInt()),
+                    )
+                    points.forEachIndexed { i, p ->
+                        drawCircle(Color(0xFF2B7FFF), radius = 11.dp.toPx(), center = p)
+                        val label = numberMeasurer.measure("${i + 1}", TextStyle(color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold))
+                        drawText(label, topLeft = Offset(p.x - label.size.width / 2f, p.y - label.size.height / 2f))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = points.isNotEmpty(), onClick = {
+                val content = map.fittedSize(canvasSize)
+                val origin = Offset((canvasSize.width - content.width) / 2f, (canvasSize.height - content.height) / 2f)
+                onStart(points.map { map.canvasToMm(it - origin, content.width, content.height) })
+            }) { Text("Start cruise") }
+        },
+        dismissButton = {
+            Row {
+                if (points.isNotEmpty()) TextButton(onClick = { points = emptyList() }) { Text("Clear") }
+                TextButton(onClick = onDismiss) { Text("Cancel") }
+            }
+        },
+    )
 }

@@ -324,4 +324,17 @@ Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47
 
   The clean then waits on the dock as paused; the official app offers Resume. LocalRock shows it as "Paused at the dock".
 - **The relocation view:** after Pin & Go and a cruise, a new clean first showed "Nieuwe kaart" and then "Positionering…" for about a minute, before the robot recognised Map 2.
+- **Spot clean** on the Pin & Go page is `app_spot []`, available once the robot has reached the pin.
+- **Cruises and pet searches** are clean records with `clean_type` 5 and 6. `manual_replenish` holds
+  the area added during the clean.
+- **The cliff no-go zone** is map block 30 (`clffbz`): `num`, then four u16 mm corners per zone.
+- **Mid-clean return from LocalRock** (2026-11-16):
+  - `app_start_collect_dust` sent in the same instant as `app_pause` was accepted but ignored.
+  - About a second after the pause it was refused with -10003 "action locked".
+  - Sent to a clean that had been paused for a while, it worked: state 26 with `back_type` 4, then
+    22, then paused on the dock.
+  - LocalRock waits for the pause and retries on -10003.
+- **During a clean**, `error_code` 3 ("wheel floating") paused the robot once; the error cleared two
+  seconds later.
+- **Resuming a paused cruise** ("Hervatten") is not captured.
 

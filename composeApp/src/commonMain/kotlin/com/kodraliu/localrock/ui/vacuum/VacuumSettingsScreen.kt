@@ -2,6 +2,8 @@ package com.kodraliu.localrock.ui.vacuum
 
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.material3.Tab
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextField
 import androidx.compose.material.icons.filled.Gamepad
@@ -144,6 +146,7 @@ import com.kodraliu.localrock.shared.vacuum.BetaFeatureState
 import com.kodraliu.localrock.shared.vacuum.CleanRecord
 import com.kodraliu.localrock.shared.vacuum.CleanSummary
 import com.kodraliu.localrock.shared.vacuum.ConsumableStatus
+import com.kodraliu.localrock.shared.vacuum.VacuumStateCodes
 import com.kodraliu.localrock.shared.vacuum.DndSettings
 import com.kodraliu.localrock.shared.vacuum.DockCapabilities
 import com.kodraliu.localrock.shared.vacuum.FeatureSection
@@ -282,7 +285,7 @@ fun VacuumSettingsScreen(
                     "Remote control" to onRemote,
                 ) + listOfNotNull(onLiveView?.let { "Live view" to it }),
             ),
-            lastClean = cleanHistory.maxByOrNull { it.beginEpoch },
+            lastClean = cleanHistory.filter { !it.isPatrol }.maxByOrNull { it.beginEpoch },
             summary = cleanSummary,
             maintenanceSummary = consumables?.summary(),
             onSchedule = onSchedule,
@@ -441,9 +444,12 @@ fun VacuumRemoteScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
 fun VacuumPinGoScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
     val parsedMap by viewModel.repository.parsedMap.collectAsState()
     val busy by viewModel.busy.collectAsState()
+    val status by viewModel.status.collectAsState()
     PinGoScreen(
         parsedMap = parsedMap,
         busy = busy,
+        travelling = status.state == VacuumStateCodes.GOING_TO_TARGET,
+        onSpot = { viewModel.run("Spot cleaning started") { it.spotClean() } },
         // A refusal is shown by run(); onSent only fires once the robot has accepted the target.
         onGoto = { x, y, onSent ->
             viewModel.run {
@@ -1407,11 +1413,31 @@ private fun HistoryScreen(
                     }
                 }
             } else {
+                // As the official app: cleans, and the camera cruises and pet searches ("Navigating").
+                var navigating by remember { mutableStateOf(false) }
+                val shown = records.filter { it.isPatrol == navigating }.sortedByDescending { it.beginEpoch }
                 LazyColumn(contentPadding = padding) {
                     if (summary != null) {
                         item { CleanSummaryCard(summary) }
                     }
-                    items(records.sortedByDescending { it.beginEpoch }, key = { it.beginEpoch }) { record ->
+                    item {
+                        SecondaryTabRow(selectedTabIndex = if (navigating) 1 else 0) {
+                            Tab(selected = !navigating, onClick = { navigating = false }, text = { Text("Cleaning") })
+                            Tab(selected = navigating, onClick = { navigating = true }, text = { Text("Navigating") })
+                        }
+                    }
+                    if (shown.isEmpty()) {
+                        item {
+                            Text(
+                                if (navigating) "No cruises or pet searches yet. The robot keeps only the most recent one."
+                                else "No cleans yet.",
+                                modifier = Modifier.padding(24.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    items(shown, key = { it.beginEpoch }) { record ->
                         Box(Modifier.clickable(enabled = loadMap != null || loadEvents != null) { opened = record }) {
                             CleanRecordRow(record)
                         }
@@ -2691,6 +2717,9 @@ private fun RcButton(icon: ImageVector, contentDescription: String, onClick: () 
 private fun PinGoScreen(
     parsedMap: ParsedMap?,
     busy: Boolean,
+    /** True while the robot drives to the pin; the spot clean waits until it is there. */
+    travelling: Boolean = false,
+    onSpot: (() -> Unit)? = null,
     onGoto: (x: Int, y: Int, onSent: () -> Unit) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -2774,8 +2803,17 @@ private fun PinGoScreen(
                         }
                     }
                 }
+                // As the official Pin & Go: once there, clean 1.5 m × 1.5 m around the pin.
+                if (sent && onSpot != null) {
+                    OutlinedButton(
+                        onClick = onSpot,
+                        enabled = !busy && !travelling,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 12.dp),
+                    ) { Text(if (travelling) "Spot clean (once it is there)" else "Spot clean here (1.5 m × 1.5 m)") }
+                }
                 Text(
                     text = when {
+                        sent && !travelling -> "The robot is at the pin."
                         sent -> "Command sent! Robot is heading there."
                         tapPoint != null -> "Target set — tap Go to send the robot there."
                         else -> "Tap on the map to set a destination."

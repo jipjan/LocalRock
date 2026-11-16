@@ -313,6 +313,60 @@ class VacuumRepository(
     suspend fun stopCleaning(): V1Response = session.appStop().requireOk("app_stop")
     suspend fun dock(): V1Response = session.appCharge().requireOk("app_charge")
 
+    /** Add an area to the running clean (corners in mm, x1,y1,x2,y1,x2,y2,x1,y2). */
+    suspend fun addCleanArea(zone: List<Int>) { session.appStartReplenishCleanArea(listOf(zone)).requireOk("app_start_replenish_clean_area") }
+
+    /** Skip the area the running clean is on. */
+    suspend fun skipCleaningArea() { session.appSkipCurrentCleaningArea().requireOk("app_skip_current_cleaning_area") }
+
+    /**
+     * Mid-clean return, as the official app's back-to-dock sheet: the clean is paused first, then the
+     * dock empties the bin or washes the mops, and the clean waits on the dock to be resumed.
+     */
+    suspend fun returnMidClean(empty: Boolean) {
+        if (_status.value.state != VacuumStateCodes.PAUSED) {
+            session.appPause().requireOk("app_pause")
+            // Sent in the same instant as the pause, the dock command was accepted and ignored (a296,
+            // 2026-11-16): wait until the robot reports the pause.
+            for (attempt in 1..15) {
+                delay(1_000)
+                val fresh = runCatching { session.getStatus() }.getOrNull()
+                if (fresh != null) _status.update { it.merge(fresh) }
+                if (fresh?.state == VacuumStateCodes.PAUSED) break
+            }
+        }
+        // Right after the pause the robot can answer -10003 "action locked" (a296): try again a few times.
+        var reply = if (empty) session.appStartCollectDust() else session.appStartWash()
+        for (attempt in 1..4) {
+            if (reply.error?.get("code")?.jsonPrimitive?.intOrNull != -10003) break
+            delay(3_000)
+            reply = if (empty) session.appStartCollectDust() else session.appStartWash()
+        }
+        reply.requireOk(if (empty) "app_start_collect_dust" else "app_start_wash")
+    }
+
+    /** Cruise past [points] (mm) on the loaded map. */
+    suspend fun startCruise(points: List<Pair<Int, Int>>) {
+        val mapIndex = _status.value.loadedMapFlag ?: 0
+        session.appStartPatrol(mapIndex, points).requireOk("app_start_patrol")
+    }
+
+    suspend fun startPetSearch() { session.appStartPetPatrol().requireOk("app_start_pet_patrol") }
+
+    suspend fun spotClean() { session.appSpot().requireOk("app_spot") }
+
+    suspend fun stopTask() { session.appStop().requireOk("app_stop") }
+
+    /** Talk-back on (the app's microphone track must already be sending) or off. */
+    suspend fun voiceChat(on: Boolean) {
+        if (on) {
+            session.startVoiceChat().requireOk("start_voice_chat")
+            runCatching { session.setVoiceChatVolume(0) }
+        } else {
+            session.stopVoiceChat().requireOk("stop_voice_chat")
+        }
+    }
+
     suspend fun resumeCleaning(): V1Response {
         val fresh = session.getStatus() ?: throw IllegalStateException("The robot's current task is unavailable")
         _status.update { it.merge(fresh) }
@@ -1831,6 +1885,7 @@ internal fun VacuumStatus.merge(fresh: VacuumStatus): VacuumStatus = fresh.copy(
     labStatus = fresh.labStatus ?: labStatus,
     switchMapMode = fresh.switchMapMode ?: switchMapMode,
     inCleaning = fresh.inCleaning ?: inCleaning,
+    backType = fresh.backType ?: backType,
     cleanPercent = fresh.cleanPercent ?: cleanPercent,
 )
 

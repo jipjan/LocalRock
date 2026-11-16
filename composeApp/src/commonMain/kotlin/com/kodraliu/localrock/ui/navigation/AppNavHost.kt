@@ -141,6 +141,7 @@ fun AppNavHost() {
                     onBack = { navController.popBackStack<VacuumGraph>(inclusive = true) },
                     onSettings = { navController.navigate(VacuumSettings) },
                     onZoneClean = { navController.navigate(VacuumZoneClean) },
+                    onAddArea = { navController.navigate(VacuumAddArea) },
                     onMapEdit = { navController.navigate(VacuumMapEdit) },
                     onSchedule = { navController.navigate(VacuumSchedule) },
                     onCamera = { navController.navigate(VacuumCamera) },
@@ -206,6 +207,17 @@ fun AppNavHost() {
                     onLiveView = if (viewModel.hasCamera) ({ navController.navigate(VacuumCamera) }) else null,
                     onPinGo = { navController.navigate(VacuumPinGo) },
                     onRemote = { navController.navigate(VacuumRemote) },
+                )
+            }
+
+            composable<VacuumAddArea> { entry ->
+                val graphEntry = remember(entry) { navController.getBackStackEntry<VacuumGraph>() }
+                val duid = graphEntry.toRoute<VacuumGraph>().duid
+                val viewModel: VacuumViewModel = viewModel(graphEntry) { VacuumViewModel(duid, container) }
+                ZoneCleanScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    addArea = true,
                 )
             }
 

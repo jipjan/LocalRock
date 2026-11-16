@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.devices
 
+import com.kodraliu.localrock.shared.vacuum.taskRunning
 import com.kodraliu.localrock.shared.vacuum.taskPausedAtDock
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.LaunchedEffect
@@ -400,7 +401,7 @@ private fun DeviceCard(
 @Composable
 private fun LiveRobotPanel(status: VacuumStatus, onAction: (AppContainer.QuickAction) -> Unit) {
     val state = status.state ?: return
-    val cleaning = state in ACTIVE_CLEANING_STATES
+    val cleaning = state in ACTIVE_CLEANING_STATES || status.taskRunning
     val paused = state == VacuumStateCodes.PAUSED || status.taskPausedAtDock
     val minutes = status.cleanTime?.takeIf { (cleaning || paused) && it > 0 }?.let { it / 60 }
     Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {

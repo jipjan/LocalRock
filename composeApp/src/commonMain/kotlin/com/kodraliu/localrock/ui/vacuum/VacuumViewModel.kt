@@ -56,6 +56,10 @@ class VacuumViewModel(
     val carpetModes = carpetModeOptions(device.newFeatureSet)
     /** Remote viewing: TwoKeyRealTimeVideo (32) or TwoKeyRTVInCharging (33). */
     val hasCamera = newFeatureBit(device.newFeatureSet, 32) || newFeatureBit(device.newFeatureSet, 33)
+    /** MidwayBackToDock (85): during a clean, back to dock offers emptying the bin or washing the mop and carrying on. */
+    val hasMidwayReturn = newFeatureBit(device.newFeatureSet, 85)
+    /** The last clean whose bubble on the map was closed, so it stays closed while the app runs. */
+    var dismissedLastClean: Long? = null
     private val _requestedPanel = kotlinx.coroutines.flow.MutableStateFlow<DetailPanel?>(null)
     /** A sheet another screen asked the robot page to open (Settings → Maps); taken once by that page. */
     internal val requestedPanel: kotlinx.coroutines.flow.StateFlow<DetailPanel?> = _requestedPanel

@@ -101,6 +101,8 @@ data class ParsedMap(
     val pathMop: BooleanArray? = null,
     val noGoZones: List<MapZone> = emptyList(),
     val noMopZones: List<MapZone> = emptyList(),
+    /** No-go zones the robot set itself at a drop (stairs): legacy block 30, shown in red as the official app does. */
+    val cliffZones: List<MapZone> = emptyList(),
     val virtualWalls: List<VirtualWall> = emptyList(),
     /** Segment id -> raw Roborock floor material id (see [FloorMaterial]). Legacy block 24. */
     val segmentMaterials: Map<Int, Int> = emptyMap(),

@@ -16,7 +16,7 @@ data class CleanRecord(
     val dustCollected: Boolean? = null,
     /** Passes over the area (`clean_times`). */
     val passes: Int? = null,
-    /** What was cleaned (`clean_type`): 1 full, 2 zones, 3 rooms, 4 quick mapping, 5 patrol. */
+    /** What was cleaned (`clean_type`): 1 full, 2 zones, 3 rooms, 4 quick mapping, 5 cruise, 6 pet search. */
     val cleanType: Int? = null,
 ) {
     /** [cleanType] as the official app's history names it, or null when unknown. */
@@ -26,9 +26,13 @@ data class CleanRecord(
             2 -> "Zones"
             3 -> "Rooms"
             4 -> "Quick mapping"
-            5 -> "Patrol"
+            5 -> "Cruise"
+            6 -> "Find the pet"
             else -> null
         }
+
+    /** A camera cruise or pet search: the official History lists these under "Navigating". */
+    val isPatrol: Boolean get() = cleanType == 5 || cleanType == 6
 
     /** Square metres per minute of cleaning, the official app's "cleaning efficiency"; null without a duration. */
     val efficiencyM2PerMinute: Float?

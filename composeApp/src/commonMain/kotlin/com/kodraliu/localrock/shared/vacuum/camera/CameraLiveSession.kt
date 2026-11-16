@@ -1,5 +1,8 @@
 package com.kodraliu.localrock.shared.vacuum.camera
 
+import com.kodraliu.localrock.shared.vacuum.setVoiceChatVolume
+import com.kodraliu.localrock.shared.vacuum.stopVoiceChat
+import com.kodraliu.localrock.shared.vacuum.startVoiceChat
 import com.kodraliu.localrock.shared.vacuum.VacuumSession
 import com.kodraliu.localrock.shared.vacuum.checkHomesecPassword
 import com.kodraliu.localrock.shared.vacuum.getCameraStatus
@@ -107,6 +110,27 @@ class CameraLiveSession(private val session: VacuumSession) {
                 closePeer()
             }
         }
+    }
+
+    /**
+     * Talk-back: the microphone goes over the call's audio and the robot plays it (`start_voice_chat`),
+     * or stops. False when this platform can't send the microphone.
+     */
+    suspend fun setTalking(on: Boolean): Boolean {
+        val p = _peer.value ?: return false
+        if (on) {
+            if (!p.setMicrophone(true)) return false
+            val reply = session.startVoiceChat()
+            if (reply.error != null) {
+                p.setMicrophone(false)
+                throw IllegalStateException("The robot refused talk-back: ${reply.error}")
+            }
+            runCatching { session.setVoiceChatVolume(0) }
+        } else {
+            p.setMicrophone(false)
+            runCatching { session.stopVoiceChat() }
+        }
+        return true
     }
 
     fun stop() {

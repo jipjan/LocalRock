@@ -39,6 +39,41 @@ suspend fun VacuumSession.setWaterBoxCustomMode(level: Int): V1Response =
     sendCommand("set_water_box_custom_mode", listOf(JsonPrimitive(level)))
 
 suspend fun VacuumSession.appStartCollectDust(): V1Response = sendCommand("app_start_collect_dust")
+
+// Captured from the official app on an a296 (2026-11-16), see docs/robot-commands-a296.md.
+
+/** Clean an extra area now and then carry on with the running clean; corners in mm. */
+suspend fun VacuumSession.appStartReplenishCleanArea(zones: List<List<Int>>): V1Response =
+    sendCommandRaw("app_start_replenish_clean_area", JsonObject(mapOf(
+        "source" to JsonPrimitive(2),
+        "zones" to JsonArray(zones.map { z -> JsonArray(z.map { JsonPrimitive(it) }) }),
+    )))
+
+/** Skip the area being cleaned this time and move on to the next. */
+suspend fun VacuumSession.appSkipCurrentCleaningArea(): V1Response =
+    sendCommandRaw("app_skip_current_cleaning_area", JsonObject(mapOf("source" to JsonPrimitive(2))))
+
+/** Cruise past [points] (mm) with the camera on, on the map with [mapIndex] (its map flag). */
+suspend fun VacuumSession.appStartPatrol(mapIndex: Int, points: List<Pair<Int, Int>>): V1Response =
+    sendCommandRaw("app_start_patrol", JsonObject(mapOf(
+        "map_index" to JsonPrimitive(mapIndex),
+        "points" to JsonArray(points.map { (x, y) -> JsonArray(listOf(JsonPrimitive(x), JsonPrimitive(y))) }),
+    )))
+
+/** Drive round the home looking for the pet with the camera. */
+suspend fun VacuumSession.appStartPetPatrol(): V1Response = sendCommandRaw("app_start_pet_patrol", JsonObject(emptyMap()))
+
+/** Clean 1.5 m × 1.5 m around where the robot stands (after Pin & Go). */
+suspend fun VacuumSession.appSpot(): V1Response = sendCommand("app_spot")
+
+/** Talk-back in the live view: the robot plays what the app sends and records for the app. */
+suspend fun VacuumSession.startVoiceChat(): V1Response =
+    sendCommandRaw("start_voice_chat", JsonObject(mapOf("play" to JsonPrimitive(true), "record" to JsonPrimitive(true))))
+
+suspend fun VacuumSession.stopVoiceChat(): V1Response = sendCommandRaw("stop_voice_chat", JsonObject(emptyMap()))
+
+suspend fun VacuumSession.setVoiceChatVolume(volume: Int): V1Response =
+    sendCommandRaw("set_voice_chat_volume", JsonObject(mapOf("volume" to JsonPrimitive(volume))))
 suspend fun VacuumSession.appStartWash(): V1Response = sendCommand("app_start_wash")
 suspend fun VacuumSession.appStopWash(): V1Response = sendCommand("app_stop_wash")
 

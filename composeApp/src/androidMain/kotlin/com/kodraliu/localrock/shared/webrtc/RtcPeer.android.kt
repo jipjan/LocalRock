@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import org.webrtc.AudioSource
+import org.webrtc.AudioTrack
 import org.webrtc.DataChannel
 import org.webrtc.DefaultVideoDecoderFactory
 import org.webrtc.DefaultVideoEncoderFactory
@@ -73,9 +75,11 @@ internal class AndroidRtcPeer(iceServers: List<RtcIceServer>) : RtcPeer {
     override suspend fun createOffer(): String {
         // Audio first, as the official app offers it: the Saros 20 (a296) never answers an offer
         // whose first m-line is video.
-        pc.addTransceiver(
+        // Two-way audio as the official app offers it, for talk-back. No microphone track is attached
+        // until the user talks (setMicrophone), so nothing is recorded before that.
+        audioTransceiver = pc.addTransceiver(
             MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO,
-            RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY),
+            RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.SEND_RECV),
         )
         pc.addTransceiver(
             MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
@@ -113,7 +117,32 @@ internal class AndroidRtcPeer(iceServers: List<RtcIceServer>) : RtcPeer {
         pc.addIceCandidate(IceCandidate(candidate.sdpMid ?: "0", candidate.sdpMLineIndex, candidate.candidate))
     }
 
+    private var audioTransceiver: RtpTransceiver? = null
+    private var micSource: AudioSource? = null
+    private var micTrack: AudioTrack? = null
+
+    override fun setMicrophone(on: Boolean): Boolean {
+        val sender = audioTransceiver?.sender ?: return false
+        if (on) {
+            val track = micTrack ?: run {
+                val source = peerConnectionFactory.createAudioSource(MediaConstraints()).also { micSource = it }
+                peerConnectionFactory.createAudioTrack("talkback", source).also { micTrack = it }
+            }
+            track.setEnabled(true)
+            sender.setTrack(track, false)
+        } else {
+            micTrack?.setEnabled(false)
+            sender.setTrack(null, false)
+        }
+        return true
+    }
+
     override fun close() {
+        runCatching { audioTransceiver?.sender?.setTrack(null, false) }
+        runCatching { micTrack?.dispose() }
+        runCatching { micSource?.dispose() }
+        micTrack = null
+        micSource = null
         videoTrack.value = null
         _connectionState.value = RtcConnectionState.CLOSED
         runCatching { pc.close() }

@@ -35,6 +35,8 @@ data class VacuumStatus(
      * washing the mop), which is how the end of a job is told from a pause in it.
      */
     @SerialName("in_cleaning") val inCleaning: Int? = null,
+    /** Why it is heading to the dock: 4 is a mid-clean return to empty the bin (a296); -1 none. */
+    @SerialName("back_type") val backType: Int? = null,
     /** How far through the current job the robot says it is, 0..100. */
     @SerialName("clean_percent") val cleanPercent: Int? = null,
     /** 1 when the robot vacuums first and mops after (captured from the official app on an a296), 0 for together. */
@@ -109,6 +111,13 @@ object DockErrorCodes {
  * the bin (a296: state 26, back_type 4, then 22, then 8 with in_cleaning still 1). The official app
  * shows it as paused, with Resume.
  */
+/**
+ * A clean is under way, also while the dock washes the mop before or during it (a296: state 23 with
+ * in_cleaning 1). Not when it is paused, here or on the dock.
+ */
+val VacuumStatus.taskRunning: Boolean
+    get() = (inCleaning ?: 0) != 0 && state != VacuumStateCodes.PAUSED && !taskPausedAtDock
+
 val VacuumStatus.taskPausedAtDock: Boolean
     get() = (inCleaning ?: 0) != 0 &&
         state in setOf(VacuumStateCodes.CHARGING, VacuumStateCodes.CHARGING_COMPLETE, VacuumStateCodes.IDLE)
