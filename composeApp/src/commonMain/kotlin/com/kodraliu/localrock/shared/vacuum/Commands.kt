@@ -388,3 +388,19 @@ suspend fun VacuumSession.sendIceToRobot(appIceBase64: String): V1Response =
     sendCommandRaw("send_ice_to_robot", JsonObject(mapOf("app_ice" to JsonPrimitive(appIceBase64))))
 
 suspend fun VacuumSession.getDeviceIce(): V1Response = sendCommand("get_device_ice")
+
+/** Registers a routine step's rooms with the robot; it answers with the step's id and map (official app, a296). */
+suspend fun VacuumSession.setScenesSegments(rooms: List<Int>): V1Response =
+    sendCommandRaw("set_scenes_segments", JsonObject(mapOf("data" to JsonArray(listOf(JsonObject(mapOf(
+        "segs" to JsonArray(rooms.map { JsonObject(mapOf("sid" to JsonPrimitive(it))) }),
+    )))))))
+
+/** Registers a routine step's zones (corners in mm, low to high); it answers with the step's id and zone ids. */
+suspend fun VacuumSession.setScenesZones(zones: List<ZoneRect>): V1Response =
+    sendCommandRaw("set_scenes_zones", JsonObject(mapOf("data" to JsonArray(listOf(JsonObject(mapOf(
+        "zones" to JsonArray(zones.map { z ->
+            JsonObject(mapOf("range" to JsonArray(listOf(
+                minOf(z.x1, z.x2), minOf(z.y1, z.y2), maxOf(z.x1, z.x2), maxOf(z.y1, z.y2),
+            ).map { JsonPrimitive(it) })))
+        }),
+    )))))))

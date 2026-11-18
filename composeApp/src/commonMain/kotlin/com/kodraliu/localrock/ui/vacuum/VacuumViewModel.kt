@@ -12,6 +12,8 @@ import com.kodraliu.localrock.shared.vacuum.RoutineStepKind
 import com.kodraliu.localrock.shared.vacuum.decodeRoutine
 import com.kodraliu.localrock.shared.vacuum.encodeRoutineParam
 import com.kodraliu.localrock.shared.vacuum.isComplete
+import com.kodraliu.localrock.shared.vacuum.edited
+import kotlin.coroutines.cancellation.CancellationException
 import com.kodraliu.localrock.shared.model.namesAVersion
 import com.kodraliu.localrock.shared.vacuum.carpetModeOptions
 import com.kodraliu.localrock.shared.vacuum.newFeatureBit
@@ -297,7 +299,7 @@ class VacuumViewModel(
     }
 
     fun updateRoutineStep(index: Int, change: (RoutineStep) -> RoutineStep) = updateRoutine { d ->
-        d.copy(steps = d.steps.mapIndexed { i, step -> if (i == index) change(step) else step })
+        d.copy(steps = d.steps.mapIndexed { i, step -> if (i == index) step.edited(change(step)) else step })
     }
 
     fun currentMapFlag(): Int = repository.currentFloorFlag.value
@@ -311,8 +313,14 @@ class VacuumViewModel(
         viewModelScope.launch {
             _routineSaving.value = true
             try {
+                // The robot hands out each new or changed room and zone step's id, as for the official
+                // app. Without the robot the routine is still saved: the server runs steps without them.
+                val steps = edit.draft.steps.map { step ->
+                    if (step.tid != null) step
+                    else try { repository.registerRoutineStep(step) } catch (e: CancellationException) { throw e } catch (e: Throwable) { step }
+                }
                 val param = encodeRoutineParam(
-                    edit.draft.copy(name = name),
+                    edit.draft.copy(name = name, steps = steps),
                     device.duid,
                     kotlin.time.Clock.System.now().toEpochMilliseconds(),
                     roomName = { id -> repository.rooms.value.find { it.id == id }?.name?.takeIf { n -> n.isNotBlank() } },

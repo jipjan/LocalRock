@@ -40,9 +40,37 @@ data class RoutineStep(
     val repeat: Int = 1,
     /** The map the rooms or zones belong to. */
     val mapFlag: Int = 0,
-    /** The official app's per-step id ("tid", a millisecond time); kept when a routine is edited. */
+    /**
+     * The step's id ("tid"), handed out by the robot when the step's rooms or zones are registered with
+     * it (`set_scenes_segments` / `set_scenes_zones`), as the official app does; kept when a routine is
+     * edited and cleared when the step's rooms or zones change. A full clean has none.
+     */
     val tid: String? = null,
+    /** The robot's ids for [zones], from `set_scenes_zones`, in the same order. */
+    val zoneIds: List<Int> = emptyList(),
 )
+
+/** What the robot answers when a step's rooms or zones are registered: the step id, map and zone ids. */
+data class SceneRegistration(val tid: String, val mapFlag: Int?, val zoneIds: List<Int>)
+
+/**
+ * Reads the answer to `set_scenes_segments` / `set_scenes_zones`, e.g. (a296, 2026-11-18)
+ * `[{"tid":"1795028618174","map_flag":1,"segs":[{"sid":3},{"sid":4}]}]` or `[{"tid":"…","zones":[{"zid":8}]}]`.
+ */
+fun parseSceneRegistration(result: JsonElement?): SceneRegistration? {
+    val entry = ((result as? JsonArray)?.firstOrNull() ?: result) as? JsonObject ?: return null
+    val tid = (entry["tid"] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() } ?: return null
+    val zids = (entry["zones"] as? JsonArray).orEmpty().mapNotNull { ((it as? JsonObject)?.get("zid") as? JsonPrimitive)?.intOrNull }
+    return SceneRegistration(tid, (entry["map_flag"] as? JsonPrimitive)?.intOrNull, zids)
+}
+
+/** The step with what the robot handed out for it. */
+fun RoutineStep.registered(reg: SceneRegistration): RoutineStep =
+    copy(tid = reg.tid, mapFlag = reg.mapFlag ?: mapFlag, zoneIds = reg.zoneIds)
+
+/** A changed step loses its robot ids, so it is registered again on saving. */
+fun RoutineStep.edited(next: RoutineStep): RoutineStep =
+    if (next.kind != kind || next.rooms != rooms || next.zones != zones) next.copy(tid = null, zoneIds = emptyList()) else next
 
 /** A step the robot cannot run: no rooms or no zones picked. */
 fun RoutineStep.isComplete(): Boolean = when (kind) {
@@ -73,13 +101,24 @@ fun encodeRoutineParam(
         put("items", buildJsonArray {
             draft.steps.forEachIndexed { index, step ->
                 val id = index + 1
+                // A step the robot could not register still needs an id; the server runs it without one.
                 val tid = step.tid ?: (now + index).toString()
                 val method = when (step.kind) {
                     RoutineStepKind.FULL -> "do_scenes_app_start"
                     RoutineStepKind.ROOMS -> "do_scenes_segments"
                     RoutineStepKind.ZONES -> "do_scenes_zones"
                 }
-                val entry = buildJsonObject {
+                val entry = if (step.kind == RoutineStepKind.FULL) buildJsonObject {
+                    // The official app's whole-home step: settings only (a296, 2026-11-18).
+                    put("fan_power", step.fanPower)
+                    put("water_box_mode", step.waterBoxMode)
+                    put("mop_mode", step.mopMode)
+                    put("mop_template_id", step.mopMode)
+                    put("repeat", step.repeat.coerceIn(1, 3))
+                    put("auto_dustCollection", 1)
+                    put("source", ROUTINE_SOURCE)
+                    put("seq_type", 0)
+                } else buildJsonObject {
                     put("tid", tid)
                     when (step.kind) {
                         RoutineStepKind.ROOMS -> put("segs", buildJsonArray {
@@ -88,7 +127,7 @@ fun encodeRoutineParam(
                         RoutineStepKind.ZONES -> put("zones", buildJsonArray {
                             step.zones.forEachIndexed { zid, z ->
                                 add(buildJsonObject {
-                                    put("zid", zid)
+                                    put("zid", step.zoneIds.getOrElse(zid) { zid })
                                     // The server repeats each zone by its own count; the step's passes are that count.
                                     put("repeat", step.repeat.coerceIn(1, 3))
                                     put("range", buildJsonArray {
@@ -110,6 +149,7 @@ fun encodeRoutineParam(
                     put("auto_dry", 1)
                     put("auto_dustCollection", 1)
                     put("region_num", 0)
+                    put("seq_type", 0)
                 }
                 val inner = buildJsonObject {
                     put("id", id)
@@ -127,7 +167,11 @@ fun encodeRoutineParam(
                 add(buildJsonObject {
                     put("id", id)
                     put("type", "CMD")
-                    put("name", stepTitle(step, roomName))
+                    // The official app names a room step by its rooms, space-separated, and leaves the others blank.
+                    put("name", when (step.kind) {
+                        RoutineStepKind.ROOMS -> step.rooms.joinToString(" ") { roomName(it) ?: "Room $it" }
+                        else -> ""
+                    })
                     put("entityId", duid)
                     put("param", Json.encodeToString(JsonObject.serializer(), inner))
                     put("finishDpIds", buildJsonArray { add(JsonPrimitive(TASK_COMPLETE_DP)) })
@@ -186,6 +230,7 @@ fun decodeRoutine(name: String, param: JsonElement?): RoutineDraft? {
                 if (r == null || r.size < 4) null
                 else ZoneRect(r[0], r[1], r[2], r[3])
             },
+            zoneIds = (entry["zones"] as? JsonArray).orEmpty().mapNotNull { ((it as? JsonObject)?.get("zid") as? JsonPrimitive)?.intOrNull },
             fanPower = int("fan_power") ?: VacuumFanPower.BALANCED,
             waterBoxMode = int("water_box_mode") ?: WaterBoxMode.OFF,
             mopMode = int("mop_mode") ?: MopRoute.STANDARD,

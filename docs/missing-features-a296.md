@@ -152,8 +152,12 @@ them step by step.
   `app_segment_clean`, `app_zoned_clean` or `app_start`.
 - Saving, editing, renaming and deleting were tested against the server.
 - Running a LocalRock-made routine on the robot was not tested yet (it is noisy).
-- The official a296 app's own routine JSON has not been captured; LocalRock follows the official
-  app's format as captured from an iOS app (fixture in the server's tests).
+- Compared on 2026-11-18 with a routine made in the official a296 app (rooms, then a full clean): the
+  same JSON apart from `tagId` ("1004", which LocalRock leaves out). Like the official app, LocalRock
+  registers each new or changed room or zone step with the robot (`set_scenes_segments
+  {"data":[{"segs":[{"sid"}]}]}` → `[{"tid","map_flag","segs"}]`, `set_scenes_zones
+  {"data":[{"zones":[{"range"}]}]}` → `[{"tid","zones":[{"zid"}]}]`, silent) and uses the robot's
+  `tid`, map and zone ids. A routine edited in LocalRock shows correctly in the official app.
 - A routine's room and zone steps belong to the map they were made on; the server does not switch
   maps before running them.
 - Missing: the official app's recommended routines ("Aanbevolen routines", e.g. "Stofzuigen, dan

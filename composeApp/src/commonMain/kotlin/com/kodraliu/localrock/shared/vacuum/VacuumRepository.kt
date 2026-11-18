@@ -316,6 +316,20 @@ class VacuumRepository(
     /** Add an area to the running clean (corners in mm, x1,y1,x2,y1,x2,y2,x1,y2). */
     suspend fun addCleanArea(zone: List<Int>) { session.appStartReplenishCleanArea(listOf(zone)).requireOk("app_start_replenish_clean_area") }
 
+    /**
+     * Registers a routine step's rooms or zones with the robot, as the official app does when a step is
+     * saved; silent. Returns the step with the robot's ids, or unchanged for a full clean.
+     */
+    suspend fun registerRoutineStep(step: RoutineStep): RoutineStep {
+        val reply = when (step.kind) {
+            RoutineStepKind.FULL -> return step
+            RoutineStepKind.ROOMS -> session.setScenesSegments(step.rooms).requireOk("set_scenes_segments")
+            RoutineStepKind.ZONES -> session.setScenesZones(step.zones).requireOk("set_scenes_zones")
+        }
+        val reg = parseSceneRegistration(reply.result) ?: error("The robot did not register the routine step")
+        return step.registered(reg)
+    }
+
     /** Skip the area the running clean is on. */
     suspend fun skipCleaningArea() { session.appSkipCurrentCleaningArea().requireOk("app_skip_current_cleaning_area") }
 
