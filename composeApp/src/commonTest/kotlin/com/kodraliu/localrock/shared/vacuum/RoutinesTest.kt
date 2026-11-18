@@ -76,7 +76,7 @@ class RoutinesTest {
     fun the_official_apps_sample_routine_reads() {
         val param = """{"triggers":[],"action":{"type":"S","items":[{"id":1,"type":"CMD","name":"Living Room","entityId":"d","param":"{\"id\":1,\"method\":\"do_scenes_segments\",\"params\":{\"data\":[{\"tid\":\"1712345601000\",\"segs\":[{\"sid\":16}],\"map_flag\":0,\"fan_power\":101,\"water_box_mode\":200,\"mop_mode\":300,\"mop_template_id\":300,\"repeat\":2}],\"source\":101}}","finishDpIds":[130]}]},"matchType":"NONE"}"""
         val step = decodeRoutine("After Dinner", JsonPrimitive(param))!!.steps.single()
-        assertEquals(RoutineStep(RoutineStepKind.ROOMS, rooms = listOf(16), fanPower = 101, waterBoxMode = 200, mopMode = 300, repeat = 2, tid = "1712345601000"), step)
+        assertEquals(RoutineStep(RoutineStepKind.ROOMS, rooms = listOf(16), fanPower = 101, waterBoxMode = 200, mopMode = 300, repeat = 2, seqType = null, tid = "1712345601000"), step)
     }
 
     @Test

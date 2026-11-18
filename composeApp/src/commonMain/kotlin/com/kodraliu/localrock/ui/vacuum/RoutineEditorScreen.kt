@@ -1,5 +1,58 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.routine_rec_vacuum_then_mop_text
+import com.kodraliu.localrock.resources.routine_rec_vacuum_then_mop
+import com.kodraliu.localrock.resources.routine_rec_intensive_vacuum_text
+import com.kodraliu.localrock.resources.routine_rec_intensive_vacuum
+import com.kodraliu.localrock.resources.routine_rec_deep_text
+import com.kodraliu.localrock.resources.routine_rec_deep_plus_text
+import com.kodraliu.localrock.resources.routine_rec_deep_plus
+import com.kodraliu.localrock.resources.routine_rec_deep
+import com.kodraliu.localrock.resources.routine_rec_after_meal_text
+import com.kodraliu.localrock.resources.routine_rec_after_meal
+import com.kodraliu.localrock.resources.routine_editor_water
+import com.kodraliu.localrock.resources.routine_editor_vacuum_then_mop
+import com.kodraliu.localrock.resources.routine_editor_suction
+import com.kodraliu.localrock.resources.routine_editor_strong
+import com.kodraliu.localrock.resources.routine_editor_step
+import com.kodraliu.localrock.resources.routine_editor_standard
+import com.kodraliu.localrock.resources.routine_editor_route_standard
+import com.kodraliu.localrock.resources.routine_editor_route_fast
+import com.kodraliu.localrock.resources.routine_editor_route_deep_plus
+import com.kodraliu.localrock.resources.routine_editor_route_deep
+import com.kodraliu.localrock.resources.routine_editor_route
+import com.kodraliu.localrock.resources.routine_editor_remove_step
+import com.kodraliu.localrock.resources.routine_editor_redraw_zones
+import com.kodraliu.localrock.resources.routine_editor_quiet
+import com.kodraliu.localrock.resources.routine_editor_passes
+import com.kodraliu.localrock.resources.routine_editor_other_map
+import com.kodraliu.localrock.resources.routine_editor_off
+import com.kodraliu.localrock.resources.routine_editor_none
+import com.kodraliu.localrock.resources.routine_editor_no_rooms
+import com.kodraliu.localrock.resources.routine_editor_new
+import com.kodraliu.localrock.resources.routine_editor_name
+import com.kodraliu.localrock.resources.routine_editor_move_up
+import com.kodraliu.localrock.resources.routine_editor_move_down
+import com.kodraliu.localrock.resources.routine_editor_medium
+import com.kodraliu.localrock.resources.routine_editor_max
+import com.kodraliu.localrock.resources.routine_editor_low
+import com.kodraliu.localrock.resources.routine_editor_kind_zones
+import com.kodraliu.localrock.resources.routine_editor_kind_rooms
+import com.kodraliu.localrock.resources.routine_editor_kind_full
+import com.kodraliu.localrock.resources.routine_editor_hint
+import com.kodraliu.localrock.resources.routine_editor_high
+import com.kodraliu.localrock.resources.routine_editor_edit
+import com.kodraliu.localrock.resources.routine_editor_draw_zones
+import com.kodraliu.localrock.resources.routine_editor_clean
+import com.kodraliu.localrock.resources.routine_editor_add_step
+import com.kodraliu.localrock.resources.common_save
+import com.kodraliu.localrock.shared.vacuum.SEQ_TYPE_VACUUM_THEN_MOP
+import com.kodraliu.localrock.shared.vacuum.SEQ_TYPE_TOGETHER
+import com.kodraliu.localrock.shared.vacuum.RecommendedRoutine
+import androidx.compose.material3.Switch
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.StringResource
+import com.kodraliu.localrock.resources.Res
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,20 +124,20 @@ fun RoutineEditorScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (current?.sceneId == null) "New routine" else "Edit routine") },
+                title = { Text(stringResource(if (current?.sceneId == null) Res.string.routine_editor_new else Res.string.routine_editor_edit)) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
                 actions = {
                     if (saving) {
                         CircularProgressIndicator(Modifier.size(24.dp).padding(end = 8.dp), strokeWidth = 2.dp)
                     } else if (current != null) {
-                        TextButton(onClick = { viewModel.saveRoutine(onSaved = onBack) }) { Text("Save") }
+                        TextButton(onClick = { viewModel.saveRoutine(onSaved = onBack) }) { Text(stringResource(Res.string.common_save)) }
                     }
                 },
             )
         },
     ) { padding ->
         if (current == null) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text("No routine open") }
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) { Text(stringResource(Res.string.routine_editor_none)) }
             return@Scaffold
         }
         val draft = current.draft
@@ -96,12 +149,12 @@ fun RoutineEditorScreen(
             OutlinedTextField(
                 value = draft.name,
                 onValueChange = { name -> viewModel.updateRoutine { it.copy(name = name.take(40)) } },
-                label = { Text("Name") },
+                label = { Text(stringResource(Res.string.routine_editor_name)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
             Text(
-                "The steps run one after another; each starts once the robot has finished the one before.",
+                stringResource(Res.string.routine_editor_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -138,7 +191,7 @@ fun RoutineEditorScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Add step")
+                Text(stringResource(Res.string.routine_editor_add_step))
             }
         }
     }
@@ -146,28 +199,49 @@ fun RoutineEditorScreen(
 
 private const val MAX_STEPS = 10
 
-private val STEP_KINDS = listOf(RoutineStepKind.FULL to "Full", RoutineStepKind.ROOMS to "Rooms", RoutineStepKind.ZONES to "Zones")
+private val STEP_KINDS = listOf(
+    RoutineStepKind.FULL to Res.string.routine_editor_kind_full,
+    RoutineStepKind.ROOMS to Res.string.routine_editor_kind_rooms,
+    RoutineStepKind.ZONES to Res.string.routine_editor_kind_zones,
+)
 
 private val STEP_FAN = listOf(
-    VacuumFanPower.OFF to "Off",
-    VacuumFanPower.QUIET to "Quiet",
-    VacuumFanPower.BALANCED to "Standard",
-    VacuumFanPower.TURBO to "Strong",
-    VacuumFanPower.MAX to "MAX",
+    VacuumFanPower.OFF to Res.string.routine_editor_off,
+    VacuumFanPower.QUIET to Res.string.routine_editor_quiet,
+    VacuumFanPower.BALANCED to Res.string.routine_editor_standard,
+    VacuumFanPower.TURBO to Res.string.routine_editor_strong,
+    VacuumFanPower.MAX to Res.string.routine_editor_max,
 )
 
 private val STEP_ROUTES = listOf(
-    MopRoute.STANDARD to "Standard",
-    MopRoute.DEEP to "Deep",
-    MopRoute.DEEP_PLUS to "Deep+",
-    MopRoute.FAST to "Fast",
+    MopRoute.STANDARD to Res.string.routine_editor_route_standard,
+    MopRoute.DEEP to Res.string.routine_editor_route_deep,
+    MopRoute.DEEP_PLUS to Res.string.routine_editor_route_deep_plus,
+    MopRoute.FAST to Res.string.routine_editor_route_fast,
 )
 
 /** Water flows: the slide's marks on robots with the water slide (a296), the three levels otherwise. */
-private fun stepWater(slide: Boolean) = listOf(WaterBoxMode.OFF to "Off") + if (slide) {
-    listOf(WaterBoxMode.SLIDE_LOW to "Low", WaterBoxMode.SLIDE_MEDIUM to "Medium", WaterBoxMode.SLIDE_HIGH to "High")
+private fun stepWater(slide: Boolean) = listOf(WaterBoxMode.OFF to Res.string.routine_editor_off) + if (slide) {
+    listOf(
+        WaterBoxMode.SLIDE_LOW to Res.string.routine_editor_low,
+        WaterBoxMode.SLIDE_MEDIUM to Res.string.routine_editor_medium,
+        WaterBoxMode.SLIDE_HIGH to Res.string.routine_editor_high,
+    )
 } else {
-    listOf(WaterBoxMode.LOW to "Low", WaterBoxMode.MEDIUM to "Medium", WaterBoxMode.HIGH to "High")
+    listOf(
+        WaterBoxMode.LOW to Res.string.routine_editor_low,
+        WaterBoxMode.MEDIUM to Res.string.routine_editor_medium,
+        WaterBoxMode.HIGH to Res.string.routine_editor_high,
+    )
+}
+
+/** A recommended routine's name and description. */
+internal fun recommendedRoutineStrings(recommended: RecommendedRoutine): Pair<StringResource, StringResource> = when (recommended) {
+    RecommendedRoutine.VACUUM_THEN_MOP -> Res.string.routine_rec_vacuum_then_mop to Res.string.routine_rec_vacuum_then_mop_text
+    RecommendedRoutine.AFTER_MEAL -> Res.string.routine_rec_after_meal to Res.string.routine_rec_after_meal_text
+    RecommendedRoutine.DEEP -> Res.string.routine_rec_deep to Res.string.routine_rec_deep_text
+    RecommendedRoutine.INTENSIVE_VACUUM -> Res.string.routine_rec_intensive_vacuum to Res.string.routine_rec_intensive_vacuum_text
+    RecommendedRoutine.DEEP_PLUS -> Res.string.routine_rec_deep_plus to Res.string.routine_rec_deep_plus_text
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -190,24 +264,24 @@ private fun RoutineStepCard(
         Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Step ${index + 1}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(Res.string.routine_editor_step, index + 1), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                     Text(stepTitle(step, roomName), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                 }
-                IconButton(onClick = { onMove(-1) }, enabled = index > 0) { Icon(Icons.Default.KeyboardArrowUp, "Move up") }
-                IconButton(onClick = { onMove(1) }, enabled = index < count - 1) { Icon(Icons.Default.KeyboardArrowDown, "Move down") }
-                IconButton(onClick = onRemove, enabled = count > 1) { Icon(Icons.Default.Delete, "Remove step") }
+                IconButton(onClick = { onMove(-1) }, enabled = index > 0) { Icon(Icons.Default.KeyboardArrowUp, stringResource(Res.string.routine_editor_move_up)) }
+                IconButton(onClick = { onMove(1) }, enabled = index < count - 1) { Icon(Icons.Default.KeyboardArrowDown, stringResource(Res.string.routine_editor_move_down)) }
+                IconButton(onClick = onRemove, enabled = count > 1) { Icon(Icons.Default.Delete, stringResource(Res.string.routine_editor_remove_step)) }
             }
-            ChipRow("Clean", STEP_KINDS, step.kind) { kind -> onChange { it.copy(kind = kind) } }
+            ChipRow(stringResource(Res.string.routine_editor_clean), STEP_KINDS, step.kind) { kind -> onChange { it.copy(kind = kind) } }
             if (otherMap) {
                 Text(
-                    "Made on another map: load that map to change these rooms or zones. The robot needs that map loaded to run this step.",
+                    stringResource(Res.string.routine_editor_other_map),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                 )
             }
             when (step.kind) {
                 RoutineStepKind.ROOMS -> if (rooms.isEmpty()) {
-                    Text("The map has no rooms yet.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(Res.string.routine_editor_no_rooms), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
                 } else {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         rooms.forEach { (id, name) ->
@@ -223,11 +297,14 @@ private fun RoutineStepCard(
                 RoutineStepKind.ZONES -> OutlinedButton(onClick = onPickZones, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text(if (step.zones.isEmpty()) "Draw zones on the map" else "Redraw zones (${step.zones.size})")
+                    Text(
+                        if (step.zones.isEmpty()) stringResource(Res.string.routine_editor_draw_zones)
+                        else stringResource(Res.string.routine_editor_redraw_zones, step.zones.size),
+                    )
                 }
                 RoutineStepKind.FULL -> {}
             }
-            ChipRow("Suction", STEP_FAN, step.fanPower) { fan ->
+            ChipRow(stringResource(Res.string.routine_editor_suction), STEP_FAN, step.fanPower) { fan ->
                 // Mop only needs water; without either the robot would do nothing.
                 onChange { s ->
                     val water = if (fan == VacuumFanPower.OFF && s.waterBoxMode == WaterBoxMode.OFF) stepWater(waterSlide)[1].first else s.waterBoxMode
@@ -237,23 +314,39 @@ private fun RoutineStepCard(
             val water = stepWater(waterSlide)
             val shownWater = water.firstOrNull { it.first == step.waterBoxMode }?.first
                 ?: water.minByOrNull { kotlin.math.abs(it.first - step.waterBoxMode) }!!.first
-            ChipRow("Water", water, shownWater) { w ->
+            ChipRow(stringResource(Res.string.routine_editor_water), water, shownWater) { w ->
                 onChange { s ->
                     val fan = if (w == WaterBoxMode.OFF && s.fanPower == VacuumFanPower.OFF) VacuumFanPower.BALANCED else s.fanPower
                     s.copy(waterBoxMode = w, fanPower = fan)
                 }
             }
             if (step.waterBoxMode != WaterBoxMode.OFF) {
-                ChipRow("Mop route", STEP_ROUTES, step.mopMode) { route -> onChange { it.copy(mopMode = route) } }
+                ChipRow(stringResource(Res.string.routine_editor_route), STEP_ROUTES, step.mopMode) { route -> onChange { it.copy(mopMode = route) } }
             }
-            ChipRow("Passes", listOf(1 to "1×", 2 to "2×", 3 to "3×"), step.repeat) { r -> onChange { it.copy(repeat = r) } }
+            TextChipRow(stringResource(Res.string.routine_editor_passes), PASSES, step.repeat.coerceAtLeast(1)) { r -> onChange { it.copy(repeat = r) } }
+            if (step.kind == RoutineStepKind.FULL && step.waterBoxMode != WaterBoxMode.OFF && step.fanPower != VacuumFanPower.OFF) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(Res.string.routine_editor_vacuum_then_mop), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = step.seqType == SEQ_TYPE_VACUUM_THEN_MOP,
+                        onCheckedChange = { on -> onChange { it.copy(seqType = if (on) SEQ_TYPE_VACUUM_THEN_MOP else SEQ_TYPE_TOGETHER) } },
+                    )
+                }
+            }
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun <T> ChipRow(label: String, options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit) {
+private fun <T> ChipRow(label: String, options: List<Pair<T, StringResource>>, selected: T, onSelect: (T) -> Unit) =
+    TextChipRow(label, options.map { it.first to stringResource(it.second) }, selected, onSelect)
+
+private val PASSES = listOf(1 to "1×", 2 to "2×", 3 to "3×")
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun <T> TextChipRow(label: String, options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

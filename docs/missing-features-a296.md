@@ -160,6 +160,18 @@ them step by step.
   `tid`, map and zone ids. A routine edited in LocalRock shows correctly in the official app.
 - A routine's room and zone steps belong to the map they were made on; the server does not switch
   maps before running them.
-- Missing: the official app's recommended routines ("Aanbevolen routines", e.g. "Stofzuigen, dan
-  dweilen") that add a ready-made routine with one tap.
+- Recommended routines ("Aanbevolen routines") are built, as the official app saves them (a296,
+  2026-11-18), each one whole-home step at `repeat` 0 with its `tagId`:
+
+  | Routine | Suction | Water | Route | Other | tagId |
+  |---|---|---|---|---|---|
+  | Stofzuigen, dan dweilen | 102 | 235 | 300 | `seq_type` 1 | 101 |
+  | Grondig | 103 | 245 | 300 | | 102 |
+  | Intensief vegen | 104 | 200 | 300 | | 103 |
+  | Grondig+ | 105 | 245 | 303 | | 104 |
+
+  "Na de maaltijd" opens the editor with its name and an empty room step, as in the official app.
+  local_roborock_server (0fe1a40) applies `seq_type` 1 with `app_set_clean_sequence_type` before the
+  step and restores the robot's own sequence afterwards.
+- The routine screens are translated (English, German, Dutch); the Dutch names follow the official app.
 

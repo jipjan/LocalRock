@@ -1,5 +1,22 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.routines_add
+import com.kodraliu.localrock.resources.routines_added
+import com.kodraliu.localrock.resources.routines_recommended
+import com.kodraliu.localrock.resources.routines_run
+import com.kodraliu.localrock.resources.routines_edit
+import com.kodraliu.localrock.resources.routines_new
+import com.kodraliu.localrock.resources.routines_empty
+import com.kodraliu.localrock.resources.common_try_again
+import com.kodraliu.localrock.resources.routines_intro
+import com.kodraliu.localrock.resources.routines_title
+import com.kodraliu.localrock.resources.common_cancel
+import com.kodraliu.localrock.resources.common_delete
+import com.kodraliu.localrock.resources.routines_delete_text
+import com.kodraliu.localrock.resources.routines_delete_title
+import com.kodraliu.localrock.shared.vacuum.RecommendedRoutine
+import org.jetbrains.compose.resources.stringResource
+import com.kodraliu.localrock.resources.Res
 import androidx.compose.material.icons.filled.Add
 import com.kodraliu.localrock.shared.vacuum.taskRunning
 import com.kodraliu.localrock.shared.vacuum.CleanRecord
@@ -401,6 +418,12 @@ fun VacuumDetailScreen(
                     }
                 },
                 onDelete = { scene -> viewModel.deleteRoutine(scene) },
+                onAddRecommended = { recommended, name, added ->
+                    if (viewModel.addRecommendedRoutine(recommended, name, added)) {
+                        panel = null
+                        onEditRoutine()
+                    }
+                },
                 busy = busy,
                 onRun = { scene ->
                     panel = null
@@ -1769,15 +1792,16 @@ private fun RoutinesSheetContent(
     onNew: () -> Unit,
     onEdit: (Scene) -> Unit,
     onDelete: (Scene) -> Unit,
+    onAddRecommended: (RecommendedRoutine, name: String, addedMessage: String) -> Unit,
 ) {
     var confirmDelete by remember { mutableStateOf<Scene?>(null) }
     confirmDelete?.let { scene ->
         AlertDialog(
             onDismissRequest = { confirmDelete = null },
-            title = { Text("Delete ${scene.name}?") },
-            text = { Text("The routine is removed from your server.") },
-            confirmButton = { TextButton(onClick = { onDelete(scene); confirmDelete = null }) { Text("Delete") } },
-            dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text("Cancel") } },
+            title = { Text(stringResource(Res.string.routines_delete_title, scene.name)) },
+            text = { Text(stringResource(Res.string.routines_delete_text)) },
+            confirmButton = { TextButton(onClick = { onDelete(scene); confirmDelete = null }) { Text(stringResource(Res.string.common_delete)) } },
+            dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text(stringResource(Res.string.common_cancel)) } },
         )
     }
     Column(
@@ -1789,9 +1813,9 @@ private fun RoutinesSheetContent(
             .padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("Routines", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.routines_title), style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Steps the robot runs one after another, kept by your server. Running one that is already going stops it.",
+            stringResource(Res.string.routines_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1801,17 +1825,17 @@ private fun RoutinesSheetContent(
             }
             is RoutinesState.Failed -> {
                 Text(state.reason, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
-                OutlinedButton(onClick = onRetry, modifier = Modifier.fillMaxWidth()) { Text("Try again") }
+                OutlinedButton(onClick = onRetry, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.common_try_again)) }
             }
             is RoutinesState.Loaded -> if (state.routines.isEmpty()) {
                 Text(
-                    "No routines for this robot yet.",
+                    stringResource(Res.string.routines_empty),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 FilledTonalButton(onClick = onNew, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("New routine")
+                    Text(stringResource(Res.string.routines_new))
                 }
             } else {
                 state.routines.forEach { scene ->
@@ -1827,12 +1851,12 @@ private fun RoutinesSheetContent(
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                             )
-                            IconButton(onClick = { onEdit(scene) }) { Icon(Icons.Default.Edit, "Edit ${scene.name}") }
-                            IconButton(onClick = { confirmDelete = scene }) { Icon(Icons.Default.Delete, "Delete ${scene.name}") }
+                            IconButton(onClick = { onEdit(scene) }) { Icon(Icons.Default.Edit, stringResource(Res.string.routines_edit, scene.name)) }
+                            IconButton(onClick = { confirmDelete = scene }) { Icon(Icons.Default.Delete, stringResource(Res.string.routines_delete_title, scene.name)) }
                             FilledTonalButton(onClick = { onRun(scene) }, enabled = !busy) {
                                 Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Run")
+                                Text(stringResource(Res.string.routines_run))
                             }
                         }
                     }
@@ -1840,7 +1864,34 @@ private fun RoutinesSheetContent(
                 OutlinedButton(onClick = onNew, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("New routine")
+                    Text(stringResource(Res.string.routines_new))
+                }
+            }
+        }
+        if (state is RoutinesState.Loaded) {
+            Spacer(Modifier.height(8.dp))
+            Text(stringResource(Res.string.routines_recommended), style = MaterialTheme.typography.titleMedium)
+            RecommendedRoutine.entries.forEach { recommended ->
+                val (nameRes, textRes) = recommendedRoutineStrings(recommended)
+                val name = stringResource(nameRes)
+                val added = stringResource(Res.string.routines_added, name)
+                Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(name, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                stringResource(textRes),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        TextButton(onClick = { onAddRecommended(recommended, name, added) }, enabled = !busy) {
+                            Text(stringResource(Res.string.routines_add))
+                        }
+                    }
                 }
             }
         }

@@ -12,6 +12,16 @@ import com.kodraliu.localrock.shared.vacuum.RoutineStepKind
 import com.kodraliu.localrock.shared.vacuum.decodeRoutine
 import com.kodraliu.localrock.shared.vacuum.encodeRoutineParam
 import com.kodraliu.localrock.shared.vacuum.isComplete
+import com.kodraliu.localrock.shared.vacuum.RecommendedRoutine
+import com.kodraliu.localrock.shared.vacuum.recommendedRoutineDraft
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.routine_editor_need_name
+import com.kodraliu.localrock.resources.routine_editor_need_step
+import com.kodraliu.localrock.resources.routine_editor_need_target
+import com.kodraliu.localrock.resources.routines_deleted
+import com.kodraliu.localrock.resources.routines_not_editable
+import com.kodraliu.localrock.resources.routines_saved
+import org.jetbrains.compose.resources.getString
 import com.kodraliu.localrock.shared.vacuum.edited
 import kotlin.coroutines.cancellation.CancellationException
 import com.kodraliu.localrock.shared.model.namesAVersion
@@ -283,6 +293,21 @@ class VacuumViewModel(
         )
     }
 
+    /**
+     * Adds one of the official app's recommended routines, named [name] in the app's language. As in the
+     * official app it is saved at once, except "After meals", which opens in the editor to check its
+     * rooms; returns true then.
+     */
+    fun addRecommendedRoutine(recommended: RecommendedRoutine, name: String, addedMessage: String): Boolean {
+        val draft = recommendedRoutineDraft(
+            recommended, name, supportsWaterSlide.value, currentMapFlag(),
+        )
+        _routineEdit.value = RoutineEdit(sceneId = null, savedName = null, draft = draft)
+        if (recommended == RecommendedRoutine.AFTER_MEAL) return true
+        saveRoutine(savedMessage = addedMessage) {}
+        return false
+    }
+
     /** False when the routine holds something LocalRock cannot edit; it can still be run. */
     fun editRoutine(scene: Scene): Boolean {
         val draft = decodeRoutine(scene.name, scene.param) ?: return false
@@ -290,8 +315,8 @@ class VacuumViewModel(
         return true
     }
 
-    fun routineNotEditable() {
-        container.messages.error("This routine has steps LocalRock can't edit; it can still be run")
+    fun routineNotEditable() = viewModelScope.launch {
+        container.messages.error(getString(Res.string.routines_not_editable))
     }
 
     fun updateRoutine(change: (RoutineDraft) -> RoutineDraft) {
@@ -304,13 +329,17 @@ class VacuumViewModel(
 
     fun currentMapFlag(): Int = repository.currentFloorFlag.value
 
-    fun saveRoutine(onSaved: () -> Unit) {
+    fun saveRoutine(savedMessage: String? = null, onSaved: () -> Unit) {
         val edit = _routineEdit.value ?: return
         val name = edit.draft.name.trim()
-        if (name.isEmpty()) { container.messages.error("Give the routine a name"); return }
-        if (edit.draft.steps.isEmpty()) { container.messages.error("Add at least one step"); return }
-        if (edit.draft.steps.any { !it.isComplete() }) { container.messages.error("Every step needs its rooms or zones"); return }
         viewModelScope.launch {
+            val problem = when {
+                name.isEmpty() -> Res.string.routine_editor_need_name
+                edit.draft.steps.isEmpty() -> Res.string.routine_editor_need_step
+                edit.draft.steps.any { !it.isComplete() } -> Res.string.routine_editor_need_target
+                else -> null
+            }
+            if (problem != null) { container.messages.error(getString(problem)); return@launch }
             _routineSaving.value = true
             try {
                 // The robot hands out each new or changed room and zone step's id, as for the official
@@ -330,7 +359,7 @@ class VacuumViewModel(
                 } else {
                     container.deviceRepository.updateScene(edit.sceneId, device.duid, name.takeIf { it != edit.savedName }, param)
                 }
-                container.messages.success("Routine saved")
+                container.messages.success(savedMessage ?: getString(Res.string.routines_saved))
                 _routineEdit.value = null
                 loadRoutines()
                 onSaved()
@@ -346,7 +375,7 @@ class VacuumViewModel(
         viewModelScope.launch {
             try {
                 container.deviceRepository.deleteScene(scene.id)
-                container.messages.success("Routine deleted")
+                container.messages.success(getString(Res.string.routines_deleted))
             } catch (e: Throwable) {
                 container.messages.error(describe(e))
             }

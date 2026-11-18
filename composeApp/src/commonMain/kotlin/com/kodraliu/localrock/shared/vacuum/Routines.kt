@@ -23,6 +23,11 @@ import kotlinx.serialization.json.put
 data class RoutineDraft(
     val name: String,
     val steps: List<RoutineStep>,
+    /**
+     * The official app's routine kind: 101–104 for its recommended routines (the icon it shows), 1004
+     * seen on one made by hand. Kept as it was; LocalRock sets it only for the recommended ones.
+     */
+    val tagId: String? = null,
 )
 
 enum class RoutineStepKind { FULL, ROOMS, ZONES }
@@ -36,8 +41,13 @@ data class RoutineStep(
     val fanPower: Int = VacuumFanPower.BALANCED,
     val waterBoxMode: Int = WaterBoxMode.OFF,
     val mopMode: Int = MopRoute.STANDARD,
-    /** Passes, 1–3. */
+    /** Passes, 1–3; 0 (the official app's recommended routines) leaves it to the robot, which cleans once. */
     val repeat: Int = 1,
+    /**
+     * Vacuum and mop together (0) or vacuum first, then mop (1), the official app's `seq_type`; null where
+     * the official app leaves it out (some recommended routines).
+     */
+    val seqType: Int? = SEQ_TYPE_TOGETHER,
     /** The map the rooms or zones belong to. */
     val mapFlag: Int = 0,
     /**
@@ -114,10 +124,10 @@ fun encodeRoutineParam(
                     put("water_box_mode", step.waterBoxMode)
                     put("mop_mode", step.mopMode)
                     put("mop_template_id", step.mopMode)
-                    put("repeat", step.repeat.coerceIn(1, 3))
+                    put("repeat", stepRepeat(step))
                     put("auto_dustCollection", 1)
                     put("source", ROUTINE_SOURCE)
-                    put("seq_type", 0)
+                    step.seqType?.let { put("seq_type", it) }
                 } else buildJsonObject {
                     put("tid", tid)
                     when (step.kind) {
@@ -144,12 +154,12 @@ fun encodeRoutineParam(
                     put("water_box_mode", step.waterBoxMode)
                     put("mop_mode", step.mopMode)
                     put("mop_template_id", step.mopMode)
-                    put("repeat", step.repeat.coerceIn(1, 3))
+                    put("repeat", stepRepeat(step))
                     put("clean_order_mode", 1)
                     put("auto_dry", 1)
                     put("auto_dustCollection", 1)
                     put("region_num", 0)
-                    put("seq_type", 0)
+                    put("seq_type", step.seqType ?: SEQ_TYPE_TOGETHER)
                 }
                 val inner = buildJsonObject {
                     put("id", id)
@@ -180,7 +190,10 @@ fun encodeRoutineParam(
         })
     })
     put("matchType", "NONE")
+    draft.tagId?.let { put("tagId", it) }
 }
+
+private fun stepRepeat(step: RoutineStep): Int = if (step.repeat == 0) 0 else step.repeat.coerceIn(1, 3)
 
 /**
  * Reads a saved routine back. Null when it holds anything LocalRock cannot show as a step (a
@@ -236,10 +249,11 @@ fun decodeRoutine(name: String, param: JsonElement?): RoutineDraft? {
             mopMode = int("mop_mode") ?: MopRoute.STANDARD,
             repeat = int("repeat") ?: 1,
             mapFlag = int("map_flag") ?: 0,
+            seqType = int("seq_type"),
             tid = (entry["tid"] as? JsonPrimitive)?.contentOrNull,
         )
     }
-    return RoutineDraft(name, steps)
+    return RoutineDraft(name, steps, tagId = (outer["tagId"] as? JsonPrimitive)?.contentOrNull)
 }
 
 /** A step's title, also stored as the step's name for the official app's list. */
