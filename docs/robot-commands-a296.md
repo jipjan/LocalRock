@@ -337,4 +337,16 @@ Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47
 - **During a clean**, `error_code` 3 ("wheel floating") paused the robot once; the error cleared two
   seconds later.
 - **Resuming a paused cruise** ("Hervatten") is not captured.
+- **Mid-clean empty, 2026-11-18:**
+  - Sent during a running clean with the old short wait, it left the robot paused.
+  - After a few minutes of pause it worked.
+  - With LocalRock's new flow (pause, wait 10 s, retry on -10003 for up to 2 minutes) it went from a
+    running clean to the dock, emptied, and waited there: state 26 shown as "Returning to empty the
+    bin".
+- **Mid-clean mop wash with `app_start_wash`:** the robot showed state 26 for about 16 s and then
+  carried on cleaning. Whether it washed is unconfirmed: the official app's command for "Mop
+  halverwege wassen" is not captured.
+- **Spot clean from LocalRock's Pin & Go** works (state "Spot cleaning"); afterwards the robot stays
+  idle where it is.
+- **`restrict_low_area_access_status`** changed fine with the robot idle (Safe, then Extreme).
 

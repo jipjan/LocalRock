@@ -335,11 +335,14 @@ class VacuumRepository(
                 if (fresh?.state == VacuumStateCodes.PAUSED) break
             }
         }
-        // Right after the pause the robot can answer -10003 "action locked" (a296): try again a few times.
+        // After a pause the robot locks dock actions for a while (a296, 2026-11-16/18): sent at once the
+        // command was accepted and ignored, a second later it was refused with -10003 "action locked",
+        // and after a minute or two of pause it worked. Give the pause time, then retry on -10003.
+        delay(10_000)
         var reply = if (empty) session.appStartCollectDust() else session.appStartWash()
-        for (attempt in 1..4) {
+        for (attempt in 1..24) {
             if (reply.error?.get("code")?.jsonPrimitive?.intOrNull != -10003) break
-            delay(3_000)
+            delay(5_000)
             reply = if (empty) session.appStartCollectDust() else session.appStartWash()
         }
         reply.requireOk(if (empty) "app_start_collect_dust" else "app_start_wash")
