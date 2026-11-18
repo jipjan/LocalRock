@@ -320,27 +320,15 @@ class VacuumRepository(
     suspend fun skipCleaningArea() { session.appSkipCurrentCleaningArea().requireOk("app_skip_current_cleaning_area") }
 
     /**
-     * Mid-clean return, as the official app's back-to-dock sheet: the clean is paused first, then the
-     * dock empties the bin or washes the mops, and the clean waits on the dock to be resumed.
+     * Mid-clean return, as the official app's back-to-dock sheet: the dock empties the bin or washes
+     * the mop, then the robot carries on by itself. Sent straight away, as the official app does (a296,
+     * 2026-11-18: state 26 with back_type 4 or 1, then 22, then cleaning again). Pausing first left the
+     * clean waiting on the dock and made the robot answer -10003 "action locked" for a while; that error
+     * is still retried in case it comes.
      */
     suspend fun returnMidClean(empty: Boolean) {
-        if (_status.value.state != VacuumStateCodes.PAUSED) {
-            session.appPause().requireOk("app_pause")
-            // Sent in the same instant as the pause, the dock command was accepted and ignored (a296,
-            // 2026-11-16): wait until the robot reports the pause.
-            for (attempt in 1..15) {
-                delay(1_000)
-                val fresh = runCatching { session.getStatus() }.getOrNull()
-                if (fresh != null) _status.update { it.merge(fresh) }
-                if (fresh?.state == VacuumStateCodes.PAUSED) break
-            }
-        }
-        // After a pause the robot locks dock actions for a while (a296, 2026-11-16/18): sent at once the
-        // command was accepted and ignored, a second later it was refused with -10003 "action locked",
-        // and after a minute or two of pause it worked. Give the pause time, then retry on -10003.
-        delay(10_000)
         var reply = if (empty) session.appStartCollectDust() else session.appStartWash()
-        for (attempt in 1..24) {
+        for (attempt in 1..12) {
             if (reply.error?.get("code")?.jsonPrimitive?.intOrNull != -10003) break
             delay(5_000)
             reply = if (empty) session.appStartCollectDust() else session.appStartWash()

@@ -349,4 +349,14 @@ Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47
 - **Spot clean from LocalRock's Pin & Go** works (state "Spot cleaning"); afterwards the robot stays
   idle where it is.
 - **`restrict_low_area_access_status`** changed fine with the robot idle (Safe, then Extreme).
+- **Mid-clean returns, captured from the official app (2026-11-18):** sent while cleaning, with no
+  pause before them.
+  - "Mop halverwege wassen" is `app_start_wash {}`: state 26 with `back_type` 1.
+  - "Halverwege … legen" is `app_start_collect_dust []`: state 26 with `back_type` 4, then 22, then
+    the robot carries on cleaning by itself.
+  - With dock error 38 (clean water tank empty or misplaced), the wash return turned back after about
+    25 s without washing.
+  - LocalRock now sends both the same way. The earlier pause-first approach caused the -10003 locks
+    and left the clean waiting on the dock.
+- **`app_charge`** was once refused with -10003 "action locked" (17:00:22), but the robot docked anyway.
 
