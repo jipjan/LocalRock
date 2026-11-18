@@ -12,6 +12,16 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.delete
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.content.TextContent
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import io.ktor.client.request.header
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.parameter
@@ -80,6 +90,52 @@ class DeviceApi(private val client: HttpClient) {
         return response.result ?: response.data ?: SceneRunResult()
     }
 
+    /** Saves a new routine; the server answers with it, id included. */
+    suspend fun createScene(homeId: Long?, duid: String, name: String, param: JsonObject): Scene {
+        val body = buildJsonObject {
+            put("name", name)
+            if (homeId != null) put("homeId", homeId)
+            put("deviceId", duid)
+            put("type", "WORKFLOW")
+            put("enabled", true)
+            put("param", Json.encodeToString(JsonObject.serializer(), param))
+        }
+        return sceneCall("save the routine") {
+            client.post("/v2/user/scene") { setBody(TextContent(body.toString(), ContentType.Application.Json)) }
+        } ?: error("The server did not return the new routine")
+    }
+
+    /** Replaces a routine's steps. */
+    suspend fun updateSceneParam(sceneId: Long, duid: String, param: JsonObject) {
+        val body = buildJsonObject {
+            put("deviceId", duid)
+            put("param", Json.encodeToString(JsonObject.serializer(), param))
+        }
+        sceneCall("save the routine") {
+            client.put("/user/scene/$sceneId/param") { setBody(TextContent(body.toString(), ContentType.Application.Json)) }
+        }
+    }
+
+    suspend fun renameScene(sceneId: Long, name: String) {
+        sceneCall("rename the routine") {
+            client.put("/user/scene/$sceneId/name") {
+                setBody(TextContent(buildJsonObject { put("name", name) }.toString(), ContentType.Application.Json))
+            }
+        }
+    }
+
+    suspend fun deleteScene(sceneId: Long) {
+        sceneCall("delete the routine") { client.delete("/user/scene/$sceneId") }
+    }
+
+    private suspend fun sceneCall(what: String, request: suspend () -> HttpResponse): Scene? {
+        val resp = request()
+        if (!resp.status.isSuccess()) throw DeviceApiException(resp.status.value, "The server could not $what (HTTP ${resp.status.value})")
+        val response: SceneSaveResponse = resp.body()
+        if (response.code != 200) throw DeviceApiException(response.code, response.msg.ifBlank { "The server could not $what" })
+        return response.result ?: response.data
+    }
+
     suspend fun checkFirmwareUpdate(duid: String): FirmwareUpdateInfo? {
         val resp = client.get("/ota/firmware/$duid/updatev2") {
             parameter("lang", "en")
@@ -101,6 +157,14 @@ private data class SceneListResponse(
     val msg: String = "",
     val data: List<Scene>? = null,
     val result: List<Scene>? = null,
+)
+
+@Serializable
+private data class SceneSaveResponse(
+    val code: Int,
+    val msg: String = "",
+    val data: Scene? = null,
+    val result: Scene? = null,
 )
 
 @Serializable

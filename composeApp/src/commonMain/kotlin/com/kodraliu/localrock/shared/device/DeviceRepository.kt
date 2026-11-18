@@ -122,6 +122,22 @@ class DeviceRepository(
         return deviceApi.getScenes(duid)
     }
 
+    suspend fun createScene(duid: String, name: String, param: kotlinx.serialization.json.JsonObject): Scene {
+        if (isDemo()) error("Routines can't be saved in demo mode")
+        return deviceApi.createScene(_home.value?.id, duid, name, param)
+    }
+
+    suspend fun updateScene(sceneId: Long, duid: String, name: String?, param: kotlinx.serialization.json.JsonObject) {
+        if (isDemo()) error("Routines can't be saved in demo mode")
+        deviceApi.updateSceneParam(sceneId, duid, param)
+        if (name != null) deviceApi.renameScene(sceneId, name)
+    }
+
+    suspend fun deleteScene(sceneId: Long) {
+        if (isDemo()) error("Routines can't be deleted in demo mode")
+        deviceApi.deleteScene(sceneId)
+    }
+
     suspend fun runScene(sceneId: Long): SceneRunResult {
         if (isDemo()) error("Routines can't be run in demo mode")
         return deviceApi.executeScene(sceneId)

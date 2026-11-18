@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import androidx.compose.material.icons.filled.Add
 import com.kodraliu.localrock.shared.vacuum.taskRunning
 import com.kodraliu.localrock.shared.vacuum.CleanRecord
 import androidx.compose.foundation.layout.BoxScope
@@ -259,6 +260,7 @@ fun VacuumDetailScreen(
     onRemote: () -> Unit,
     onPinGo: () -> Unit,
     onHistory: () -> Unit,
+    onEditRoutine: () -> Unit = {},
 ) {
     val status by viewModel.status.collectAsState()
     val busy by viewModel.busy.collectAsState()
@@ -385,6 +387,20 @@ fun VacuumDetailScreen(
 
             DetailPanel.Routines -> RoutinesSheetContent(
                 state = routines,
+                onNew = {
+                    viewModel.newRoutine()
+                    panel = null
+                    onEditRoutine()
+                },
+                onEdit = { scene ->
+                    if (viewModel.editRoutine(scene)) {
+                        panel = null
+                        onEditRoutine()
+                    } else {
+                        viewModel.routineNotEditable()
+                    }
+                },
+                onDelete = { scene -> viewModel.deleteRoutine(scene) },
                 busy = busy,
                 onRun = { scene ->
                     panel = null
@@ -1750,7 +1766,20 @@ private fun RoutinesSheetContent(
     busy: Boolean,
     onRun: (Scene) -> Unit,
     onRetry: () -> Unit,
+    onNew: () -> Unit,
+    onEdit: (Scene) -> Unit,
+    onDelete: (Scene) -> Unit,
 ) {
+    var confirmDelete by remember { mutableStateOf<Scene?>(null) }
+    confirmDelete?.let { scene ->
+        AlertDialog(
+            onDismissRequest = { confirmDelete = null },
+            title = { Text("Delete ${scene.name}?") },
+            text = { Text("The routine is removed from your server.") },
+            confirmButton = { TextButton(onClick = { onDelete(scene); confirmDelete = null }) { Text("Delete") } },
+            dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text("Cancel") } },
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1762,7 +1791,7 @@ private fun RoutinesSheetContent(
     ) {
         Text("Routines", style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Routines saved in the Roborock app, kept by your server. Running one that is already going stops it.",
+            "Steps the robot runs one after another, kept by your server. Running one that is already going stops it.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1776,9 +1805,14 @@ private fun RoutinesSheetContent(
             }
             is RoutinesState.Loaded -> if (state.routines.isEmpty()) {
                 Text(
-                    "No routines for this robot. Routines are made in the Roborock app; once the server has them they show up here.",
+                    "No routines for this robot yet.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
+                FilledTonalButton(onClick = onNew, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("New routine")
+                }
             } else {
                 state.routines.forEach { scene ->
                     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
@@ -1793,6 +1827,8 @@ private fun RoutinesSheetContent(
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                             )
+                            IconButton(onClick = { onEdit(scene) }) { Icon(Icons.Default.Edit, "Edit ${scene.name}") }
+                            IconButton(onClick = { confirmDelete = scene }) { Icon(Icons.Default.Delete, "Delete ${scene.name}") }
                             FilledTonalButton(onClick = { onRun(scene) }, enabled = !busy) {
                                 Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(6.dp))
@@ -1800,6 +1836,11 @@ private fun RoutinesSheetContent(
                             }
                         }
                     }
+                }
+                OutlinedButton(onClick = onNew, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("New routine")
                 }
             }
         }

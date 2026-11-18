@@ -8,6 +8,10 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
+import io.ktor.client.request.delete
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.content.TextContent
 import io.ktor.http.HttpHeaders
 import io.ktor.http.parameters
 import kotlinx.coroutines.test.runTest
@@ -75,7 +79,24 @@ class HawkAuthPluginTest {
     }
 
     @Test
+    fun a_json_body_is_signed_as_its_bytes() = runTest {
+        // Saving a routine: the server hashes a JSON body as the MD5 of the raw bytes.
+        var auth: String? = null
+        client { auth = it }.put("/user/scene/42/name") {
+            setBody(TextContent("{\"name\":\"Evening\"}", ContentType.Application.Json))
+        }
+        assertEquals("zPGyCYXgBH/iac50n+avHIhxU2I79L4mcrfrPWiT748=", macOf(auth))
+    }
+
+    @Test
+    fun a_bodyless_delete_is_signed_with_an_empty_body() = runTest {
+        var auth: String? = null
+        client { auth = it }.delete("/user/scene/42")
+        assertEquals("CKDKHU++flyarG9e/8XUe7tBV/pivq4xx+wqWt4CazQ=", macOf(auth))
+    }
+
+    @Test
     fun other_bodies_fail_instead_of_being_signed_wrongly() = runTest {
-        assertFails { client { }.put("/user/homes/1234/rooms") }
+        assertFails { client { }.put("/user/homes/1234/rooms") { setBody(TextContent("x", ContentType.Text.Plain)) } }
     }
 }

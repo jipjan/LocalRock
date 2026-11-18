@@ -6,6 +6,12 @@ import com.kodraliu.localrock.shared.AppContainer
 import com.kodraliu.localrock.shared.messages.MessageSeverity
 import com.kodraliu.localrock.shared.model.Scene
 import com.kodraliu.localrock.shared.model.SceneRunResult
+import com.kodraliu.localrock.shared.vacuum.RoutineDraft
+import com.kodraliu.localrock.shared.vacuum.RoutineStep
+import com.kodraliu.localrock.shared.vacuum.RoutineStepKind
+import com.kodraliu.localrock.shared.vacuum.decodeRoutine
+import com.kodraliu.localrock.shared.vacuum.encodeRoutineParam
+import com.kodraliu.localrock.shared.vacuum.isComplete
 import com.kodraliu.localrock.shared.model.namesAVersion
 import com.kodraliu.localrock.shared.vacuum.carpetModeOptions
 import com.kodraliu.localrock.shared.vacuum.newFeatureBit
@@ -256,6 +262,90 @@ class VacuumViewModel(
         container.messages.success(routineRunMessage(scene.name, result))
     }
 
+    /** The routine open in the editor: a saved one ([RoutineEdit.sceneId]) or a new one. */
+    private val _routineEdit = MutableStateFlow<RoutineEdit?>(null)
+    val routineEdit: StateFlow<RoutineEdit?> = _routineEdit.asStateFlow()
+
+    /** Which step's zones the zone screen is picking, while it is open for a routine. */
+    var routineZoneStep: Int? = null
+
+    private val _routineSaving = MutableStateFlow(false)
+    val routineSaving: StateFlow<Boolean> = _routineSaving.asStateFlow()
+
+    fun newRoutine() {
+        val count = (routines.value as? RoutinesState.Loaded)?.routines?.size ?: 0
+        _routineEdit.value = RoutineEdit(
+            sceneId = null,
+            savedName = null,
+            draft = RoutineDraft("Routine ${count + 1}", listOf(RoutineStep(RoutineStepKind.FULL, mapFlag = currentMapFlag()))),
+        )
+    }
+
+    /** False when the routine holds something LocalRock cannot edit; it can still be run. */
+    fun editRoutine(scene: Scene): Boolean {
+        val draft = decodeRoutine(scene.name, scene.param) ?: return false
+        _routineEdit.value = RoutineEdit(scene.id, scene.name, draft)
+        return true
+    }
+
+    fun routineNotEditable() {
+        container.messages.error("This routine has steps LocalRock can't edit; it can still be run")
+    }
+
+    fun updateRoutine(change: (RoutineDraft) -> RoutineDraft) {
+        _routineEdit.value = _routineEdit.value?.let { it.copy(draft = change(it.draft)) }
+    }
+
+    fun updateRoutineStep(index: Int, change: (RoutineStep) -> RoutineStep) = updateRoutine { d ->
+        d.copy(steps = d.steps.mapIndexed { i, step -> if (i == index) change(step) else step })
+    }
+
+    fun currentMapFlag(): Int = repository.currentFloorFlag.value
+
+    fun saveRoutine(onSaved: () -> Unit) {
+        val edit = _routineEdit.value ?: return
+        val name = edit.draft.name.trim()
+        if (name.isEmpty()) { container.messages.error("Give the routine a name"); return }
+        if (edit.draft.steps.isEmpty()) { container.messages.error("Add at least one step"); return }
+        if (edit.draft.steps.any { !it.isComplete() }) { container.messages.error("Every step needs its rooms or zones"); return }
+        viewModelScope.launch {
+            _routineSaving.value = true
+            try {
+                val param = encodeRoutineParam(
+                    edit.draft.copy(name = name),
+                    device.duid,
+                    kotlin.time.Clock.System.now().toEpochMilliseconds(),
+                    roomName = { id -> repository.rooms.value.find { it.id == id }?.name?.takeIf { n -> n.isNotBlank() } },
+                )
+                if (edit.sceneId == null) {
+                    container.deviceRepository.createScene(device.duid, name, param)
+                } else {
+                    container.deviceRepository.updateScene(edit.sceneId, device.duid, name.takeIf { it != edit.savedName }, param)
+                }
+                container.messages.success("Routine saved")
+                _routineEdit.value = null
+                loadRoutines()
+                onSaved()
+            } catch (e: Throwable) {
+                container.messages.error(describe(e))
+            } finally {
+                _routineSaving.value = false
+            }
+        }
+    }
+
+    fun deleteRoutine(scene: Scene) {
+        viewModelScope.launch {
+            try {
+                container.deviceRepository.deleteScene(scene.id)
+                container.messages.success("Routine deleted")
+            } catch (e: Throwable) {
+                container.messages.error(describe(e))
+            }
+            loadRoutines()
+        }
+    }
+
     /** The room order a full clean follows on the loaded map; empty when none has been set. */
     fun defaultCleanOrder(): List<Int> =
         container.appSettings.cleanOrder(device.duid, repository.currentFloorFlag.value)
@@ -333,6 +423,8 @@ sealed interface FirmwareUpdateState {
     ) : FirmwareUpdateState
     data class Unavailable(val reason: String) : FirmwareUpdateState
 }
+
+data class RoutineEdit(val sceneId: Long?, val savedName: String?, val draft: RoutineDraft)
 
 sealed interface RoutinesState {
     data object Loading : RoutinesState

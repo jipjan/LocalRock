@@ -35,6 +35,7 @@ import com.kodraliu.localrock.ui.vacuum.VacuumSettingsScreen
 import com.kodraliu.localrock.ui.vacuum.VacuumViewModel
 import com.kodraliu.localrock.ui.vacuum.MapEditScreen
 import com.kodraliu.localrock.ui.vacuum.ZoneCleanScreen
+import com.kodraliu.localrock.ui.vacuum.RoutineEditorScreen
 import com.kodraliu.localrock.ui.whatsnew.WhatsNewSheet
 import com.kodraliu.localrock.ui.whatsnew.shouldShowWhatsNew
 import com.kodraliu.localrock.ui.whatsnew.whatsNewFor
@@ -148,6 +149,38 @@ fun AppNavHost() {
                     onRemote = { navController.navigate(VacuumRemote) },
                     onPinGo = { navController.navigate(VacuumPinGo) },
                     onHistory = { navController.navigate(VacuumHistory) },
+                    onEditRoutine = { navController.navigate(VacuumRoutineEdit) },
+                )
+            }
+
+            composable<VacuumRoutineEdit> { entry ->
+                val graphEntry = remember(entry) { navController.getBackStackEntry<VacuumGraph>() }
+                val duid = graphEntry.toRoute<VacuumGraph>().duid
+                val viewModel: VacuumViewModel = viewModel(graphEntry) { VacuumViewModel(duid, container) }
+                RoutineEditorScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    onPickZones = { index ->
+                        viewModel.routineZoneStep = index
+                        navController.navigate(VacuumRoutineZones)
+                    },
+                )
+            }
+
+            composable<VacuumRoutineZones> { entry ->
+                val graphEntry = remember(entry) { navController.getBackStackEntry<VacuumGraph>() }
+                val duid = graphEntry.toRoute<VacuumGraph>().duid
+                val viewModel: VacuumViewModel = viewModel(graphEntry) { VacuumViewModel(duid, container) }
+                val index = viewModel.routineZoneStep
+                ZoneCleanScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    pickFor = index?.let { viewModel.routineEdit.value?.draft?.steps?.getOrNull(it)?.zones } ?: emptyList(),
+                    onPicked = { zones ->
+                        if (index != null) {
+                            viewModel.updateRoutineStep(index) { it.copy(zones = zones, mapFlag = viewModel.currentMapFlag()) }
+                        }
+                    },
                 )
             }
 

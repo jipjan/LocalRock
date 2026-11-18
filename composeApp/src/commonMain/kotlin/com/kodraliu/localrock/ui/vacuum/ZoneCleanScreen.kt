@@ -62,10 +62,13 @@ fun ZoneCleanScreen(
      * which the clean carries on.
      */
     addArea: Boolean = false,
+    /** Pick zones for a routine step instead of cleaning them: they go back to the routine editor. */
+    pickFor: List<ZoneRect>? = null,
+    onPicked: ((List<ZoneRect>) -> Unit)? = null,
 ) {
     val parsedMap by viewModel.repository.parsedMap.collectAsState()
     val busy by viewModel.busy.collectAsState()
-    var zones by remember { mutableStateOf<List<ZoneRect>>(emptyList()) }
+    var zones by remember { mutableStateOf(pickFor ?: emptyList()) }
     var dragStart by remember { mutableStateOf<Offset?>(null) }
     var dragCurrent by remember { mutableStateOf<Offset?>(null) }
     var sent by remember { mutableStateOf(false) }
@@ -77,7 +80,7 @@ fun ZoneCleanScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (addArea) "Add area" else "Zone Clean") },
+                title = { Text(if (onPicked != null) "Routine zones" else if (addArea) "Add area" else "Zone Clean") },
                 navigationIcon = {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
                 },
@@ -100,7 +103,10 @@ fun ZoneCleanScreen(
                     if (zones.isNotEmpty() && !sent) {
                         TextButton(enabled = !busy, onClick = {
                             val selectedZones = zones
-                            if (addArea) {
+                            if (onPicked != null) {
+                                onPicked(selectedZones)
+                                onBack()
+                            } else if (addArea) {
                                 val z = selectedZones.last()
                                 viewModel.run("Area added to the clean") {
                                     it.addCleanArea(listOf(z.x1, z.y1, z.x2, z.y1, z.x2, z.y2, z.x1, z.y2))
@@ -113,7 +119,7 @@ fun ZoneCleanScreen(
                                     sent = true
                                 }
                             }
-                        }) { Text(if (addArea) "Clean" else "Start") }
+                        }) { Text(if (onPicked != null) "Use" else if (addArea) "Clean" else "Start") }
                     }
                 },
             )

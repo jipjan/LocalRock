@@ -74,7 +74,7 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Pin n Go, Afstandsbediening | Built. |
 | Gebruiksaanwijzing, Productinformatie, Apparaat delen | Not needed locally (manual link, serial number, sharing through Roborock's account). |
 | Firmware bijwerken | LocalRock checks; installing needs Roborock's update server. |
-| Main screen: Volledig, Kamer, Zones, Routine, Stofzuigen dan dweilen | Built (routines as scenes). |
+| Main screen: Volledig, Kamer, Zones, Routine, Stofzuigen dan dweilen | Built. Routines can be made, edited, renamed, deleted and run in LocalRock: steps of a full clean, rooms or drawn zones, each with suction, water, mop route and passes (see below). |
 
 ## Things the official app sends that LocalRock deliberately does not
 `set_user_privacy`, `enable_log_upload [9,3]`, `set_fds_endpoint` (a Roborock log-upload host). The
@@ -132,3 +132,23 @@ Intensive corner mopping (`set_corner_clean_mode`) and the distance-based custom
 - Past clean: History → tap a clean: its map with the path (`get_clean_record_map {"start_time"}`,
   answered through the map channel) and a timeline of state changes with battery (`get_clean_detail`
   event 11). Other event types (rooms, washes, obstacles) are not decoded yet.
+
+## Routines (2026-11-18)
+
+LocalRock makes routines itself, in the official app's format (type WORKFLOW, `action.items` of
+`CMD` steps, each step's `param` a JSON string with `do_scenes_app_start`, `do_scenes_segments` or
+`do_scenes_zones`, `finishDpIds` [130]). local_roborock_server stores them
+(`POST /v2/user/scene`, `PUT /user/scene/{id}/param` and `/name`, `DELETE /user/scene/{id}`) and runs
+them step by step.
+- Zones carry their corners (`range`) in the routine, so the server needs nothing from the robot to
+  run them.
+- The JSON LocalRock writes was run through the server's `parse_scene_steps` and `commands_for_step`:
+  `set_custom_mode`, `set_water_box_custom_mode`, `set_mop_mode`, `set_mop_template_id`, then
+  `app_segment_clean`, `app_zoned_clean` or `app_start`.
+- Saving, editing, renaming and deleting were tested against the server.
+- Running a LocalRock-made routine on the robot was not tested yet (it is noisy).
+- The official a296 app's own routine JSON has not been captured; LocalRock follows the official
+  app's format as captured from an iOS app (fixture in the server's tests).
+- A routine's room and zone steps belong to the map they were made on; the server does not switch
+  maps before running them.
+
