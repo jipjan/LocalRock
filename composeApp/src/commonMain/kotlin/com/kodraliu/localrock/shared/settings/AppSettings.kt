@@ -211,4 +211,13 @@ class AppSettings(private val settings: Settings) {
             settings.putString(KEY_LOGIN_CODE, code)
         }
     }
+
+    /** The last robot alert code announced for [duid] of [kind] ("robot", "dock"); null when cleared. */
+    fun announcedAlert(duid: String, kind: String): Int? = settings.getIntOrNull("alert_${kind}_$duid")
+
+    fun rememberAlert(duid: String, kind: String, code: Int?) {
+        val key = "alert_${kind}_$duid"
+        if (code == null) settings.remove(key) else settings.putInt(key, code)
+    }
+
 }

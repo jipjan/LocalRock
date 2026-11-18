@@ -23,7 +23,22 @@ sealed interface RobotEvent {
  * rather than "fine", so whatever is already wrong when watching starts is the baseline and is
  * not announced.
  */
-class RobotEventDetector {
+/**
+ * The last alert code announced per kind ("robot", "dock") for one robot, so a problem is announced
+ * once even across restarts of the app, and again only after it cleared.
+ */
+interface AlertMemory {
+    fun announced(kind: String): Int?
+    fun remember(kind: String, code: Int?)
+}
+
+class InMemoryAlertMemory : AlertMemory {
+    private val codes = mutableMapOf<String, Int?>()
+    override fun announced(kind: String): Int? = codes[kind]
+    override fun remember(kind: String, code: Int?) { codes[kind] = code }
+}
+
+class RobotEventDetector(private val memory: AlertMemory = InMemoryAlertMemory()) {
     private var last = VacuumStatus()
 
     /**
@@ -38,14 +53,12 @@ class RobotEventDetector {
         last = next
         val events = mutableListOf<RobotEvent>()
 
-        val error = next.errorCode
-        if (error != null && error != 0 && prev.errorCode != null && prev.errorCode != error) {
-            events += RobotEvent.Error(error)
-        }
-
-        val dock = next.dockErrorStatus
-        if (dock != null && dock != 0 && prev.dockErrorStatus != null && prev.dockErrorStatus != dock) {
-            events += RobotEvent.DockAlert(dock)
+        // A problem is announced once: also one that was already there when watching started (a dock
+        // with an empty water tank said nothing otherwise), and again only after the robot cleared it.
+        // Only with a known state, so a lone push before the first status is not taken for news.
+        if (next.state != null) {
+            alert("robot", next.errorCode) { events += RobotEvent.Error(it) }
+            alert("dock", next.dockErrorStatus) { events += RobotEvent.DockAlert(it) }
         }
 
         if (next.state in CLEANING_STATES) {
@@ -58,6 +71,17 @@ class RobotEventDetector {
             }
         }
         return events
+    }
+
+    private inline fun alert(kind: String, code: Int?, announce: (Int) -> Unit) {
+        if (code == null) return
+        if (code == 0) {
+            if (memory.announced(kind) != null) memory.remember(kind, null)
+            return
+        }
+        if (memory.announced(kind) == code) return
+        memory.remember(kind, code)
+        announce(code)
     }
 
     private companion object {

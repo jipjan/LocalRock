@@ -17,8 +17,23 @@ class RobotEventsTest {
     }
 
     @Test
-    fun what_is_already_wrong_when_watching_starts_is_not_announced() {
-        assertEquals(emptyList(), events(docked.copy(errorCode = 8, dockErrorStatus = DockErrorCodes.WATER_EMPTY)))
+    fun what_is_already_wrong_when_watching_starts_is_announced_once() {
+        // The a296 reported an empty clean water tank (dock error 38) for hours without a word (2026-11-18).
+        val wrong = docked.copy(errorCode = 8, dockErrorStatus = DockErrorCodes.WATER_EMPTY)
+        assertEquals(listOf(RobotEvent.Error(8), RobotEvent.DockAlert(DockErrorCodes.WATER_EMPTY)), events(wrong, wrong))
+    }
+
+    @Test
+    fun an_alert_already_announced_is_not_repeated_after_a_restart_until_it_clears() {
+        val memory = InMemoryAlertMemory()
+        val empty = docked.copy(dockErrorStatus = DockErrorCodes.WATER_EMPTY)
+        assertEquals(listOf<RobotEvent>(RobotEvent.DockAlert(DockErrorCodes.WATER_EMPTY)), RobotEventDetector(memory).update(empty))
+        // The app starts again: same memory, same problem, nothing new.
+        assertEquals(emptyList(), RobotEventDetector(memory).update(empty))
+        // Cleared, then back: announced again.
+        val again = RobotEventDetector(memory)
+        assertEquals(emptyList(), again.update(docked.copy(dockErrorStatus = 0)))
+        assertEquals(listOf<RobotEvent>(RobotEvent.DockAlert(DockErrorCodes.WATER_EMPTY)), again.update(empty))
     }
 
     @Test

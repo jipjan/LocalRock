@@ -1370,7 +1370,10 @@ private fun StatusBar(
     }
 
     val cleaningNow = status.state in ACTIVE_CLEANING_STATES || status.taskRunning
-    val detail = buildList {
+    val detail = if (status.state == VacuumStateCodes.SPOT_CLEANING) {
+        // The robot keeps reporting the last clean's area and time during a spot clean.
+        "Spot clean · 1.5 m × 1.5 m"
+    } else buildList {
         // While cleaning, lead with where and how, as the official app's card does.
         if (cleaningNow) {
             currentRoom?.let { add(it) }
@@ -1461,6 +1464,23 @@ private fun StatusBar(
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
+            }
+        }
+        // A dock problem in the card itself, as the official app's banner ("Check the clean water tank").
+        val dockError = status.dockErrorStatus?.takeIf { it != 0 }
+        if (dockError != null) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
+                Text(
+                    DockErrorCodes.describe(dockError),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
         }
         if (cleaningNow && expanded) {

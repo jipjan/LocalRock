@@ -1,5 +1,6 @@
 package com.kodraliu.localrock.ui.devices
 
+import com.kodraliu.localrock.shared.vacuum.DockErrorCodes
 import com.kodraliu.localrock.shared.vacuum.taskRunning
 import com.kodraliu.localrock.shared.vacuum.taskPausedAtDock
 import kotlinx.coroutines.delay
@@ -420,6 +421,13 @@ private fun LiveRobotPanel(status: VacuumStatus, onAction: (AppContainer.QuickAc
             )
             minutes?.let { Text("$it min", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             status.battery?.let { Text("$it%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        }
+        status.dockErrorStatus?.takeIf { it != 0 }?.let { code ->
+            Text(
+                DockErrorCodes.describe(code),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+            )
         }
         val percent = status.cleanPercent?.takeIf { (cleaning || paused) && it in 0..100 }
         if (percent != null) {

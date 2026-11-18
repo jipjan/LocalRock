@@ -133,6 +133,12 @@ class AppContainer(
         wantsRoom = ::progressWanted,
         rriotKey = { authRepository.userData.value?.rriot?.k ?: error("not logged in") },
         homeRoomName = { roomId -> deviceRepository.home.value?.rooms?.find { it.id == roomId }?.name },
+        alertMemoryFor = { duid ->
+            object : com.kodraliu.localrock.shared.notify.AlertMemory {
+                override fun announced(kind: String) = appSettings.announcedAlert(duid, kind)
+                override fun remember(kind: String, code: Int?) = appSettings.rememberAlert(duid, kind, code)
+            }
+        },
     )
 
     /** Whether the platform should keep the process alive to go on watching once the app is closed. */

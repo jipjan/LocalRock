@@ -39,6 +39,8 @@ class RobotMonitor(
     private val wantsRoom: () -> Boolean,
     private val rriotKey: () -> String,
     private val homeRoomName: (roomId: Long) -> String?,
+    /** Where announced alerts are kept per robot, so they are not repeated after a restart. */
+    private val alertMemoryFor: (duid: String) -> AlertMemory = { InMemoryAlertMemory() },
     private val idlePollMs: Long = 30_000L,
     private val activePollMs: Long = 10_000L,
 ) {
@@ -61,7 +63,7 @@ class RobotMonitor(
         connect()
         val session = sessionFor(device)
         val locator = RoomLocator(session, rriotKey, homeRoomName)
-        val detector = RobotEventDetector()
+        val detector = RobotEventDetector(alertMemoryFor(device.duid))
         val lock = Mutex()
         var status = VacuumStatus()
         var room: String? = null
