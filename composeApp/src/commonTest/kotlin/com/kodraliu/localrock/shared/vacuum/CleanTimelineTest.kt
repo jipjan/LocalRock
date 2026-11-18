@@ -100,4 +100,21 @@ class CleanTimelineResumeTest {
         val first = describeCleanEvents(events) { null }.first()
         assertEquals("15 · Medium", first.settings?.waterLabel)
     }
+
+    @Test
+    fun dockProblemsAndMidCleanReturnsAreShown() {
+        // From an a296 clean on 2026-11-18: the water tank was empty, the mop wash and the bin emptying
+        // were asked for during the clean.
+        val lines = describeCleanEvents(listOf(
+            ev(1795022488, 31, """{"311":38,"312":0}"""),
+            ev(1795022594, 51, """{"511":11,"512":1}"""),
+            ev(1795022621, 13, """{"131":15,"10":0,"12":0}"""),
+            ev(1795022707, 51, """{"511":11,"512":4}"""),
+            ev(1795022729, 54, """{"541":1,"542":-1}"""),
+        )) { null }
+        assertEquals(
+            listOf("Dock: Clean water tank empty", "Back to the dock to wash the mop", "Back to the dock to empty the bin"),
+            lines.map { it.title },
+        )
+    }
 }

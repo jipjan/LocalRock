@@ -10,6 +10,7 @@ NewFeatureStrBit table). See `robot-commands-a296.md` for the commands of everyt
 ### Built
 | Bit | Plugin name | Where in LocalRock |
 |---|---|---|
+| 85 | MidwayBackToDock | Return to dock → empty the bin or wash the mop, then carry on (`app_start_collect_dust` / `app_start_wash` while cleaning, as the official app) |
 | 34, 36, 40, 43, 49, 54, 56, 63, 66, 70, 75, 79, 80, 104, 105, 112, 116, 131, 132, 144 | (various) | Floor, carpet, obstacle and dock pages |
 | 37 | VoiceControl | Robot settings → Voice assistant (`get/set_voice_service_switch {"data"}`) |
 | 50 | PetSnapshot | Obstacles → Pet Snaps (`set_camera_status`, bit 4096) |
@@ -38,7 +39,6 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 ### Still missing (listed on the Beta page)
 | Bit | Plugin name | What it is | Commands (plugin) | Effort |
 |---|---|---|---|---|
-| 85 | MidwayBackToDock | Returns to the dock mid-clean to wash/empty; shown in the clean's status | not found in the capture | needs a capture during a clean |
 | 48, 59, 68, 74, 95, 103, 123, 126, 127 | (not in the plugin's table) | unknown | – | – |
 
 ## Official app compared page by page
@@ -53,7 +53,7 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Instellingen dockingstation (dock) | Built, all options. |
 | Reactief obstakelvermijding (obstacles) | Built except **Obstacle photos** (camera bit not identified: turning it on needs a privacy consent in the official app, so it was not captured) and the photos themselves on the map. |
 | Huisdieren (pets): Ik heb huisdieren, Pet Snaps | Built. |
-| Huisdieren: Zoek het huisdier (find the pet) | Missing: `app_start_pet_patrol`, a camera patrol. |
+| Huisdieren: Zoek het huisdier (find the pet) | Built: live view → Find the pet (`app_start_pet_patrol {}`). |
 | Huisdieren: Huisdierenalbum (pet album) | Missing: `get_pet_album`, `get_pet_album_photos`, photos are encrypted like obstacle photos. |
 | Huisdieren: Reinigingsinstellingen (pet cleaning settings) | Built elsewhere: it holds auto-empty frequency (dock) and re-clean areas blocked by people/pets (`dynamic_obstacle_replenish_status`). |
 | Huisdieren: Huisdiermeubels (pet furniture) | Built: pet supplies deep clean, and "Add" opens the same furniture editor as the map editor's Furniture tool. |
@@ -68,7 +68,7 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 | Stemassistent: Taal (voice pack) | Built, served by the local server. |
 | Stemassistent: Volume | Built (robot volume). `set_voice_chat_volume {"volume"}` is not this: in the plugin it is the talk-back volume of the remote-viewing screen, so it comes with remote viewing. |
 | Stemassistent: Chatgeschiedenis (chat history) | Missing: `get_voice_history`, `get_voice_history_summary`, `delete_all_voice_history`. |
-| Kijken op afstand (remote viewing) | Built: the camera icon at the top right, as in the official app, with drive buttons, Pin & Go and a mini map (needs the server's TURN relay, pairing with a short server name, and the pattern set in the official app). Missing: talk-back, Navigate, Find the pet. |
+| Kijken op afstand (remote viewing) | Built: the camera icon at the top right, as in the official app, with drive buttons, Pin & Go and a mini map (needs the server's TURN relay, pairing with a short server name, and the pattern set in the official app). Talk-back, Cruise (`app_start_patrol`) and Find the pet are built. Missing: resuming a paused cruise (the official command is not captured). |
 | Verbinding maken met Matter | Not possible locally (needs Roborock's cloud and a Matter hub). |
 | Meer opties: DND, oplaadmodus, knopverlichting, kinderslot, offline kaart | Built (charging mode = off-peak charging on or off). |
 | Pin n Go, Afstandsbediening | Built. |
@@ -113,10 +113,10 @@ Intensive corner mopping (`set_corner_clean_mode`) and the distance-based custom
 - LocalRock live view works (2026-11-15, tested on the emulator): More actions → Live view, draw the
   pattern. The a296 answers `send_sdp_to_robot` with "ok" but never produces an answer to an offer whose
   first m-line is video, or one that lists every codec. LocalRock now offers audio first and only H264
-  and Opus (`keepRobotCodecs`), as the official app does. The iOS peer has the audio-first order but
-  not the codec trimming yet.
-- Still to do: talk-back (the official app offers two-way audio) and activation from LocalRock (it
-  sends the a296 `set_homesec_password` form, but the power-button step is not built).
+  and Opus (`keepRobotCodecs`), as the official app does, on Android and iOS. Talk-back is built on
+  Android only.
+- Still to do: activation from LocalRock (it sends the a296 `set_homesec_password` form, but the
+  power-button step is not built), and talk-back on iOS.
 
 ## Other things captured, not built yet
 
@@ -131,7 +131,9 @@ Intensive corner mopping (`set_corner_clean_mode`) and the distance-based custom
 
 - Past clean: History → tap a clean: its map with the path (`get_clean_record_map {"start_time"}`,
   answered through the map channel) and a timeline of state changes with battery (`get_clean_detail`
-  event 11). Other event types (rooms, washes, obstacles) are not decoded yet.
+  event 11), rooms, mop washes, resumes, settings changed by hand, auto-empty, dock problems and
+  mid-clean returns. Event types 13, 22, 24, 47 and 54 are seen but not shown, as their official
+  wording is not matched yet.
 
 ## Routines (2026-11-18)
 

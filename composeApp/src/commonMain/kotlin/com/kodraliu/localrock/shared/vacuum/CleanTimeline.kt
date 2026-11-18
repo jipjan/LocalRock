@@ -102,6 +102,12 @@ data class CleanRunSettings(val suction: Int?, val water: Int?, val route: Int?,
  * 25 start (251 source, 252 clean type), 42 cleaning a room (2 room id, 421 kind, 3 suction, 4 water,
  * 6 passes), 52 mop wash (521 wash mode, 522 water temperature), 53 resumed after a wash, 21 settings
  * changed by hand (211 what), 12 clean finished, 23 auto-empty (231 frequency).
+ *
+ * Matched on an a296 (2026-11-18) against the commands sent during the clean: 31 a dock problem at the
+ * start (311 the dock error, 38 the clean water tank), 51 back to the dock mid-clean (512 why: 1 to
+ * wash the mop, 4 to empty the bin; the status's back_type).
+ * Seen but not yet matched to the official app's words: 13 (131, 10, 12) after a wash return that did not
+ * wash, 22 (3, 221), 24 (241–246) at the start, 47 (471 the room order), 54 (541, 542) after emptying.
  */
 private fun JsonObject.int(key: String) = (this[key] as? JsonPrimitive)?.intOrNull
 
@@ -147,6 +153,12 @@ fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): L
                 CleanTimelineEntry(e.epoch, "Mop wash", listOfNotNull(mode, if (mode != null) temp else null).joinToString(" · ").ifEmpty { null })
             }
             53 -> CleanTimelineEntry(e.epoch, "Resumed")
+            31 -> f.int("311")?.takeIf { it != 0 }?.let { CleanTimelineEntry(e.epoch, "Dock: ${DockErrorCodes.describe(it)}") }
+            51 -> when (f.int("512")) {
+                1 -> CleanTimelineEntry(e.epoch, "Back to the dock to wash the mop")
+                4 -> CleanTimelineEntry(e.epoch, "Back to the dock to empty the bin")
+                else -> null
+            }
             21 -> CleanTimelineEntry(e.epoch, "Settings changed by hand", if (f.int("211") == 1) "Water flow changed" else null)
             12 -> CleanTimelineEntry(e.epoch, "Clean finished", milestone = true)
             23 -> CleanTimelineEntry(e.epoch, "Auto-empty", when (f.int("231")) { 1 -> "Balanced"; 2 -> "High"; else -> null })
