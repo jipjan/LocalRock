@@ -132,8 +132,11 @@ Intensive corner mopping (`set_corner_clean_mode`) and the distance-based custom
 - Past clean: History → tap a clean: its map with the path (`get_clean_record_map {"start_time"}`,
   answered through the map channel) and a timeline of state changes with battery (`get_clean_detail`
   event 11), rooms, mop washes, resumes, settings changed by hand, auto-empty, dock problems and
-  mid-clean returns. Event types 13, 22, 24, 47 and 54 are seen but not shown, as their official
-  wording is not matched yet.
+  failed mop washes, switching to vacuum only and auto-empty during a clean, matched on 2026-11-18
+  against the official app's timeline of the same clean. Like the official app, it leaves out the trips
+  back to the dock (51) and events 24 and 47. The official app's start entry lists four lines ("Uitgebreide
+  waarneming van de thuisomgeving", "Dynamische routeplanning op basis van AI", "Grote dekking",
+  "Stofzuigen en dweilen"), probably from event 24; not matched yet.
 
 ## Routines (2026-11-18)
 
@@ -153,4 +156,6 @@ them step by step.
   app's format as captured from an iOS app (fixture in the server's tests).
 - A routine's room and zone steps belong to the map they were made on; the server does not switch
   maps before running them.
+- Missing: the official app's recommended routines ("Aanbevolen routines", e.g. "Stofzuigen, dan
+  dweilen") that add a ready-made routine with one tap.
 

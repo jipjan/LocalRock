@@ -103,12 +103,16 @@ data class CleanRunSettings(val suction: Int?, val water: Int?, val route: Int?,
  * 6 passes), 52 mop wash (521 wash mode, 522 water temperature), 53 resumed after a wash, 21 settings
  * changed by hand (211 what), 12 clean finished, 23 auto-empty (231 frequency).
  *
- * Matched on an a296 (2026-11-18) against the commands sent during the clean: 31 a dock problem at the
- * start (311 the dock error, 38 the clean water tank), 51 back to the dock mid-clean (512 why: 1 to
- * wash the mop, 4 to empty the bin; the status's back_type).
- * Seen but not yet matched to the official app's words: 13 (131, 10, 12) after a wash return that did not
- * wash, 22 (3, 221), 24 (241–246) at the start, 47 (471 the room order), 54 (541, 542) after emptying.
+ * Matched on an a296 (2026-11-18) against the official app's timeline of the same clean: 31 mop wash
+ * failed (311 the dock error; shown once per error, the robot logs it again on every retry), 22 with
+ * field 3 = 5 switched to vacuum only, 54 auto-empty during the clean (541 = 1 "Light"; not shown right
+ * after a 23, which the official app shows instead), 13 with 131 = 14 resumed.
+ * Not shown, as in the official app: 51 back to the dock mid-clean (512: 1 wash, 4 empty), 13 with 131 = 15
+ * (back from a wash that failed), 22 with other values, 24 (241–246) and 47 (471 the room order).
  */
+/** An end-of-clean auto-empty (23) is followed by a 54 that the official app does not show again. */
+private const val AUTO_EMPTY_PAIR_SECONDS = 60L
+
 private fun JsonObject.int(key: String) = (this[key] as? JsonPrimitive)?.intOrNull
 
 private fun runSettings(f: JsonObject): CleanRunSettings? =
@@ -126,6 +130,8 @@ fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): L
     // A room the robot goes back to is logged twice at once: the usual room event, and one with field
     // 425 that the official app shows as "<room> · resume cleaning" (a296, 2026-11-15). Only that one is shown.
     val resumed = events.filter { it.type == 42 && it.fields.int("425") != null }.map { it.epoch to it.fields.int("2") }.toSet()
+    val washFailures = mutableSetOf<Int>()
+    val autoEmptyEnds = events.filter { it.type == 23 }.map { it.epoch }
     return events.sortedBy { it.epoch }.mapNotNull { e ->
         val f = e.fields
         when (e.type) {
@@ -153,12 +159,13 @@ fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): L
                 CleanTimelineEntry(e.epoch, "Mop wash", listOfNotNull(mode, if (mode != null) temp else null).joinToString(" · ").ifEmpty { null })
             }
             53 -> CleanTimelineEntry(e.epoch, "Resumed")
-            31 -> f.int("311")?.takeIf { it != 0 }?.let { CleanTimelineEntry(e.epoch, "Dock: ${DockErrorCodes.describe(it)}") }
-            51 -> when (f.int("512")) {
-                1 -> CleanTimelineEntry(e.epoch, "Back to the dock to wash the mop")
-                4 -> CleanTimelineEntry(e.epoch, "Back to the dock to empty the bin")
-                else -> null
+            31 -> f.int("311")?.takeIf { it != 0 && washFailures.add(it) }?.let {
+                CleanTimelineEntry(e.epoch, "Mop wash failed ($it)", DockErrorCodes.describe(it))
             }
+            22 -> if (f.int("3") == 5) CleanTimelineEntry(e.epoch, "Switched to vacuum only") else null
+            13 -> if (f.int("131") == 14) CleanTimelineEntry(e.epoch, "Resumed") else null
+            54 -> if (autoEmptyEnds.any { e.epoch - it in 0..AUTO_EMPTY_PAIR_SECONDS }) null
+            else CleanTimelineEntry(e.epoch, "Auto-empty", if (f.int("541") == 1) "Light" else null)
             21 -> CleanTimelineEntry(e.epoch, "Settings changed by hand", if (f.int("211") == 1) "Water flow changed" else null)
             12 -> CleanTimelineEntry(e.epoch, "Clean finished", milestone = true)
             23 -> CleanTimelineEntry(e.epoch, "Auto-empty", when (f.int("231")) { 1 -> "Balanced"; 2 -> "High"; else -> null })

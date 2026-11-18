@@ -102,19 +102,25 @@ class CleanTimelineResumeTest {
     }
 
     @Test
-    fun dockProblemsAndMidCleanReturnsAreShown() {
-        // From an a296 clean on 2026-11-18: the water tank was empty, the mop wash and the bin emptying
-        // were asked for during the clean.
+    fun aMidCleanWashAndEmptyReadLikeTheOfficialApp() {
+        // An a296 clean on 2026-11-18 with an empty water tank: the official app showed "Dweil wassen
+        // mislukt(38)", "Naar alleen-stofzuigen schakelen", "Automatisch legen · Licht", "Hervatten".
         val lines = describeCleanEvents(listOf(
             ev(1795022488, 31, """{"311":38,"312":0}"""),
+            ev(1795022490, 22, """{"3":5,"221":0}"""),
+            ev(1795022594, 22, """{"3":2,"221":0}"""),
             ev(1795022594, 51, """{"511":11,"512":1}"""),
             ev(1795022621, 13, """{"131":15,"10":0,"12":0}"""),
-            ev(1795022707, 51, """{"511":11,"512":4}"""),
+            ev(1795022621, 31, """{"311":38,"312":0}"""),
+            ev(1795022704, 51, """{"511":24,"512":4}"""),
             ev(1795022729, 54, """{"541":1,"542":-1}"""),
+            ev(1795022748, 13, """{"131":14,"10":0,"12":0}"""),
         )) { null }
         assertEquals(
-            listOf("Dock: Clean water tank empty", "Back to the dock to wash the mop", "Back to the dock to empty the bin"),
+            listOf("Mop wash failed (38)", "Switched to vacuum only", "Auto-empty", "Resumed"),
             lines.map { it.title },
         )
+        assertEquals("Clean water tank empty", lines[0].detail)
+        assertEquals("Light", lines[2].detail)
     }
 }
