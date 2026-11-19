@@ -1,30 +1,50 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.robot_routine_not_started_status
+import com.kodraliu.localrock.resources.robot_routine_started
+import com.kodraliu.localrock.resources.robot_routine_still_running
+import com.kodraliu.localrock.resources.robot_routine_stopping
 import com.kodraliu.localrock.shared.model.SceneRunResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
+// The texts are string resources (English: values/strings_robot.xml), which a JVM unit test can't
+// read, so these check which message is picked and what goes into it.
 class RoutineRunMessageTest {
 
     @Test
     fun a_started_routine_says_so() {
-        assertEquals("\"Kitchen first\" started", routineRunMessage("Kitchen first", SceneRunResult(status = "started")))
+        assertEquals(
+            RoutineRunText(true, Res.string.robot_routine_started, listOf("Kitchen first")),
+            routineRunText("Kitchen first", SceneRunResult(status = "started")),
+        )
     }
 
     @Test
     fun running_the_active_routine_again_stops_it() {
-        assertEquals("Stopping \"Kitchen first\"", routineRunMessage("Kitchen first", SceneRunResult(status = "cancel_requested")))
+        assertEquals(
+            RoutineRunText(true, Res.string.robot_routine_stopping, listOf("Kitchen first")),
+            routineRunText("Kitchen first", SceneRunResult(status = "cancel_requested")),
+        )
     }
 
     @Test
     fun another_running_routine_is_named_in_the_error() {
-        val e = assertFailsWith<IllegalStateException> {
-            routineRunMessage(
+        assertEquals(
+            RoutineRunText(false, Res.string.robot_routine_still_running, listOf("Whole home")),
+            routineRunText(
                 "Kitchen first",
                 SceneRunResult(accepted = false, status = "routine_in_progress", activeSceneName = "Whole home"),
-            )
-        }
-        assertEquals("\"Whole home\" is still running. Run it again to stop it first.", e.message)
+            ),
+        )
+    }
+
+    @Test
+    fun a_refusal_names_the_routine_and_the_status() {
+        assertEquals(
+            RoutineRunText(false, Res.string.robot_routine_not_started_status, listOf("Kitchen first", "offline")),
+            routineRunText("Kitchen first", SceneRunResult(accepted = false, status = "offline")),
+        )
     }
 }

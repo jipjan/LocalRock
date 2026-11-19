@@ -1,5 +1,42 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.camera_back_to_map
+import com.kodraliu.localrock.resources.camera_change_pin
+import com.kodraliu.localrock.resources.camera_clear
+import com.kodraliu.localrock.resources.camera_cruise
+import com.kodraliu.localrock.resources.camera_cruise_started
+import com.kodraliu.localrock.resources.camera_cruise_text
+import com.kodraliu.localrock.resources.camera_dock
+import com.kodraliu.localrock.resources.camera_draw_instead
+import com.kodraliu.localrock.resources.camera_draw_pattern_hint
+import com.kodraliu.localrock.resources.camera_drive_forward
+import com.kodraliu.localrock.resources.camera_end
+import com.kodraliu.localrock.resources.camera_find_pet
+import com.kodraliu.localrock.resources.camera_go_back
+import com.kodraliu.localrock.resources.camera_live
+import com.kodraliu.localrock.resources.camera_looking_for_pet
+import com.kodraliu.localrock.resources.camera_pattern_captured
+import com.kodraliu.localrock.resources.camera_pause
+import com.kodraliu.localrock.resources.camera_pin
+import com.kodraliu.localrock.resources.camera_pin_go
+import com.kodraliu.localrock.resources.camera_pin_intro_pattern
+import com.kodraliu.localrock.resources.camera_pin_intro_typed
+import com.kodraliu.localrock.resources.camera_retry
+import com.kodraliu.localrock.resources.camera_returning_to_dock
+import com.kodraliu.localrock.resources.camera_set_pin
+import com.kodraliu.localrock.resources.camera_start
+import com.kodraliu.localrock.resources.camera_start_cruise
+import com.kodraliu.localrock.resources.camera_stop_talking
+import com.kodraliu.localrock.resources.camera_talk
+import com.kodraliu.localrock.resources.camera_talk_needs_mic
+import com.kodraliu.localrock.resources.camera_talk_unavailable
+import com.kodraliu.localrock.resources.camera_turn_left
+import com.kodraliu.localrock.resources.camera_turn_right
+import com.kodraliu.localrock.resources.camera_type_instead
+import com.kodraliu.localrock.resources.camera_unsupported
+import com.kodraliu.localrock.resources.common_cancel
+import org.jetbrains.compose.resources.stringResource
 import kotlin.time.TimeSource
 import com.kodraliu.localrock.ui.rememberMicrophonePermissionRequest
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
@@ -135,7 +172,7 @@ fun CameraLiveViewScreen(
                 title = { Text(viewModel.deviceName, color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back", tint = Color.White)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.camera_go_back), tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -152,7 +189,7 @@ fun CameraLiveViewScreen(
             if (!liveViewSupported) {
                 CameraMessage(
                     icon = { Icon(Icons.Default.VideocamOff, null, Modifier.size(48.dp), tint = Color.White) },
-                    text = "Camera live view isn't available on this platform yet.",
+                    text = stringResource(Res.string.camera_unsupported),
                 )
                 return@Box
             }
@@ -184,7 +221,7 @@ fun CameraLiveViewScreen(
                 is CameraLiveSession.State.Streaming -> {
                     peer?.let { RtcVideoView(it, Modifier.fillMaxSize()) }
                     Text(
-                        "LIVE",
+                        stringResource(Res.string.camera_live),
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(top = 12.dp, end = 16.dp)
@@ -204,16 +241,18 @@ fun CameraLiveViewScreen(
                     DisposableEffect(Unit) {
                         onDispose { if (talking) talkScope.launch(NonCancellable) { runCatching { liveSession.setTalking(false) } } }
                     }
+                    val needsMic = stringResource(Res.string.camera_talk_needs_mic)
+                    val talkUnavailable = stringResource(Res.string.camera_talk_unavailable)
                     val askMic = rememberMicrophonePermissionRequest { granted ->
                         if (!granted) {
-                            talkError = "Talk-back needs the microphone."
+                            talkError = needsMic
                         } else {
                             talkScope.launch {
                                 runCatching { liveSession.setTalking(true) }
                                     .onSuccess { ok ->
                                         talking = ok
                                         talkStarted = TimeSource.Monotonic.markNow()
-                                        if (!ok) talkError = "Talk-back is not available on this device yet."
+                                        if (!ok) talkError = talkUnavailable
                                     }
                                     .onFailure { talkError = it.message }
                             }
@@ -229,11 +268,11 @@ fun CameraLiveViewScreen(
                         patrolling = patrolling,
                         patrolPaused = patrolling && state == VacuumStateCodes.PAUSED,
                         onCruise = { cruisePicking = true },
-                        onFindPet = { viewModel.run("Looking for the pet") { it.startPetSearch() } },
+                        onFindPet = { viewModel.run(Res.string.camera_looking_for_pet) { it.startPetSearch() } },
                         onPatrolPause = { viewModel.run { it.pause() } },
                         onPatrolResume = { viewModel.run { it.resumeCleaning() } },
                         onPatrolEnd = { viewModel.run { it.stopTask() } },
-                        onPatrolDock = { viewModel.run("Returning to dock") { it.dock() } },
+                        onPatrolDock = { viewModel.run(Res.string.camera_returning_to_dock) { it.dock() } },
                     )
                     TalkButton(
                         talking = talking,
@@ -263,7 +302,7 @@ fun CameraLiveViewScreen(
                             onDismiss = { cruisePicking = false },
                             onStart = { points ->
                                 cruisePicking = false
-                                viewModel.run("Cruise started") { it.startCruise(points) }
+                                viewModel.run(Res.string.camera_cruise_started) { it.startCruise(points) }
                             },
                         )
                     }
@@ -279,7 +318,7 @@ fun CameraLiveViewScreen(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(Color.Black.copy(alpha = 0.55f))
                                 .border(1.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
-                                .clickable(onClickLabel = "Back to the map", onClick = onBack)
+                                .clickable(onClickLabel = stringResource(Res.string.camera_back_to_map), onClick = onBack)
                                 .padding(6.dp),
                         )
                     }
@@ -299,12 +338,12 @@ fun CameraLiveViewScreen(
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         Spacer(Modifier.height(16.dp))
-                        Button(onClick = { liveSession.start(pin) }) { Text("Retry") }
+                        Button(onClick = { liveSession.start(pin) }) { Text(stringResource(Res.string.camera_retry)) }
                         TextButton(onClick = {
                             container.appSettings.setCameraPin(duid, null)
                             pin = ""
                             liveSession.stop()
-                        }) { Text("Change PIN", color = Color.White) }
+                        }) { Text(stringResource(Res.string.camera_change_pin), color = Color.White) }
                     }
                 }
             }
@@ -330,11 +369,9 @@ private fun PinEntry(
     ) {
         Text(
             if (typed) {
-                "The live view is protected by a camera PIN stored on the robot. " +
-                    "Enter your existing PIN, or pick a new one and register it on the robot."
+                stringResource(Res.string.camera_pin_intro_typed)
             } else {
-                "The live view is protected by a camera PIN stored on the robot. " +
-                    "Draw your existing pattern, or draw a new one and register it on the robot."
+                stringResource(Res.string.camera_pin_intro_pattern)
             },
             color = Color.White,
             textAlign = TextAlign.Center,
@@ -344,7 +381,7 @@ private fun PinEntry(
             OutlinedTextField(
                 value = pin,
                 onValueChange = onPinChange,
-                label = { Text("Camera PIN") },
+                label = { Text(stringResource(Res.string.camera_pin)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
@@ -353,15 +390,15 @@ private fun PinEntry(
         } else {
             PatternPinInput(onPattern = onPinChange)
             Text(
-                if (pin.isBlank()) "Draw a pattern of at least 4 dots" else "Pattern captured",
+                if (pin.isBlank()) stringResource(Res.string.camera_draw_pattern_hint) else stringResource(Res.string.camera_pattern_captured),
                 color = Color.White.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.bodySmall,
             )
         }
-        Button(onClick = onConnect, enabled = pin.isNotBlank()) { Text("Start live view") }
+        Button(onClick = onConnect, enabled = pin.isNotBlank()) { Text(stringResource(Res.string.camera_start)) }
         TextButton(onClick = onSetPinOnRobot, enabled = pin.isNotBlank()) {
-            Text("Set as new PIN on robot", color = Color.White)
+            Text(stringResource(Res.string.camera_set_pin), color = Color.White)
         }
         TextButton(
             onClick = {
@@ -370,7 +407,7 @@ private fun PinEntry(
             },
         ) {
             Text(
-                if (typed) "Draw a pattern instead" else "Type a PIN instead",
+                if (typed) stringResource(Res.string.camera_draw_instead) else stringResource(Res.string.camera_type_instead),
                 color = Color.White.copy(alpha = 0.7f),
             )
         }
@@ -453,28 +490,28 @@ private fun BoxScope.LiveViewControls(
             // Resuming a paused cruise is not captured yet (the official app's "Hervatten"), so a paused
             // cruise or search can only be ended or sent to the dock.
             if (!patrolPaused) {
-                FilledTonalButton(onClick = onPatrolPause, colors = glass) { Text("Pause") }
+                FilledTonalButton(onClick = onPatrolPause, colors = glass) { Text(stringResource(Res.string.camera_pause)) }
             }
-            FilledTonalButton(onClick = onPatrolEnd, colors = glass) { Text("End") }
-            FilledTonalButton(onClick = onPatrolDock, colors = glass) { Text("Dock") }
+            FilledTonalButton(onClick = onPatrolEnd, colors = glass) { Text(stringResource(Res.string.camera_end)) }
+            FilledTonalButton(onClick = onPatrolDock, colors = glass) { Text(stringResource(Res.string.camera_dock)) }
         } else {
             FilledTonalButton(onClick = onPinGo, colors = glass) {
                 Icon(Icons.Default.Place, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Pin & Go")
+                Text(stringResource(Res.string.camera_pin_go))
             }
-            FilledTonalButton(onClick = onCruise, colors = glass) { Text("Cruise") }
+            FilledTonalButton(onClick = onCruise, colors = glass) { Text(stringResource(Res.string.camera_cruise)) }
             FilledTonalButton(onClick = onFindPet, colors = glass) {
                 Icon(Icons.Default.Pets, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Find pet")
+                Text(stringResource(Res.string.camera_find_pet))
             }
         }
     }
     if (patrolling) return
     HoldButton(
         icon = Icons.Default.KeyboardArrowUp,
-        label = "Drive forward",
+        label = stringResource(Res.string.camera_drive_forward),
         modifier = Modifier.align(Alignment.BottomStart).padding(24.dp),
         onPress = { drive.hold(0.3, 0.0) },
         onRelease = drive::release,
@@ -483,8 +520,8 @@ private fun BoxScope.LiveViewControls(
         modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        HoldButton(Icons.AutoMirrored.Filled.RotateLeft, "Turn left", onPress = { drive.hold(0.0, 0.5) }, onRelease = drive::release)
-        HoldButton(Icons.AutoMirrored.Filled.RotateRight, "Turn right", onPress = { drive.hold(0.0, -0.5) }, onRelease = drive::release)
+        HoldButton(Icons.AutoMirrored.Filled.RotateLeft, stringResource(Res.string.camera_turn_left), onPress = { drive.hold(0.0, 0.5) }, onRelease = drive::release)
+        HoldButton(Icons.AutoMirrored.Filled.RotateRight, stringResource(Res.string.camera_turn_right), onPress = { drive.hold(0.0, -0.5) }, onRelease = drive::release)
     }
 }
 
@@ -528,10 +565,11 @@ private fun TalkButton(talking: Boolean, startedAt: TimeSource.Monotonic.ValueTi
             delay(1_000)
         }
     }
+    val talkLabel = if (talking) stringResource(Res.string.camera_stop_talking) else stringResource(Res.string.camera_talk)
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Box(
             Modifier.size(48.dp).background(if (talking) Color(0xFFE5484D) else Color(0xFF2BBF8A), CircleShape)
-                .semantics { contentDescription = if (talking) "Stop talking" else "Talk through the robot" }
+                .semantics { contentDescription = talkLabel }
                 .pointerInput(Unit) { detectTapGestures(onTap = { onClick() }) },
             contentAlignment = Alignment.Center,
         ) {
@@ -558,10 +596,10 @@ private fun CruisePointsDialog(map: ParsedMap, onDismiss: () -> Unit, onStart: (
     val numberMeasurer = rememberTextMeasurer()
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Cruise") },
+        title = { Text(stringResource(Res.string.camera_cruise)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Tap the map to set the points to drive past, in order.", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(Res.string.camera_cruise_text), style = MaterialTheme.typography.bodySmall)
                 Canvas(
                     Modifier.fillMaxWidth().height(300.dp)
                         .onSizeChanged { canvasSize = it.toSize() }
@@ -587,12 +625,12 @@ private fun CruisePointsDialog(map: ParsedMap, onDismiss: () -> Unit, onStart: (
                 val content = map.fittedSize(canvasSize)
                 val origin = Offset((canvasSize.width - content.width) / 2f, (canvasSize.height - content.height) / 2f)
                 onStart(points.map { map.canvasToMm(it - origin, content.width, content.height) })
-            }) { Text("Start cruise") }
+            }) { Text(stringResource(Res.string.camera_start_cruise)) }
         },
         dismissButton = {
             Row {
-                if (points.isNotEmpty()) TextButton(onClick = { points = emptyList() }) { Text("Clear") }
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                if (points.isNotEmpty()) TextButton(onClick = { points = emptyList() }) { Text(stringResource(Res.string.camera_clear)) }
+                TextButton(onClick = onDismiss) { Text(stringResource(Res.string.common_cancel)) }
             }
         },
     )

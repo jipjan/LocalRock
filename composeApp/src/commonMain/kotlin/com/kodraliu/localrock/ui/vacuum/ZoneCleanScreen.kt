@@ -1,5 +1,26 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.zone_area_added
+import com.kodraliu.localrock.resources.zone_back
+import com.kodraliu.localrock.resources.zone_clean
+import com.kodraliu.localrock.resources.zone_clear
+import com.kodraliu.localrock.resources.zone_count
+import com.kodraliu.localrock.resources.zone_draw_mode
+import com.kodraliu.localrock.resources.zone_hint_draw
+import com.kodraliu.localrock.resources.zone_hint_pan
+import com.kodraliu.localrock.resources.zone_map_not_loaded
+import com.kodraliu.localrock.resources.zone_map_not_loaded_text
+import com.kodraliu.localrock.resources.zone_pan_mode
+import com.kodraliu.localrock.resources.zone_start
+import com.kodraliu.localrock.resources.zone_started
+import com.kodraliu.localrock.resources.zone_title
+import com.kodraliu.localrock.resources.zone_title_add_area
+import com.kodraliu.localrock.resources.zone_title_routine
+import com.kodraliu.localrock.resources.zone_use
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.StringResource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -80,9 +101,9 @@ fun ZoneCleanScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (onPicked != null) "Routine zones" else if (addArea) "Add area" else "Zone Clean") },
+                title = { Text(if (onPicked != null) stringResource(Res.string.zone_title_routine) else if (addArea) stringResource(Res.string.zone_title_add_area) else stringResource(Res.string.zone_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.zone_back)) }
                 },
                 actions = {
                     // Draw / Pan toggle
@@ -92,12 +113,12 @@ fun ZoneCleanScreen(
                     ) {
                         Icon(
                             if (drawMode) Icons.Default.Edit else Icons.Default.OpenWith,
-                            contentDescription = if (drawMode) "Draw mode" else "Pan mode",
+                            contentDescription = if (drawMode) stringResource(Res.string.zone_draw_mode) else stringResource(Res.string.zone_pan_mode),
                         )
                     }
                     if (zones.isNotEmpty()) {
                         IconButton(onClick = { zones = emptyList(); sent = false }) {
-                            Icon(Icons.Default.Delete, "Clear zones")
+                            Icon(Icons.Default.Delete, stringResource(Res.string.zone_clear))
                         }
                     }
                     if (zones.isNotEmpty() && !sent) {
@@ -108,7 +129,7 @@ fun ZoneCleanScreen(
                                 onBack()
                             } else if (addArea) {
                                 val z = selectedZones.last()
-                                viewModel.run("Area added to the clean") {
+                                viewModel.run(Res.string.zone_area_added) {
                                     it.addCleanArea(listOf(z.x1, z.y1, z.x2, z.y1, z.x2, z.y2, z.x1, z.y2))
                                     sent = true
                                 }
@@ -119,7 +140,7 @@ fun ZoneCleanScreen(
                                     sent = true
                                 }
                             }
-                        }) { Text(if (onPicked != null) "Use" else if (addArea) "Clean" else "Start") }
+                        }) { Text(if (onPicked != null) stringResource(Res.string.zone_use) else if (addArea) stringResource(Res.string.zone_clean) else stringResource(Res.string.zone_start)) }
                     }
                 },
             )
@@ -131,9 +152,9 @@ fun ZoneCleanScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.Map, null, Modifier.size(48.dp), MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(Modifier.height(12.dp))
-                        Text("Map not loaded", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(Res.string.zone_map_not_loaded), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Go back and wait for the map to load first",
+                            stringResource(Res.string.zone_map_not_loaded_text),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -257,10 +278,10 @@ fun ZoneCleanScreen(
 
                 Text(
                     text = when {
-                        sent -> "Zone cleaning started!"
-                        !drawMode -> "Pinch to zoom · Double-tap to reset · Switch to draw mode to add zones"
-                        zones.isNotEmpty() -> "${zones.size} zone(s) — tap Start to begin"
-                        else -> "Drag on the map to draw a zone · Switch to pan mode to navigate"
+                        sent -> stringResource(Res.string.zone_started)
+                        !drawMode -> stringResource(Res.string.zone_hint_pan)
+                        zones.isNotEmpty() -> pluralStringResource(Res.plurals.zone_count, zones.size, zones.size)
+                        else -> stringResource(Res.string.zone_hint_draw)
                     },
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                     style = MaterialTheme.typography.bodySmall,

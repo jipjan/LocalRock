@@ -1,5 +1,218 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.robot_action_dock
+import com.kodraliu.localrock.resources.robot_action_history
+import com.kodraliu.localrock.resources.robot_action_maps
+import com.kodraliu.localrock.resources.robot_action_pin_go
+import com.kodraliu.localrock.resources.robot_action_remote
+import com.kodraliu.localrock.resources.robot_action_rooms
+import com.kodraliu.localrock.resources.robot_action_routines
+import com.kodraliu.localrock.resources.robot_action_schedule
+import com.kodraliu.localrock.resources.robot_action_zone_clean
+import com.kodraliu.localrock.resources.robot_add_area
+import com.kodraliu.localrock.resources.robot_area_last_clean
+import com.kodraliu.localrock.resources.robot_area_skipped
+import com.kodraliu.localrock.resources.robot_area_so_far
+import com.kodraliu.localrock.resources.robot_auto_empty_mode
+import com.kodraliu.localrock.resources.robot_back
+import com.kodraliu.localrock.resources.robot_back_up
+import com.kodraliu.localrock.resources.robot_back_up_now
+import com.kodraliu.localrock.resources.robot_backup_from
+import com.kodraliu.localrock.resources.robot_backup_text
+import com.kodraliu.localrock.resources.robot_backup_text_replace
+import com.kodraliu.localrock.resources.robot_backup_title
+import com.kodraliu.localrock.resources.robot_battery
+import com.kodraliu.localrock.resources.robot_battery_charging
+import com.kodraliu.localrock.resources.robot_checking_maps
+import com.kodraliu.localrock.resources.robot_choose_map
+import com.kodraliu.localrock.resources.robot_clean
+import com.kodraliu.localrock.resources.robot_clean_rooms
+import com.kodraliu.localrock.resources.robot_clean_selected_rooms
+import com.kodraliu.localrock.resources.robot_clean_water_tank
+import com.kodraliu.localrock.resources.robot_cleaning_count
+import com.kodraliu.localrock.resources.robot_cleaning_resumed
+import com.kodraliu.localrock.resources.robot_cleaning_rooms
+import com.kodraliu.localrock.resources.robot_cleaning_started
+import com.kodraliu.localrock.resources.robot_clear_selection
+import com.kodraliu.localrock.resources.robot_close
+import com.kodraliu.localrock.resources.robot_corner_text
+import com.kodraliu.localrock.resources.robot_corner_title
+import com.kodraliu.localrock.resources.robot_couldnt_load
+import com.kodraliu.localrock.resources.robot_currently_loaded
+import com.kodraliu.localrock.resources.robot_custom_amount
+import com.kodraliu.localrock.resources.robot_default_order
+import com.kodraliu.localrock.resources.robot_default_order_text
+import com.kodraliu.localrock.resources.robot_delete_map
+import com.kodraliu.localrock.resources.robot_delete_named
+import com.kodraliu.localrock.resources.robot_delete_text
+import com.kodraliu.localrock.resources.robot_delete_title
+import com.kodraliu.localrock.resources.robot_dirty_water_tank
+import com.kodraliu.localrock.resources.robot_dock_charge
+import com.kodraliu.localrock.resources.robot_dock_control
+import com.kodraliu.localrock.resources.robot_dock_empty
+import com.kodraliu.localrock.resources.robot_dock_empty_action
+import com.kodraliu.localrock.resources.robot_dock_settings
+import com.kodraliu.localrock.resources.robot_dock_title
+import com.kodraliu.localrock.resources.robot_dock_wash
+import com.kodraliu.localrock.resources.robot_dock_wash_action
+import com.kodraliu.localrock.resources.robot_dry
+import com.kodraliu.localrock.resources.robot_drying
+import com.kodraliu.localrock.resources.robot_drying_left
+import com.kodraliu.localrock.resources.robot_drying_mop
+import com.kodraliu.localrock.resources.robot_drying_mop_left
+import com.kodraliu.localrock.resources.robot_duct_blocked
+import com.kodraliu.localrock.resources.robot_dust_bag
+import com.kodraliu.localrock.resources.robot_earlier
+import com.kodraliu.localrock.resources.robot_edit_map
+import com.kodraliu.localrock.resources.robot_empty_refill
+import com.kodraliu.localrock.resources.robot_fan_max
+import com.kodraliu.localrock.resources.robot_fan_quiet
+import com.kodraliu.localrock.resources.robot_fan_standard
+import com.kodraliu.localrock.resources.robot_fan_strong
+import com.kodraliu.localrock.resources.robot_full_empty_it
+import com.kodraliu.localrock.resources.robot_go_back
+import com.kodraliu.localrock.resources.robot_hide_timeline
+import com.kodraliu.localrock.resources.robot_keep_confirm
+import com.kodraliu.localrock.resources.robot_keep_text
+import com.kodraliu.localrock.resources.robot_keep_title
+import com.kodraliu.localrock.resources.robot_last_clean_completed
+import com.kodraliu.localrock.resources.robot_last_clean_ended_early
+import com.kodraliu.localrock.resources.robot_latch_open
+import com.kodraliu.localrock.resources.robot_left_hm
+import com.kodraliu.localrock.resources.robot_left_m
+import com.kodraliu.localrock.resources.robot_less_water
+import com.kodraliu.localrock.resources.robot_live_view
+import com.kodraliu.localrock.resources.robot_load
+import com.kodraliu.localrock.resources.robot_load_map
+import com.kodraliu.localrock.resources.robot_load_map_first
+import com.kodraliu.localrock.resources.robot_loaded
+import com.kodraliu.localrock.resources.robot_loading
+import com.kodraliu.localrock.resources.robot_map_another_floor
+import com.kodraliu.localrock.resources.robot_map_backed_up
+import com.kodraliu.localrock.resources.robot_map_deleted
+import com.kodraliu.localrock.resources.robot_map_name
+import com.kodraliu.localrock.resources.robot_map_renamed
+import com.kodraliu.localrock.resources.robot_map_restored
+import com.kodraliu.localrock.resources.robot_map_saving_off
+import com.kodraliu.localrock.resources.robot_map_saving_off_text
+import com.kodraliu.localrock.resources.robot_map_saving_on
+import com.kodraliu.localrock.resources.robot_map_the_home
+import com.kodraliu.localrock.resources.robot_mapping_started
+import com.kodraliu.localrock.resources.robot_maps_intro
+import com.kodraliu.localrock.resources.robot_missing
+import com.kodraliu.localrock.resources.robot_mode_mop
+import com.kodraliu.localrock.resources.robot_mode_vac_mop
+import com.kodraliu.localrock.resources.robot_mode_vacuum
+import com.kodraliu.localrock.resources.robot_mop_dryer
+import com.kodraliu.localrock.resources.robot_mop_wash_frequency
+import com.kodraliu.localrock.resources.robot_more_actions
+import com.kodraliu.localrock.resources.robot_more_cleaning_settings
+import com.kodraliu.localrock.resources.robot_more_water
+import com.kodraliu.localrock.resources.robot_move_down
+import com.kodraliu.localrock.resources.robot_move_up
+import com.kodraliu.localrock.resources.robot_multi_level
+import com.kodraliu.localrock.resources.robot_multi_level_off
+import com.kodraliu.localrock.resources.robot_multi_level_on
+import com.kodraliu.localrock.resources.robot_multi_level_text
+import com.kodraliu.localrock.resources.robot_new_map_saved
+import com.kodraliu.localrock.resources.robot_new_map_unsaved
+import com.kodraliu.localrock.resources.robot_new_map_unsaved_text
+import com.kodraliu.localrock.resources.robot_new_routine_name
+import com.kodraliu.localrock.resources.robot_no_backup
+import com.kodraliu.localrock.resources.robot_no_cleaning_yet
+import com.kodraliu.localrock.resources.robot_no_go_drop
+import com.kodraliu.localrock.resources.robot_no_map
+import com.kodraliu.localrock.resources.robot_no_map_text
+import com.kodraliu.localrock.resources.robot_no_saved_maps
+import com.kodraliu.localrock.resources.robot_no_saved_maps_text
+import com.kodraliu.localrock.resources.robot_off
+import com.kodraliu.localrock.resources.robot_ok
+import com.kodraliu.localrock.resources.robot_once
+import com.kodraliu.localrock.resources.robot_other
+import com.kodraliu.localrock.resources.robot_page_vac_then_mop
+import com.kodraliu.localrock.resources.robot_pause
+import com.kodraliu.localrock.resources.robot_paused_at_dock
+import com.kodraliu.localrock.resources.robot_plan_custom
+import com.kodraliu.localrock.resources.robot_plan_general
+import com.kodraliu.localrock.resources.robot_plan_smart
+import com.kodraliu.localrock.resources.robot_preview_backup
+import com.kodraliu.localrock.resources.robot_preview_map
+import com.kodraliu.localrock.resources.robot_reading_room_settings
+import com.kodraliu.localrock.resources.robot_reading_timeline
+import com.kodraliu.localrock.resources.robot_recheck
+import com.kodraliu.localrock.resources.robot_refresh_map
+import com.kodraliu.localrock.resources.robot_remove_order
+import com.kodraliu.localrock.resources.robot_rename
+import com.kodraliu.localrock.resources.robot_rename_map
+import com.kodraliu.localrock.resources.robot_rename_named
+import com.kodraliu.localrock.resources.robot_restore
+import com.kodraliu.localrock.resources.robot_restore_backup
+import com.kodraliu.localrock.resources.robot_restore_text
+import com.kodraliu.localrock.resources.robot_restore_title
+import com.kodraliu.localrock.resources.robot_resume
+import com.kodraliu.localrock.resources.robot_return_to_dock
+import com.kodraliu.localrock.resources.robot_returning_to_dock
+import com.kodraliu.localrock.resources.robot_returning_to_empty
+import com.kodraliu.localrock.resources.robot_returning_to_wash
+import com.kodraliu.localrock.resources.robot_room_fallback
+import com.kodraliu.localrock.resources.robot_room_generic
+import com.kodraliu.localrock.resources.robot_room_modes_load_map
+import com.kodraliu.localrock.resources.robot_room_modes_text
+import com.kodraliu.localrock.resources.robot_room_settings_failed
+import com.kodraliu.localrock.resources.robot_room_settings_saved
+import com.kodraliu.localrock.resources.robot_rooms_selected
+import com.kodraliu.localrock.resources.robot_rooms_selected_hint
+import com.kodraliu.localrock.resources.robot_route
+import com.kodraliu.localrock.resources.robot_route_deep
+import com.kodraliu.localrock.resources.robot_route_deep_plus
+import com.kodraliu.localrock.resources.robot_route_fast
+import com.kodraliu.localrock.resources.robot_route_standard
+import com.kodraliu.localrock.resources.robot_save_new_map
+import com.kodraliu.localrock.resources.robot_save_order
+import com.kodraliu.localrock.resources.robot_save_room_settings
+import com.kodraliu.localrock.resources.robot_saved_maps
+import com.kodraliu.localrock.resources.robot_select_rooms
+import com.kodraliu.localrock.resources.robot_settings
+import com.kodraliu.localrock.resources.robot_show_timeline
+import com.kodraliu.localrock.resources.robot_skip
+import com.kodraliu.localrock.resources.robot_skip_area
+import com.kodraliu.localrock.resources.robot_skip_text
+import com.kodraliu.localrock.resources.robot_skip_title
+import com.kodraliu.localrock.resources.robot_smart_floor
+import com.kodraliu.localrock.resources.robot_smart_floor_text
+import com.kodraliu.localrock.resources.robot_smartplan_text
+import com.kodraliu.localrock.resources.robot_spot_clean
+import com.kodraliu.localrock.resources.robot_start_cleans_selected
+import com.kodraliu.localrock.resources.robot_stop_cleaning
+import com.kodraliu.localrock.resources.robot_stop_dry
+import com.kodraliu.localrock.resources.robot_subtitle_mop
+import com.kodraliu.localrock.resources.robot_subtitle_vac_mop
+import com.kodraliu.localrock.resources.robot_subtitle_vac_then_mop
+import com.kodraliu.localrock.resources.robot_subtitle_vacuum
+import com.kodraliu.localrock.resources.robot_suction_power
+import com.kodraliu.localrock.resources.robot_summary_mop
+import com.kodraliu.localrock.resources.robot_summary_vac_mop
+import com.kodraliu.localrock.resources.robot_summary_vacuum
+import com.kodraliu.localrock.resources.robot_switch_map
+import com.kodraliu.localrock.resources.robot_tab_full
+import com.kodraliu.localrock.resources.robot_tab_room
+import com.kodraliu.localrock.resources.robot_tab_routine
+import com.kodraliu.localrock.resources.robot_tab_zones
+import com.kodraliu.localrock.resources.robot_tap_rooms
+import com.kodraliu.localrock.resources.robot_tap_rooms_hint
+import com.kodraliu.localrock.resources.robot_turn_on_map_saving
+import com.kodraliu.localrock.resources.robot_twice
+import com.kodraliu.localrock.resources.robot_unknown
+import com.kodraliu.localrock.resources.robot_vac_then_mop_text
+import com.kodraliu.localrock.resources.robot_vac_then_mop_title
+import com.kodraliu.localrock.resources.robot_washing_mode
+import com.kodraliu.localrock.resources.robot_water_custom
+import com.kodraliu.localrock.resources.robot_water_flow
+import com.kodraliu.localrock.resources.robot_water_high
+import com.kodraliu.localrock.resources.robot_water_low
+import com.kodraliu.localrock.resources.robot_water_med
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.StringResource
 import com.kodraliu.localrock.resources.routines_add
 import com.kodraliu.localrock.resources.routines_added
 import com.kodraliu.localrock.resources.routines_recommended
@@ -228,33 +441,33 @@ import kotlinx.coroutines.launch
 
 
 private val FAN_OPTIONS = listOf(
-    VacuumFanPower.QUIET to "Quiet",
-    VacuumFanPower.BALANCED to "Standard",
-    VacuumFanPower.TURBO to "Strong",
-    VacuumFanPower.MAX to "MAX",
+    VacuumFanPower.QUIET to Res.string.robot_fan_quiet,
+    VacuumFanPower.BALANCED to Res.string.robot_fan_standard,
+    VacuumFanPower.TURBO to Res.string.robot_fan_strong,
+    VacuumFanPower.MAX to Res.string.robot_fan_max,
 )
 
 /** A room can also go without suction, the official app's mop-only setting. */
-private val ROOM_FAN_OPTIONS = listOf(VacuumFanPower.OFF to "Off") + FAN_OPTIONS
+private val ROOM_FAN_OPTIONS = listOf(VacuumFanPower.OFF to Res.string.robot_off) + FAN_OPTIONS
 
 private val WATER_OPTIONS = listOf(
-    WaterBoxMode.OFF to "Off",
-    WaterBoxMode.LOW to "Low",
-    WaterBoxMode.MEDIUM to "Med",
-    WaterBoxMode.HIGH to "High",
+    WaterBoxMode.OFF to Res.string.robot_off,
+    WaterBoxMode.LOW to Res.string.robot_water_low,
+    WaterBoxMode.MEDIUM to Res.string.robot_water_med,
+    WaterBoxMode.HIGH to Res.string.robot_water_high,
 )
 
 private val ROUTE_OPTIONS = listOf(
-    MopRoute.STANDARD to "Standard",
-    MopRoute.DEEP to "Deep",
-    MopRoute.DEEP_PLUS to "Deep+",
-    MopRoute.FAST to "Fast",
+    MopRoute.STANDARD to Res.string.robot_route_standard,
+    MopRoute.DEEP to Res.string.robot_route_deep,
+    MopRoute.DEEP_PLUS to Res.string.robot_route_deep_plus,
+    MopRoute.FAST to Res.string.robot_route_fast,
 )
 
 private val DEEP_ROUTES = setOf(MopRoute.DEEP, MopRoute.DEEP_PLUS)
 
 /** The route buttons for a robot: the ones it offers, and the one it has now even if not offered. */
-private fun routeChoices(offered: Set<Int>?, current: Int?): List<Pair<Int, String>> =
+private fun routeChoices(offered: Set<Int>?, current: Int?): List<Pair<Int, StringResource>> =
     ROUTE_OPTIONS.filter { offered == null || it.first in offered || it.first == current }
 
 internal val ACTIVE_CLEANING_STATES = setOf(
@@ -324,14 +537,15 @@ fun VacuumDetailScreen(
     val mapViewport = remember { LiveMapViewport() }
 
 
-    val sessionRoomNames = remember(sessionRoomIds, status.state, parsedMap) {
+    val sessionRooms = remember(sessionRoomIds, status.state, parsedMap) {
         if (status.state == VacuumStateCodes.SEGMENT_CLEANING && sessionRoomIds.isNotEmpty()) {
             val byId = parsedMap?.rooms?.associateBy { it.id } ?: emptyMap()
-            sessionRoomIds.map { id -> byId[id]?.name ?: "Room $id" }
+            sessionRoomIds.map { id -> id to byId[id]?.name }
         } else {
             emptyList()
         }
     }
+    val sessionRoomNames = sessionRooms.map { (id, name) -> name ?: stringResource(Res.string.robot_room_fallback, id) }
 
     LaunchedEffect(status.cleanArea) {
         if ((status.cleanArea ?: 0L) > 0L) lastCleanArea = status.cleanArea
@@ -397,6 +611,10 @@ fun VacuumDetailScreen(
         else selectedRoomIds + roomId
     }
     val onFloorSwitch: (Int) -> Unit = { flag -> viewModel.run { it.switchFloor(flag) } }
+    val newRoutineName = stringResource(
+        Res.string.robot_new_routine_name,
+        ((routines as? RoutinesState.Loaded)?.routines?.size ?: 0) + 1,
+    )
 
     val PanelBody: @Composable (DetailPanel) -> Unit = { currentPanel ->
         when (currentPanel) {
@@ -405,7 +623,7 @@ fun VacuumDetailScreen(
             DetailPanel.Routines -> RoutinesSheetContent(
                 state = routines,
                 onNew = {
-                    viewModel.newRoutine()
+                    viewModel.newRoutine(newRoutineName)
                     panel = null
                     onEditRoutine()
                 },
@@ -489,7 +707,7 @@ fun VacuumDetailScreen(
             DetailPanel.CleaningMode -> {
                 // A refusal is shown in the sheet; the screen's own message would be behind it.
                 var modeError by remember { mutableStateOf<String?>(null) }
-                fun runMode(successMessage: String? = null, action: suspend (VacuumRepository) -> Unit) {
+                fun runMode(successMessage: StringResource? = null, action: suspend (VacuumRepository) -> Unit) {
                     modeError = null
                     viewModel.run(successMessage, onError = { modeError = it }, action = action)
                 }
@@ -521,7 +739,7 @@ fun VacuumDetailScreen(
                             }
                         }
                     },
-                    onSaveRoomModes = { modes -> runMode("Room settings saved") { it.saveRoomCleanModes(modes) } },
+                    onSaveRoomModes = { modes -> runMode(Res.string.robot_room_settings_saved) { it.saveRoomCleanModes(modes) } },
                     onFanPowerSelected = { level -> runMode { it.setFanPower(level) } },
                     onWaterModeSelected = { level -> runMode { it.setWaterBoxMode(level) } },
                     onRouteSelected = { mode -> runMode { it.setMopMode(mode) } },
@@ -552,13 +770,13 @@ fun VacuumDetailScreen(
                 smartSwitching = status.switchMapMode?.let { it == SWITCH_MAP_MODE_SMART },
                 onMultiLevelChange = { on ->
                     when {
-                        on -> viewModel.run("Multi-level maps on") { it.setMultiLevel(true, null) }
+                        on -> viewModel.run(Res.string.robot_multi_level_on) { it.setMultiLevel(true, null) }
                         floorMaps.size > 1 -> choosingMapToKeep = true
-                        else -> viewModel.run("Multi-level maps off") { it.setMultiLevel(false, null) }
+                        else -> viewModel.run(Res.string.robot_multi_level_off) { it.setMultiLevel(false, null) }
                     }
                 },
                 onSmartSwitchingChange = { smart -> viewModel.run { it.setSmartMapSwitching(smart) } },
-                onEnableMapSaving = { viewModel.run("Map saving on") { it.enableMapSaving() } },
+                onEnableMapSaving = { viewModel.run(Res.string.robot_map_saving_on) { it.enableMapSaving() } },
                 onLoad = { flag ->
                     panel = null
                     viewModel.run { it.switchFloor(flag) }
@@ -576,9 +794,9 @@ fun VacuumDetailScreen(
                 loadSavedMap = { flag, backup -> viewModel.repository.fetchSavedMap(flag, backup) },
                 onStartMapping = {
                     panel = null
-                    viewModel.run("Mapping started") { it.startMapping() }
+                    viewModel.run(Res.string.robot_mapping_started) { it.startMapping() }
                 },
-                onSaveNewMap = { viewModel.run("New map saved") { it.saveNewMap() } },
+                onSaveNewMap = { viewModel.run(Res.string.robot_new_map_saved) { it.saveNewMap() } },
                 onRecheck = { recoverTick++ },
             )
         }
@@ -626,7 +844,7 @@ fun VacuumDetailScreen(
             onClean = {
                 sessionRoomIds = emptyList()
                 val order = viewModel.defaultCleanOrder()
-                viewModel.run("Cleaning started") { it.clean(order) }
+                viewModel.run(Res.string.robot_cleaning_started) { it.clean(order) }
             },
             onCleanRooms = {
                 val toClean = selectedRoomIds
@@ -636,7 +854,7 @@ fun VacuumDetailScreen(
             },
             onClearSelection = { selectedRoomIds = emptyList() },
             onPause = { viewModel.run { it.pause() } },
-            onResume = { viewModel.run("Cleaning resumed") { it.resumeCleaning() } },
+            onResume = { viewModel.run(Res.string.robot_cleaning_resumed) { it.resumeCleaning() } },
             onStop = {
                 sessionRoomIds = emptyList()
                 viewModel.run { it.stopCleaning() }
@@ -647,7 +865,7 @@ fun VacuumDetailScreen(
                     dockChoice = true
                 } else {
                     sessionRoomIds = emptyList()
-                    viewModel.run("Returning to dock") { it.dock() }
+                    viewModel.run(Res.string.robot_returning_to_dock) { it.dock() }
                 }
             },
             onCleaningMode = { panel = DetailPanel.CleaningMode },
@@ -661,37 +879,37 @@ fun VacuumDetailScreen(
     if (confirmSkip) {
         AlertDialog(
             onDismissRequest = { confirmSkip = false },
-            title = { Text("Skip this area?") },
-            text = { Text("The robot leaves the area it is cleaning now and goes on to the next. It is skipped this time only.") },
-            confirmButton = { TextButton(onClick = { confirmSkip = false; viewModel.run("Area skipped") { it.skipCleaningArea() } }) { Text("Skip") } },
-            dismissButton = { TextButton(onClick = { confirmSkip = false }) { Text("Cancel") } },
+            title = { Text(stringResource(Res.string.robot_skip_title)) },
+            text = { Text(stringResource(Res.string.robot_skip_text)) },
+            confirmButton = { TextButton(onClick = { confirmSkip = false; viewModel.run(Res.string.robot_area_skipped) { it.skipCleaningArea() } }) { Text(stringResource(Res.string.robot_skip)) } },
+            dismissButton = { TextButton(onClick = { confirmSkip = false }) { Text(stringResource(Res.string.common_cancel)) } },
         )
     }
     if (dockChoice) {
         AlertDialog(
             onDismissRequest = { dockChoice = false },
-            title = { Text("Back to the dock") },
+            title = { Text(stringResource(Res.string.robot_dock_title)) },
             text = {
                 Column {
                     TextButton(onClick = {
                         dockChoice = false
                         sessionRoomIds = emptyList()
-                        viewModel.run("Returning to dock") { it.dock() }
-                    }, modifier = Modifier.fillMaxWidth()) { Text("Return to charge (ends the clean)") }
+                        viewModel.run(Res.string.robot_returning_to_dock) { it.dock() }
+                    }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.robot_dock_charge)) }
                     TextButton(onClick = {
                         dockChoice = false
-                        viewModel.run("Returning to empty the bin") { it.returnMidClean(empty = true) }
-                    }, modifier = Modifier.fillMaxWidth()) { Text("Empty the bin, then carry on") }
+                        viewModel.run(Res.string.robot_returning_to_empty) { it.returnMidClean(empty = true) }
+                    }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.robot_dock_empty)) }
                     if (viewModel.dockCapabilities.washIntervals.isNotEmpty()) {
                         TextButton(onClick = {
                             dockChoice = false
-                            viewModel.run("Returning to wash the mop") { it.returnMidClean(empty = false) }
-                        }, modifier = Modifier.fillMaxWidth()) { Text("Wash the mop, then carry on") }
+                            viewModel.run(Res.string.robot_returning_to_wash) { it.returnMidClean(empty = false) }
+                        }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.robot_dock_wash)) }
                     }
                 }
             },
             confirmButton = {},
-            dismissButton = { TextButton(onClick = { dockChoice = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { dockChoice = false }) { Text(stringResource(Res.string.common_cancel)) } },
         )
     }
 
@@ -701,21 +919,21 @@ fun VacuumDetailScreen(
                 title = { Text(viewModel.deviceName, style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.robot_go_back))
                     }
                 },
                 // Same three icons, in the same order, as the official app's robot page.
                 actions = {
                     if (viewModel.hasCamera) {
                         IconButton(onClick = onCamera) {
-                            Icon(Icons.Default.Videocam, contentDescription = "Live view")
+                            Icon(Icons.Default.Videocam, contentDescription = stringResource(Res.string.robot_live_view))
                         }
                     }
                     IconButton(onClick = onMapEdit) {
-                        Icon(Icons.Default.EditLocationAlt, contentDescription = "Edit map")
+                        Icon(Icons.Default.EditLocationAlt, contentDescription = stringResource(Res.string.robot_edit_map))
                     }
                     IconButton(onClick = onSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(Res.string.robot_settings))
                     }
                 },
             )
@@ -731,8 +949,8 @@ fun VacuumDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    MapSideAction(Icons.Default.AddBox, "Add area") { onAddArea() }
-                    MapSideAction(Icons.Default.Block, "Skip area") { confirmSkip = true }
+                    MapSideAction(Icons.Default.AddBox, stringResource(Res.string.robot_add_area)) { onAddArea() }
+                    MapSideAction(Icons.Default.Block, stringResource(Res.string.robot_skip_area)) { confirmSkip = true }
                 }
             } else if (!isPausedNow) {
                 val last = lastCleanForBubble
@@ -795,7 +1013,7 @@ fun VacuumDetailScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 IconButton(onClick = { panel = null }) {
-                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.robot_back))
                                 }
                                 Text(headed.title(), style = MaterialTheme.typography.titleMedium)
                             }
@@ -836,7 +1054,7 @@ fun VacuumDetailScreen(
             floor = floor,
             onConfirm = { name ->
                 renamingMap = null
-                viewModel.run("Map renamed") { it.renameFloorMap(floor.mapFlag, name) }
+                viewModel.run(Res.string.robot_map_renamed) { it.renameFloorMap(floor.mapFlag, name) }
             },
             onDismiss = { renamingMap = null },
         )
@@ -848,7 +1066,7 @@ fun VacuumDetailScreen(
             currentFloorFlag = currentFloorFlag,
             onConfirm = { keep ->
                 choosingMapToKeep = false
-                viewModel.run("Multi-level maps off") { it.setMultiLevel(false, keep) }
+                viewModel.run(Res.string.robot_multi_level_off) { it.setMultiLevel(false, keep) }
             },
             onDismiss = { choosingMapToKeep = false },
         )
@@ -859,7 +1077,7 @@ fun VacuumDetailScreen(
             floor = floor,
             onConfirm = {
                 deletingMap = null
-                viewModel.run("Map deleted") { it.deleteFloorMap(floor.mapFlag) }
+                viewModel.run(Res.string.robot_map_deleted) { it.deleteFloorMap(floor.mapFlag) }
             },
             onDismiss = { deletingMap = null },
         )
@@ -871,7 +1089,7 @@ fun VacuumDetailScreen(
             picture = backingUpPicture,
             onConfirm = {
                 backingUpMap = null
-                viewModel.run("Map backed up") { it.backupFloorMap(floor.mapFlag) }
+                viewModel.run(Res.string.robot_map_backed_up) { it.backupFloorMap(floor.mapFlag) }
             },
             onDismiss = { backingUpMap = null },
         )
@@ -883,7 +1101,7 @@ fun VacuumDetailScreen(
             picture = restoringPicture,
             onConfirm = {
                 restoringMap = null
-                viewModel.run("Map restored from backup") { it.restoreFloorMapBackup(floor.mapFlag) }
+                viewModel.run(Res.string.robot_map_restored) { it.restoreFloorMapBackup(floor.mapFlag) }
             },
             onDismiss = { restoringMap = null },
         )
@@ -956,7 +1174,7 @@ private fun MapHeroSection(
             modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp).size(48.dp),
         ) {
             if (busy) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-            else Icon(Icons.Default.Refresh, contentDescription = "Refresh map", modifier = Modifier.size(22.dp))
+            else Icon(Icons.Default.Refresh, contentDescription = stringResource(Res.string.robot_refresh_map), modifier = Modifier.size(22.dp))
         }
 
         Column(
@@ -998,13 +1216,13 @@ private fun FloorPicker(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    current?.name ?: "Choose map",
+                    current?.name ?: stringResource(Res.string.robot_choose_map),
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
                 )
-                Icon(Icons.Default.ArrowDropDown, contentDescription = "Switch map", modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.ArrowDropDown, contentDescription = stringResource(Res.string.robot_switch_map), modifier = Modifier.size(20.dp))
             }
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -1013,7 +1231,7 @@ private fun FloorPicker(
                 DropdownMenuItem(
                     text = { Text(floor.name) },
                     leadingIcon = {
-                        if (selected) Icon(Icons.Default.Check, contentDescription = "Loaded")
+                        if (selected) Icon(Icons.Default.Check, contentDescription = stringResource(Res.string.robot_loaded))
                         else Spacer(Modifier.size(24.dp))
                     },
                     onClick = {
@@ -1086,14 +1304,17 @@ private fun LastCleanBubble(record: CleanRecord, onOpen: () -> Unit, onClose: ()
             Column(Modifier.weight(1f, fill = false)) {
                 Text(formatCleanRecordTime(record.beginEpoch), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    (if (record.complete == 1) "Cleaning completed" else "Cleaning ended early") +
-                        " · ${record.durationSeconds / 60} min · ${(record.areaMm2 / 1_000_000f).roundToInt()} m²",
+                    stringResource(
+                        if (record.complete == 1) Res.string.robot_last_clean_completed else Res.string.robot_last_clean_ended_early,
+                        record.durationSeconds / 60,
+                        (record.areaMm2 / 1_000_000f).roundToInt(),
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
-                Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.robot_close), modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -1113,7 +1334,7 @@ private fun SessionRoomsBadge(roomNames: List<String>, modifier: Modifier = Modi
         ) {
             PulsingDot(MaterialTheme.colorScheme.onPrimary)
             Text(
-                text = "Cleaning ${roomNames.joinToString(", ")}",
+                text = stringResource(Res.string.robot_cleaning_rooms, roomNames.joinToString(", ")),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onPrimary,
@@ -1138,6 +1359,7 @@ private fun VacuumMapImage(
     val robotIcon = rememberVectorPainter(Icons.Default.Cyclone)
     val labelRooms = remember(map.rooms) { map.rooms.filter { it.labelNormX != null && it.labelNormY != null } }
     val textMeasurer = rememberTextMeasurer()
+    val noGoDropLabel = stringResource(Res.string.robot_no_go_drop)
     // Labels follow the scheme rather than being a fixed black scrim: over a light map a dark
     // scrim reads as a scattering of heavy blobs and dominates the surface it sits on.
     val labelStyle = TextStyle(
@@ -1252,7 +1474,7 @@ private fun VacuumMapImage(
                     mapViewport.offset.x + cell.x / map.width * content.width * mapViewport.scale,
                     mapViewport.offset.y + cell.y / map.height * content.height * mapViewport.scale,
                 )
-                val tag = textMeasurer.measure("No-go: drop", badgeStyle)
+                val tag = textMeasurer.measure(noGoDropLabel, badgeStyle)
                 val padX = 6.dp.toPx()
                 val padY = 3.dp.toPx()
                 val left = at.x - tag.size.width / 2f - padX
@@ -1349,18 +1571,18 @@ private fun MapEmptyState(busy: Boolean, onLoadMap: () -> Unit, onRecover: () ->
     ) {
         Icon(Icons.Default.Map, null, Modifier.size(48.dp), MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(16.dp))
-        Text("No map loaded", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(Res.string.robot_no_map), style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(4.dp))
-        Text("Load the latest map from your robot.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(Res.string.robot_no_map_text), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(20.dp))
         Button(onClick = onLoadMap, enabled = !busy) {
             Icon(Icons.Default.Refresh, null)
             Spacer(Modifier.width(8.dp))
-            Text(if (busy) "Loading…" else "Load map")
+            Text(if (busy) stringResource(Res.string.robot_loading) else stringResource(Res.string.robot_load_map))
         }
         Spacer(Modifier.height(4.dp))
         TextButton(onClick = onRecover, enabled = !busy) {
-            Text("Saved maps")
+            Text(stringResource(Res.string.robot_saved_maps))
         }
     }
 }
@@ -1397,8 +1619,8 @@ private fun StatusBar(
     val headline = when {
         errorCode != 0 -> VacuumErrorCodes.describe(errorCode)
         drying -> dryingLabel(status.remainingDryTimeSec)
-        status.taskPausedAtDock -> "Paused at the dock"
-        status.state == VacuumStateCodes.GOING_TO_WASH_MOP && status.backType == 4 -> "Returning to empty the bin"
+        status.taskPausedAtDock -> stringResource(Res.string.robot_paused_at_dock)
+        status.state == VacuumStateCodes.GOING_TO_WASH_MOP && status.backType == 4 -> stringResource(Res.string.robot_returning_to_empty)
         else -> stateLabel(status.state)
     }
     val headlineColor = when {
@@ -1409,18 +1631,21 @@ private fun StatusBar(
     }
 
     val cleaningNow = status.state in ACTIVE_CLEANING_STATES || status.taskRunning
+    val areaSoFar = stringResource(Res.string.robot_area_so_far, area ?: "")
+    val areaLastClean = stringResource(Res.string.robot_area_last_clean, area ?: "")
+    val modeLabel = cleanModeLabel(status)
     val detail = if (status.state == VacuumStateCodes.SPOT_CLEANING) {
         // The robot keeps reporting the last clean's area and time during a spot clean.
-        "Spot clean · 1.5 m × 1.5 m"
+        stringResource(Res.string.robot_spot_clean)
     } else buildList {
         // While cleaning, lead with where and how, as the official app's card does.
         if (cleaningNow) {
             currentRoom?.let { add(it) }
-            add(cleanModeLabel(status))
+            add(modeLabel)
         }
-        if (area != null) add(if (cleaningNow) "$area so far" else "$area last clean")
+        if (area != null) add(if (cleaningNow) areaSoFar else areaLastClean)
         if (time != null) add(time)
-    }.joinToString(" · ").ifEmpty { "No cleaning recorded yet" }
+    }.joinToString(" · ").ifEmpty { stringResource(Res.string.robot_no_cleaning_yet) }
 
     val charging = status.chargeStatus == 1 || status.state == VacuumStateCodes.CHARGING
     val battery = status.battery
@@ -1486,7 +1711,7 @@ private fun StatusBar(
             ) {
                 Icon(
                     batteryIcon,
-                    contentDescription = if (charging) "Battery, charging" else "Battery",
+                    contentDescription = stringResource(if (charging) Res.string.robot_battery_charging else Res.string.robot_battery),
                     modifier = Modifier.size(20.dp),
                     tint = batteryColor(battery),
                 )
@@ -1498,7 +1723,7 @@ private fun StatusBar(
                 if (cleaningNow) {
                     Icon(
                         if (expanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
-                        contentDescription = if (expanded) "Hide the clean's timeline" else "Show the clean's timeline",
+                        contentDescription = stringResource(if (expanded) Res.string.robot_hide_timeline else Res.string.robot_show_timeline),
                         modifier = Modifier.size(22.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
@@ -1529,7 +1754,7 @@ private fun StatusBar(
             ) {
                 if (timeline.isEmpty()) {
                     Text(
-                        "Reading the clean's timeline…",
+                        stringResource(Res.string.robot_reading_timeline),
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1546,15 +1771,16 @@ private fun StatusBar(
 
 
 /** The cleaning mode as the mode button names it: SmartPlan, per room, Mop, Vac & Mop or Vacuum. */
+@Composable
 private fun cleanModeLabel(status: VacuumStatus): String {
     val mopping = (status.waterBoxCustomMode ?: WaterBoxMode.OFF) != WaterBoxMode.OFF
-    return when {
+    return stringResource(when {
         isSmartModeSet(status.fanPower, status.waterBoxCustomMode, null) -> CleanPlan.SMART.label
         isCustomizeModeSet(status.fanPower, status.waterBoxCustomMode, null) -> CleanPlan.PER_ROOM.label
-        mopping && status.fanPower == VacuumFanPower.OFF -> "Mop"
-        mopping -> "Vac & Mop"
-        else -> "Vacuum"
-    }
+        mopping && status.fanPower == VacuumFanPower.OFF -> Res.string.robot_mode_mop
+        mopping -> Res.string.robot_mode_vac_mop
+        else -> Res.string.robot_mode_vacuum
+    })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1590,12 +1816,12 @@ private fun ControlBar(
                     selected = true,
                     onClick = onClearSelection,
                     label = {
-                        Text(if (selectedRoomCount == 1) "1 room" else "$selectedRoomCount rooms")
+                        Text(pluralStringResource(Res.plurals.robot_rooms_selected, selectedRoomCount, selectedRoomCount))
                     },
                     trailingIcon = {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Clear room selection",
+                            contentDescription = stringResource(Res.string.robot_clear_selection),
                             modifier = Modifier.size(18.dp),
                         )
                     },
@@ -1604,11 +1830,11 @@ private fun ControlBar(
             Spacer(Modifier.weight(1f))
             if (isCleaning || isPaused) {
                 FilledTonalIconButton(onClick = onStop, enabled = !busy, modifier = Modifier.size(40.dp)) {
-                    Icon(Icons.Default.Stop, contentDescription = "Stop cleaning", modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.Stop, contentDescription = stringResource(Res.string.robot_stop_cleaning), modifier = Modifier.size(20.dp))
                 }
             }
             FilledTonalIconButton(onClick = onMore, modifier = Modifier.size(40.dp)) {
-                Icon(Icons.Default.MoreHoriz, contentDescription = "More actions", modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.MoreHoriz, contentDescription = stringResource(Res.string.robot_more_actions), modifier = Modifier.size(20.dp))
             }
         }
 
@@ -1618,14 +1844,14 @@ private fun ControlBar(
         if (idle) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 val roomsChosen = roomMode || selectedRoomCount > 0
-                StartModeTab("Full", selected = !roomsChosen) { roomMode = false; if (selectedRoomCount > 0) onClearSelection() }
-                StartModeTab("Room", selected = roomsChosen) { roomMode = true }
-                StartModeTab("Zones", selected = false, onClick = onZoneClean)
-                StartModeTab("Routine", selected = false, onClick = onRoutines)
+                StartModeTab(stringResource(Res.string.robot_tab_full), selected = !roomsChosen) { roomMode = false; if (selectedRoomCount > 0) onClearSelection() }
+                StartModeTab(stringResource(Res.string.robot_tab_room), selected = roomsChosen) { roomMode = true }
+                StartModeTab(stringResource(Res.string.robot_tab_zones), selected = false, onClick = onZoneClean)
+                StartModeTab(stringResource(Res.string.robot_tab_routine), selected = false, onClick = onRoutines)
             }
             if (roomMode && selectedRoomCount == 0) {
                 Text(
-                    "Tap the rooms on the map",
+                    stringResource(Res.string.robot_tap_rooms),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -1648,12 +1874,12 @@ private fun ControlBar(
                     onClick = onCleaningMode,
                     modifier = Modifier.weight(1f),
                 )
-                val primaryLabel = when {
-                    isCleaning -> "Pause"
-                    selectedRoomCount > 0 -> "Clean rooms"
-                    isPaused -> "Resume"
-                    else -> "Clean"
-                }
+                val primaryLabel = stringResource(when {
+                    isCleaning -> Res.string.robot_pause
+                    selectedRoomCount > 0 -> Res.string.robot_clean_rooms
+                    isPaused -> Res.string.robot_resume
+                    else -> Res.string.robot_clean
+                })
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.size(84.dp)) {
                     val progress = status.cleanPercent?.takeIf { (isCleaning || isPaused) && it in 0..100 }
                     if (progress != null) {
@@ -1685,7 +1911,7 @@ private fun ControlBar(
                 }
                 BarAction(
                     icon = Icons.Default.Home,
-                    label = "Return to dock",
+                    label = stringResource(Res.string.robot_return_to_dock),
                     onClick = onDock,
                     enabled = !busy,
                     modifier = Modifier.weight(1f),
@@ -1694,7 +1920,7 @@ private fun ControlBar(
         }
         if (selectedRoomCount > 0 && !isCleaning) {
             Text(
-                "Start cleans the selected rooms",
+                stringResource(Res.string.robot_start_cleans_selected),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -1755,27 +1981,27 @@ private fun MoreActionsSheetContent(onAction: (MoreAction) -> Unit) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
-            "More actions",
+            stringResource(Res.string.robot_more_actions),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MoreActionItem(Modifier.weight(1f), Icons.Default.GridView, "Rooms", MaterialTheme.colorScheme.primary) { onAction(MoreAction.ROOMS) }
-            MoreActionItem(Modifier.weight(1f), Icons.Default.SelectAll, "Zone clean", AppColors.AccentIndigo) { onAction(MoreAction.ZONES) }
-            MoreActionItem(Modifier.weight(1f), Icons.Default.Place, "Pin & Go", AppColors.AccentPurple) { onAction(MoreAction.PIN_GO) }
+            MoreActionItem(Modifier.weight(1f), Icons.Default.GridView, stringResource(Res.string.robot_action_rooms), MaterialTheme.colorScheme.primary) { onAction(MoreAction.ROOMS) }
+            MoreActionItem(Modifier.weight(1f), Icons.Default.SelectAll, stringResource(Res.string.robot_action_zone_clean), AppColors.AccentIndigo) { onAction(MoreAction.ZONES) }
+            MoreActionItem(Modifier.weight(1f), Icons.Default.Place, stringResource(Res.string.robot_action_pin_go), AppColors.AccentPurple) { onAction(MoreAction.PIN_GO) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MoreActionItem(Modifier.weight(1f), Icons.Default.Gamepad, "Remote", AppColors.AccentCyan) { onAction(MoreAction.REMOTE) }
-            MoreActionItem(Modifier.weight(1f), Icons.Default.Schedule, "Schedule", AppColors.Water) { onAction(MoreAction.SCHEDULE) }
-            MoreActionItem(Modifier.weight(1f), Icons.Default.Edit, "Edit map", AppColors.AccentRed) { onAction(MoreAction.EDIT_MAP) }
+            MoreActionItem(Modifier.weight(1f), Icons.Default.Gamepad, stringResource(Res.string.robot_action_remote), AppColors.AccentCyan) { onAction(MoreAction.REMOTE) }
+            MoreActionItem(Modifier.weight(1f), Icons.Default.Schedule, stringResource(Res.string.robot_action_schedule), AppColors.Water) { onAction(MoreAction.SCHEDULE) }
+            MoreActionItem(Modifier.weight(1f), Icons.Default.Edit, stringResource(Res.string.robot_edit_map), AppColors.AccentRed) { onAction(MoreAction.EDIT_MAP) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MoreActionItem(Modifier.weight(1f), Icons.Default.Dock, "Dock & care", AppColors.Good) { onAction(MoreAction.DOCK) }
-            MoreActionItem(Modifier.weight(1f), Icons.Default.History, "History", MaterialTheme.colorScheme.tertiary) { onAction(MoreAction.HISTORY) }
-            MoreActionItem(Modifier.weight(1f), Icons.Default.Map, "Maps", AppColors.Warn) { onAction(MoreAction.MAPS) }
+            MoreActionItem(Modifier.weight(1f), Icons.Default.Dock, stringResource(Res.string.robot_action_dock), AppColors.Good) { onAction(MoreAction.DOCK) }
+            MoreActionItem(Modifier.weight(1f), Icons.Default.History, stringResource(Res.string.robot_action_history), MaterialTheme.colorScheme.tertiary) { onAction(MoreAction.HISTORY) }
+            MoreActionItem(Modifier.weight(1f), Icons.Default.Map, stringResource(Res.string.robot_action_maps), AppColors.Warn) { onAction(MoreAction.MAPS) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            MoreActionItem(Modifier.weight(1f), Icons.AutoMirrored.Filled.PlaylistPlay, "Routines", MaterialTheme.colorScheme.secondary) { onAction(MoreAction.ROUTINES) }
+            MoreActionItem(Modifier.weight(1f), Icons.AutoMirrored.Filled.PlaylistPlay, stringResource(Res.string.robot_action_routines), MaterialTheme.colorScheme.secondary) { onAction(MoreAction.ROUTINES) }
             Spacer(Modifier.weight(1f))
             Spacer(Modifier.weight(1f))
         }
@@ -2007,7 +2233,7 @@ private fun CleaningModeSheetContent(
                         color = Color.Transparent,
                     ) {
                         Text(
-                            p.label,
+                            stringResource(p.label),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = if (chosen) FontWeight.SemiBold else FontWeight.Normal,
@@ -2028,7 +2254,7 @@ private fun CleaningModeSheetContent(
         }
         if (smart) {
             Column(Modifier.padding(horizontal = 24.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                Text("SmartPlan picks suction, water and route for each room.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.robot_smartplan_text), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 CountSelector(cleaningCount, onCountChange)
             }
         } else if (perRoom) {
@@ -2036,8 +2262,8 @@ private fun CleaningModeSheetContent(
                 RoomCleanModesEditor(rooms, roomCleanModes, busy, onSaveRoomModes, routeOptions)
             } else {
                 Text(
-                    if (roomModesLoaded == null) "Reading the room settings from the robot."
-                    else "Couldn't read the room settings from the robot. Close this sheet and open it again.",
+                    if (roomModesLoaded == null) stringResource(Res.string.robot_reading_room_settings)
+                    else stringResource(Res.string.robot_room_settings_failed),
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -2092,7 +2318,7 @@ private fun CleaningModeSheetContent(
                     Tab(
                         selected = pagerState.currentPage == i,
                         onClick = { pagerScope.launch { pagerState.animateScrollToPage(i) } },
-                        text = { Text(page.title) },
+                        text = { Text(stringResource(page.title)) },
                     )
                 }
             }
@@ -2107,23 +2333,23 @@ private fun CleaningModeSheetContent(
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
                     val subtitle = when (pageTab) {
-                        0 -> if (pages[pageIndex] == ModePage.VAC_THEN_MOP) "Vacuums everything first, then mops it" else "Vac & Mop for daily clean"
-                        1 -> "Mop only for delicate floors"
-                        else -> "Vacuum only mode"
+                        0 -> if (pages[pageIndex] == ModePage.VAC_THEN_MOP) stringResource(Res.string.robot_subtitle_vac_then_mop) else stringResource(Res.string.robot_subtitle_vac_mop)
+                        1 -> stringResource(Res.string.robot_subtitle_mop)
+                        else -> stringResource(Res.string.robot_subtitle_vacuum)
                     }
                     Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                     val suction = @Composable {
-                        ModeOptionSelector("Suction power", FAN_OPTIONS.map { it.second }, FAN_OPTIONS.indexOfFirst { it.first == currentFanPower }, !busy, icons = FAN_OPTIONS.map { suctionIcon(it.first) }) { onFanPowerSelected(FAN_OPTIONS[it].first) }
+                        ModeOptionSelector(stringResource(Res.string.robot_suction_power), FAN_OPTIONS.map { stringResource(it.second) }, FAN_OPTIONS.indexOfFirst { it.first == currentFanPower }, !busy, icons = FAN_OPTIONS.map { suctionIcon(it.first) }) { onFanPowerSelected(FAN_OPTIONS[it].first) }
                     }
                     val water = @Composable {
                         if (waterSlide) WaterSlideSelector(currentWaterMode, !busy, onWaterModeSelected)
                         else if (waterDistance != null) WaterDistanceSelector(currentWaterMode, waterDistance, !busy, onWaterModeSelected, onWaterDistanceChange)
-                        else ModeOptionSelector("Water flow", WATER_OPTIONS.map { it.second }, WATER_OPTIONS.indexOfFirst { it.first == WaterBoxMode.normalize(currentWaterMode) }, !busy) { onWaterModeSelected(WATER_OPTIONS[it].first) }
+                        else ModeOptionSelector(stringResource(Res.string.robot_water_flow), WATER_OPTIONS.map { stringResource(it.second) }, WATER_OPTIONS.indexOfFirst { it.first == WaterBoxMode.normalize(currentWaterMode) }, !busy) { onWaterModeSelected(WATER_OPTIONS[it].first) }
                     }
                     val routes = routeChoices(routeOptions, currentRoute)
                     val route = @Composable {
-                        ModeOptionSelector("Route", routes.map { it.second }, routes.indexOfFirst { it.first == currentRoute }, !busy, icons = routes.map { routeIcon(it.first) }) { onRouteSelected(routes[it].first) }
+                        ModeOptionSelector(stringResource(Res.string.robot_route), routes.map { stringResource(it.second) }, routes.indexOfFirst { it.first == currentRoute }, !busy, icons = routes.map { routeIcon(it.first) }) { onRouteSelected(routes[it].first) }
                     }
 
                     when (pageTab) {
@@ -2146,7 +2372,7 @@ private fun CleaningModeSheetContent(
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
             ) {
                 Row(Modifier.padding(horizontal = 16.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("More cleaning settings", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Text(stringResource(Res.string.robot_more_cleaning_settings), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
                 }
             }
@@ -2155,27 +2381,28 @@ private fun CleaningModeSheetContent(
 }
 
 /** The official app's three plans: SmartPlan, General (one mode for all) and Custom (per room). */
-private enum class CleanPlan(val label: String) {
-    SMART("SmartPlan"),
-    MANUAL("General"),
-    PER_ROOM("Custom"),
+private enum class CleanPlan(val label: StringResource) {
+    SMART(Res.string.robot_plan_smart),
+    MANUAL(Res.string.robot_plan_general),
+    PER_ROOM(Res.string.robot_plan_custom),
 }
 
 /** The modes of the General plan, as the official sheet's swipeable strip. */
-private enum class ModePage(val title: String, val tab: Int) {
-    VAC_THEN_MOP("Vacuum, then mop", 0),
-    VAC_AND_MOP("Vac & Mop", 0),
-    MOP("Mop", 1),
-    VACUUM("Vacuum", 2),
+private enum class ModePage(val title: StringResource, val tab: Int) {
+    VAC_THEN_MOP(Res.string.robot_page_vac_then_mop, 0),
+    VAC_AND_MOP(Res.string.robot_mode_vac_mop, 0),
+    MOP(Res.string.robot_mode_mop, 1),
+    VACUUM(Res.string.robot_mode_vacuum, 2),
 }
 
+@Composable
 private fun roomModeSummary(mode: RoomCleanMode): String {
-    val fan = ROOM_FAN_OPTIONS.firstOrNull { it.first == mode.fanPower }?.second ?: "Other"
-    val water = WATER_OPTIONS.firstOrNull { it.first == WaterBoxMode.normalize(mode.waterBoxMode) }?.second ?: "Other"
+    val fan = stringResource(ROOM_FAN_OPTIONS.firstOrNull { it.first == mode.fanPower }?.second ?: Res.string.robot_other)
+    val water = stringResource(WATER_OPTIONS.firstOrNull { it.first == WaterBoxMode.normalize(mode.waterBoxMode) }?.second ?: Res.string.robot_other)
     return when {
-        mode.waterBoxMode == WaterBoxMode.OFF -> "Vacuum $fan"
-        mode.fanPower == VacuumFanPower.OFF -> "Mop $water"
-        else -> "Vacuum $fan, mop $water"
+        mode.waterBoxMode == WaterBoxMode.OFF -> stringResource(Res.string.robot_summary_vacuum, fan)
+        mode.fanPower == VacuumFanPower.OFF -> stringResource(Res.string.robot_summary_mop, water)
+        else -> stringResource(Res.string.robot_summary_vac_mop, fan, water)
     }
 }
 
@@ -2199,8 +2426,8 @@ private fun RoomCleanModesEditor(
 
     Column(Modifier.padding(horizontal = 24.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            if (rooms.isEmpty()) "Load the map to set up each room."
-            else "Each room is cleaned with its own suction, water and route.",
+            if (rooms.isEmpty()) stringResource(Res.string.robot_room_modes_load_map)
+            else stringResource(Res.string.robot_room_modes_text),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -2227,13 +2454,13 @@ private fun RoomCleanModesEditor(
                 }
                 if (open) {
                     Column(Modifier.padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                        ModeOptionSelector("Suction power", ROOM_FAN_OPTIONS.map { it.second }, ROOM_FAN_OPTIONS.indexOfFirst { it.first == mode.fanPower }, !busy, icons = ROOM_FAN_OPTIONS.map { suctionIcon(it.first) }) {
+                        ModeOptionSelector(stringResource(Res.string.robot_suction_power), ROOM_FAN_OPTIONS.map { stringResource(it.second) }, ROOM_FAN_OPTIONS.indexOfFirst { it.first == mode.fanPower }, !busy, icons = ROOM_FAN_OPTIONS.map { suctionIcon(it.first) }) {
                             val fan = ROOM_FAN_OPTIONS[it].first
                             // A room with neither suction nor water would not be cleaned at all.
                             val water = if (fan == VacuumFanPower.OFF && mode.waterBoxMode == WaterBoxMode.OFF) WaterBoxMode.LOW else mode.waterBoxMode
                             update(mode.copy(fanPower = fan, waterBoxMode = water))
                         }
-                        ModeOptionSelector("Water flow", WATER_OPTIONS.map { it.second }, WATER_OPTIONS.indexOfFirst { it.first == WaterBoxMode.normalize(mode.waterBoxMode) }, !busy) {
+                        ModeOptionSelector(stringResource(Res.string.robot_water_flow), WATER_OPTIONS.map { stringResource(it.second) }, WATER_OPTIONS.indexOfFirst { it.first == WaterBoxMode.normalize(mode.waterBoxMode) }, !busy) {
                             val water = WATER_OPTIONS[it].first
                             val fan = if (water == WaterBoxMode.OFF && mode.fanPower == VacuumFanPower.OFF) VacuumFanPower.BALANCED else mode.fanPower
                             // The route is hidden without water. A Qrevo S Pro (02.33.88) refuses Deep and Deep+ in a
@@ -2244,7 +2471,7 @@ private fun RoomCleanModesEditor(
                         }
                         if (mode.waterBoxMode != WaterBoxMode.OFF) {
                             val routes = routeChoices(routeOptions, mode.mopMode)
-                            ModeOptionSelector("Route", routes.map { it.second }, routes.indexOfFirst { it.first == mode.mopMode }, !busy) {
+                            ModeOptionSelector(stringResource(Res.string.robot_route), routes.map { stringResource(it.second) }, routes.indexOfFirst { it.first == mode.mopMode }, !busy) {
                                 update(mode.copy(mopMode = routes[it].first))
                             }
                         }
@@ -2254,7 +2481,7 @@ private fun RoomCleanModesEditor(
         }
         if (rooms.isNotEmpty()) {
             Button(onClick = { onSave(draft) }, enabled = !busy && unsaved, modifier = Modifier.fillMaxWidth()) {
-                Text("Save room settings")
+                Text(stringResource(Res.string.robot_save_room_settings))
             }
         }
     }
@@ -2346,19 +2573,19 @@ private fun LabeledSwitchRow(title: String, subtitle: String, checked: Boolean, 
 
 @Composable
 private fun VacuumThenMopRow(checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) =
-    LabeledSwitchRow("Vacuum first, then mop", "Vacuums everything before it starts mopping", checked, enabled, onChange)
+    LabeledSwitchRow(stringResource(Res.string.robot_vac_then_mop_title), stringResource(Res.string.robot_vac_then_mop_text), checked, enabled, onChange)
 
 @Composable
 private fun CornerCleanRow(checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) =
-    LabeledSwitchRow("Intensive corner mopping", "Mops corners and edges more thoroughly", checked, enabled, onChange)
+    LabeledSwitchRow(stringResource(Res.string.robot_corner_title), stringResource(Res.string.robot_corner_text), checked, enabled, onChange)
 
 /** The four water buttons plus Custom, whose amount is set with a slider ([WaterDistance]). */
 @Composable
 private fun WaterDistanceSelector(current: Int?, distance: Int, enabled: Boolean, onMode: (Int) -> Unit, onDistance: (Int) -> Unit) {
-    val options = WATER_OPTIONS + (WaterBoxMode.USER_CUSTOM to "Custom")
+    val options = WATER_OPTIONS + (WaterBoxMode.USER_CUSTOM to Res.string.robot_water_custom)
     val custom = current == WaterBoxMode.USER_CUSTOM
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ModeOptionSelector("Water flow", options.map { it.second }, options.indexOfFirst { it.first == WaterBoxMode.normalize(current) }, enabled) {
+        ModeOptionSelector(stringResource(Res.string.robot_water_flow), options.map { stringResource(it.second) }, options.indexOfFirst { it.first == WaterBoxMode.normalize(current) }, enabled) {
             val code = options[it].first
             if (code == WaterBoxMode.USER_CUSTOM) onDistance(distance) else onMode(code)
         }
@@ -2366,7 +2593,7 @@ private fun WaterDistanceSelector(current: Int?, distance: Int, enabled: Boolean
             val range = WaterDistance.RANGE
             var level by remember(distance) { mutableFloatStateOf(WaterDistance.level(distance).toFloat()) }
             val max = WaterDistance.level(range.first)
-            Text("Custom amount ${level.roundToInt()} of $max", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(Res.string.robot_custom_amount, level.roundToInt(), max), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             Slider(
                 value = level,
                 onValueChange = { level = it },
@@ -2390,12 +2617,12 @@ private fun WaterSlideSelector(current: Int?, enabled: Boolean, onSelect: (Int) 
     val code = position.roundToInt().coerceIn(range)
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Water flow", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(stringResource(Res.string.robot_water_flow), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Text(WaterBoxMode.slideLabel(code).orEmpty(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
         // Less water on the left, more on the right, as the official slider's two drops show.
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(Icons.Outlined.WaterDrop, contentDescription = "Less water", modifier = Modifier.size(16.dp),
+            Icon(Icons.Outlined.WaterDrop, contentDescription = stringResource(Res.string.robot_less_water), modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Slider(
                 value = position,
@@ -2410,7 +2637,7 @@ private fun WaterSlideSelector(current: Int?, enabled: Boolean, onSelect: (Int) 
                 enabled = enabled,
                 modifier = Modifier.weight(1f),
             )
-            Icon(Icons.Default.WaterDrop, contentDescription = "More water", modifier = Modifier.size(24.dp),
+            Icon(Icons.Default.WaterDrop, contentDescription = stringResource(Res.string.robot_more_water), modifier = Modifier.size(24.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -2420,8 +2647,8 @@ private fun WaterSlideSelector(current: Int?, enabled: Boolean, onSelect: (Int) 
 private fun CountSelector(selected: Int, onSelect: (Int) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Cleaning count", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-            Text(if (selected == 1) "once" else "twice", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+            Text(stringResource(Res.string.robot_cleaning_count), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(stringResource(if (selected == 1) Res.string.robot_once else Res.string.robot_twice), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
         SegmentedChoice(2, selected - 1, enabled = true, onSelect = { onSelect(it + 1) }) { index, isSelected ->
             Text("×${index + 1}", style = MaterialTheme.typography.labelLarge,
@@ -2452,8 +2679,8 @@ private fun DockSheetContent(
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 16.dp)) {
         Spacer(Modifier.height(12.dp))
         SecondaryTabRow(selectedTabIndex = selectedTab) {
-            listOf("Dock control", "Dock settings").forEachIndexed { i, title ->
-                Tab(selected = selectedTab == i, onClick = { selectedTab = i }, text = { Text(title) })
+            listOf(Res.string.robot_dock_control, Res.string.robot_dock_settings).forEachIndexed { i, title ->
+                Tab(selected = selectedTab == i, onClick = { selectedTab = i }, text = { Text(stringResource(title)) })
             }
         }
         Box(Modifier.fillMaxWidth().heightIn(min = 340.dp)) {
@@ -2487,11 +2714,11 @@ private fun DockControlTab(
     ) {
         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             DockStatusRow(
-                label = "Clean water tank",
+                label = stringResource(Res.string.robot_clean_water_tank),
                 value = when {
-                    dockError == null -> "Unknown"
-                    dockError == DockErrorCodes.WATER_EMPTY -> "Empty — refill"
-                    else -> "OK"
+                    dockError == null -> stringResource(Res.string.robot_unknown)
+                    dockError == DockErrorCodes.WATER_EMPTY -> stringResource(Res.string.robot_empty_refill)
+                    else -> stringResource(Res.string.robot_ok)
                 },
                 color = when {
                     dockError == null -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -2500,12 +2727,12 @@ private fun DockControlTab(
                 },
             )
             DockStatusRow(
-                label = "Dirty water tank",
+                label = stringResource(Res.string.robot_dirty_water_tank),
                 value = when (dockError) {
-                    null -> "Unknown"
-                    DockErrorCodes.DIRTY_TANK_FULL -> "Full — empty it"
-                    DockErrorCodes.DIRTY_TANK_LATCH_OPEN -> "Latch open"
-                    else -> "OK"
+                    null -> stringResource(Res.string.robot_unknown)
+                    DockErrorCodes.DIRTY_TANK_FULL -> stringResource(Res.string.robot_full_empty_it)
+                    DockErrorCodes.DIRTY_TANK_LATCH_OPEN -> stringResource(Res.string.robot_latch_open)
+                    else -> stringResource(Res.string.robot_ok)
                 },
                 color = when (dockError) {
                     null -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -2514,12 +2741,12 @@ private fun DockControlTab(
                 },
             )
             DockStatusRow(
-                label = "Dust bag",
+                label = stringResource(Res.string.robot_dust_bag),
                 value = when (dockError) {
-                    null -> "Unknown"
-                    DockErrorCodes.NO_DUSTBIN -> "Missing"
-                    DockErrorCodes.DUCT_BLOCKAGE -> "Duct blocked"
-                    else -> "OK"
+                    null -> stringResource(Res.string.robot_unknown)
+                    DockErrorCodes.NO_DUSTBIN -> stringResource(Res.string.robot_missing)
+                    DockErrorCodes.DUCT_BLOCKAGE -> stringResource(Res.string.robot_duct_blocked)
+                    else -> stringResource(Res.string.robot_ok)
                 },
                 color = when (dockError) {
                     null -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -2529,22 +2756,22 @@ private fun DockControlTab(
             )
             if (drying) {
                 DockStatusRow(
-                    label = "Mop dryer",
+                    label = stringResource(Res.string.robot_mop_dryer),
                     value = status.remainingDryTimeSec
                         ?.takeIf { it > 0 }
-                        ?.let { sec -> "Drying — ${((sec + 59) / 60)}m left" }
-                        ?: "Drying",
+                        ?.let { sec -> stringResource(Res.string.robot_drying_left, (sec + 59) / 60) }
+                        ?: stringResource(Res.string.robot_drying),
                     color = AppColors.Warn,
                 )
             }
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            DockActionButton(Modifier.weight(1f), Icons.Default.Delete, AppColors.Good, "Empty", !busy, onEmptyDustbin)
-            DockActionButton(Modifier.weight(1f), Icons.Default.WaterDrop, AppColors.Water, "Wash", !busy && waterAttached, onWashMop)
+            DockActionButton(Modifier.weight(1f), Icons.Default.Delete, AppColors.Good, stringResource(Res.string.robot_dock_empty_action), !busy, onEmptyDustbin)
+            DockActionButton(Modifier.weight(1f), Icons.Default.WaterDrop, AppColors.Water, stringResource(Res.string.robot_dock_wash_action), !busy && waterAttached, onWashMop)
             if (drying) {
-                DockActionButton(Modifier.weight(1f), Icons.Default.Stop, AppColors.Warn, "Stop dry", !busy, onStopDry)
+                DockActionButton(Modifier.weight(1f), Icons.Default.Stop, AppColors.Warn, stringResource(Res.string.robot_stop_dry), !busy, onStopDry)
             } else {
-                DockActionButton(Modifier.weight(1f), Icons.Default.Air, AppColors.Warn, "Dry", !busy, onDryMop)
+                DockActionButton(Modifier.weight(1f), Icons.Default.Air, AppColors.Warn, stringResource(Res.string.robot_dry), !busy, onDryMop)
             }
         }
     }
@@ -2605,15 +2832,15 @@ private fun DockSettingsTab(
 
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            DockSettingCard(Modifier.weight(1f), Icons.Default.Repeat, AppColors.Water, "Mop wash frequency", washFrequencyLabel(smartWash), washFrequencyEnabled) { dialogTarget = "wash_freq" }
-            DockSettingCard(Modifier.weight(1f), Icons.Default.WaterDrop, AppColors.Water, "Washing mode", dockCapabilities.washModeLabel(dockSettings.washMode, dockType), washModeEnabled) { dialogTarget = "wash_mode" }
+            DockSettingCard(Modifier.weight(1f), Icons.Default.Repeat, AppColors.Water, stringResource(Res.string.robot_mop_wash_frequency), washFrequencyLabel(smartWash), washFrequencyEnabled) { dialogTarget = "wash_freq" }
+            DockSettingCard(Modifier.weight(1f), Icons.Default.WaterDrop, AppColors.Water, stringResource(Res.string.robot_washing_mode), dockCapabilities.washModeLabel(dockSettings.washMode, dockType), washModeEnabled) { dialogTarget = "wash_mode" }
         }
-        DockSettingCard(Modifier.fillMaxWidth(), Icons.Default.Delete, MaterialTheme.colorScheme.primary, "Auto-empty mode", dockCapabilities.autoEmptyModeLabel(dockSettings.autoEmptyMode), autoEmptyEnabled) { dialogTarget = "auto_empty" }
+        DockSettingCard(Modifier.fillMaxWidth(), Icons.Default.Delete, MaterialTheme.colorScheme.primary, stringResource(Res.string.robot_auto_empty_mode), dockCapabilities.autoEmptyModeLabel(dockSettings.autoEmptyMode), autoEmptyEnabled) { dialogTarget = "auto_empty" }
     }
 
     when (dialogTarget) {
         "wash_freq" -> RadioPickerDialog(
-            title = "Mop wash frequency",
+            title = stringResource(Res.string.robot_mop_wash_frequency),
             options = washFrequencyOptions.map { it.label },
             selected = washFrequencyIndex,
             onSelect = { washFrequencyOptions[it].let { option -> onWashFrequencyChange(option.mode, option.intervalMinutes) } },
@@ -2621,7 +2848,7 @@ private fun DockSettingsTab(
             onDismiss = { dialogTarget = null },
         )
         "wash_mode" -> RadioPickerDialog(
-            title = "Washing mode",
+            title = stringResource(Res.string.robot_washing_mode),
             options = washModes.map { it.second },
             selected = washModeIndex,
             onSelect = { onWashModeChange(washModes[it].first) },
@@ -2629,7 +2856,7 @@ private fun DockSettingsTab(
             onDismiss = { dialogTarget = null },
         )
         "auto_empty" -> RadioPickerDialog(
-            title = "Auto-empty mode",
+            title = stringResource(Res.string.robot_auto_empty_mode),
             options = autoEmptyModes.map { it.second },
             selected = autoEmptyModes.indexOfFirst { it.first == dockSettings.autoEmptyMode },
             onSelect = { onAutoEmptyModeChange(autoEmptyModes[it].first) },
@@ -2671,7 +2898,7 @@ private fun RadioPickerDialog(title: String, options: List<String>, selected: In
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.robot_close)) } },
     )
 }
 
@@ -2691,17 +2918,17 @@ private fun RoomsSheetContent(
         modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).navigationBarsPadding().padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Select rooms", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.robot_select_rooms), style = MaterialTheme.typography.headlineSmall)
         if (rooms.isEmpty()) {
-            Text("Load the map first to discover your rooms.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(Res.string.robot_load_map_first), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             OutlinedButton(onClick = onLoadMap, modifier = Modifier.fillMaxWidth()) {
-                Icon(Icons.Default.Refresh, null); Spacer(Modifier.width(8.dp)); Text("Load map")
+                Icon(Icons.Default.Refresh, null); Spacer(Modifier.width(8.dp)); Text(stringResource(Res.string.robot_load_map))
             }
         } else {
             val hint = if (selectedRoomIds.isEmpty())
-                "Tap rooms to select — they'll be cleaned in the order you pick."
+                stringResource(Res.string.robot_tap_rooms_hint)
             else
-                "${selectedRoomIds.size} selected — tap to reorder or remove."
+                stringResource(Res.string.robot_rooms_selected_hint, selectedRoomIds.size)
             Text(hint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 rooms.forEach { room ->
@@ -2730,10 +2957,10 @@ private fun RoomsSheetContent(
             Button(onClick = onCleanRooms, enabled = !busy && selectedRoomIds.isNotEmpty(), modifier = Modifier.fillMaxWidth().height(56.dp), shape = MaterialTheme.shapes.extraLarge) {
                 Icon(Icons.Default.PlayArrow, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Clean selected rooms")
+                Text(stringResource(Res.string.robot_clean_selected_rooms))
             }
             TextButton(onClick = onDefaultOrder, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-                Text("Default cleaning order")
+                Text(stringResource(Res.string.robot_default_order))
             }
         }
     }
@@ -2765,10 +2992,10 @@ private fun CleanOrderSheetContent(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).navigationBarsPadding().padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Default cleaning order", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.robot_default_order), style = MaterialTheme.typography.headlineSmall)
         Text(
-            if (rooms.isEmpty()) "Load the map first to discover your rooms."
-            else "Clean without picking rooms goes through them in this order. Rooms you pick are still cleaned in the order you tap them.",
+            if (rooms.isEmpty()) stringResource(Res.string.robot_load_map_first)
+            else stringResource(Res.string.robot_default_order_text),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -2782,17 +3009,18 @@ private fun CleanOrderSheetContent(
                         }
                     }
                     Text(
-                        names[roomId] ?: "Room $roomId",
+                        names[roomId] ?: stringResource(Res.string.robot_room_fallback, roomId),
                         modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    val movedRoom = names[roomId] ?: stringResource(Res.string.robot_room_generic)
                     IconButton(onClick = { move(index, index - 1) }, enabled = !busy && index > 0) {
-                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Move ${names[roomId] ?: "room"} up")
+                        Icon(Icons.Default.KeyboardArrowUp, contentDescription = stringResource(Res.string.robot_move_up, movedRoom))
                     }
                     IconButton(onClick = { move(index, index + 1) }, enabled = !busy && index < order.lastIndex) {
-                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Move ${names[roomId] ?: "room"} down")
+                        Icon(Icons.Default.KeyboardArrowDown, contentDescription = stringResource(Res.string.robot_move_down, movedRoom))
                     }
                 }
             }
@@ -2804,12 +3032,12 @@ private fun CleanOrderSheetContent(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = MaterialTheme.shapes.extraLarge,
             ) {
-                Text("Save order")
+                Text(stringResource(Res.string.robot_save_order))
             }
         }
         if (savedOrder.isNotEmpty()) {
             TextButton(onClick = onRemove, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-                Text("Remove default order")
+                Text(stringResource(Res.string.robot_remove_order))
             }
         }
     }
@@ -2845,11 +3073,9 @@ private fun MapsSheetContent(
         modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).navigationBarsPadding().padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Maps", style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(Res.string.robot_action_maps), style = MaterialTheme.typography.headlineSmall)
         Text(
-            "The maps stored on your robot. The robot keeps one backup of each map: back it up while " +
-                "the map looks right, and restore it if the map goes wrong. Moved the dock somewhere the " +
-                "map doesn't cover? Delete the map, then let the robot map the home again.",
+            stringResource(Res.string.robot_maps_intro),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -2884,14 +3110,13 @@ private fun MapsSheetContent(
         if (mapSaving == false && floorMaps.isEmpty() && !loading) {
             Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Map saving is off", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(Res.string.robot_map_saving_off), style = MaterialTheme.typography.titleSmall)
                     Text(
-                        "This robot does not keep a map yet, so there are no rooms, zones or floors to work with. " +
-                            "Turn map saving on to let it store one.",
+                        stringResource(Res.string.robot_map_saving_off_text),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     OutlinedButton(onClick = onEnableMapSaving, enabled = canManage, modifier = Modifier.fillMaxWidth()) {
-                        Text("Turn on map saving")
+                        Text(stringResource(Res.string.robot_turn_on_map_saving))
                     }
                 }
             }
@@ -2899,16 +3124,16 @@ private fun MapsSheetContent(
 
         if (multiLevel != null) {
             SettingSwitchRow(
-                title = "Multi-level maps",
-                subtitle = "Keep up to one map per floor. Turning this off keeps one map and deletes the rest.",
+                title = stringResource(Res.string.robot_multi_level),
+                subtitle = stringResource(Res.string.robot_multi_level_text),
                 checked = multiLevel,
                 enabled = canManage,
                 onCheckedChange = onMultiLevelChange,
             )
             if (multiLevel && smartSwitching != null) {
                 SettingSwitchRow(
-                    title = "Recognise the floor automatically",
-                    subtitle = "Off: you pick the map before cleaning another floor.",
+                    title = stringResource(Res.string.robot_smart_floor),
+                    subtitle = stringResource(Res.string.robot_smart_floor_text),
                     checked = smartSwitching,
                     enabled = canManage,
                     onCheckedChange = onSmartSwitchingChange,
@@ -2920,14 +3145,13 @@ private fun MapsSheetContent(
         if (unsavedMap) {
             Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.primaryContainer) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("New map not saved", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(Res.string.robot_new_map_unsaved), style = MaterialTheme.typography.titleSmall)
                     Text(
-                        "The robot has built a new map. Stop the mapping run when it has covered the home, " +
-                            "then save it so it is kept and split into rooms.",
+                        stringResource(Res.string.robot_new_map_unsaved_text),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Button(onClick = onSaveNewMap, enabled = canManage, modifier = Modifier.fillMaxWidth()) {
-                        Text("Save new map")
+                        Text(stringResource(Res.string.robot_save_new_map))
                     }
                 }
             }
@@ -2937,23 +3161,22 @@ private fun MapsSheetContent(
             loading && floorMaps.isEmpty() -> {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                    Text("Checking robot for saved maps…", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(Res.string.robot_checking_maps), style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
             floorMaps.isEmpty() -> {
-                Text("No saved maps on the robot.", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(Res.string.robot_no_saved_maps), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "The robot leaves the dock and drives through the home to build a new map. Stop it once " +
-                        "it has covered everything, then save the map here. Open the doors to every room you want on it.",
+                    stringResource(Res.string.robot_no_saved_maps_text),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Button(onClick = onStartMapping, enabled = canManage && !unsavedMap, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.Map, null); Spacer(Modifier.width(8.dp)); Text("Map the home")
+                    Icon(Icons.Default.Map, null); Spacer(Modifier.width(8.dp)); Text(stringResource(Res.string.robot_map_the_home))
                 }
                 OutlinedButton(onClick = onRecheck, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.Refresh, null); Spacer(Modifier.width(8.dp)); Text("Re-check")
+                    Icon(Icons.Default.Refresh, null); Spacer(Modifier.width(8.dp)); Text(stringResource(Res.string.robot_recheck))
                 }
             }
 
@@ -2968,41 +3191,41 @@ private fun MapsSheetContent(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(floor.name, style = MaterialTheme.typography.bodyLarge)
                             if (selected) {
-                                Text("Currently loaded", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                                Text(stringResource(Res.string.robot_currently_loaded), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                             }
                             Text(
-                                floor.backupAt?.let { "Backup from ${formatCleanRecordTime(it)}" } ?: "No backup yet",
+                                floor.backupAt?.let { stringResource(Res.string.robot_backup_from, formatCleanRecordTime(it)) } ?: stringResource(Res.string.robot_no_backup),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                         IconButton(onClick = { onRename(floor) }, enabled = canManage) {
-                            Icon(Icons.Default.Edit, contentDescription = "Rename ${floor.name}")
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(Res.string.robot_rename_named, floor.name))
                         }
                         IconButton(onClick = { onDelete(floor) }, enabled = canManage) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "Delete ${floor.name}",
+                                contentDescription = stringResource(Res.string.robot_delete_named, floor.name),
                                 tint = if (canManage) MaterialTheme.colorScheme.error else LocalContentColor.current,
                             )
                         }
                         // Loading only matters when there is another map to switch to.
                         if (floorMaps.size > 1) {
                             Button(onClick = { onLoad(floor.mapFlag) }, enabled = !busy && !selected) {
-                                Text(if (selected) "Loaded" else "Load")
+                                Text(if (selected) stringResource(Res.string.robot_loaded) else stringResource(Res.string.robot_load))
                             }
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         SavedMapPreview(
-                            label = "Map",
+                            label = stringResource(Res.string.robot_preview_map),
                             map = previews[previewKey(floor, backup = false)],
                             failed = failedPreviews[previewKey(floor, backup = false)] == true,
                             modifier = Modifier.weight(1f),
                         )
                         if (floor.backupAt != null) {
                             SavedMapPreview(
-                                label = "Backup",
+                                label = stringResource(Res.string.robot_preview_backup),
                                 map = previews[previewKey(floor, backup = true)],
                                 failed = failedPreviews[previewKey(floor, backup = true)] == true,
                                 modifier = Modifier.weight(1f),
@@ -3013,22 +3236,22 @@ private fun MapsSheetContent(
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
                         OutlinedButton(onClick = { onBackup(floor, previews[previewKey(floor, backup = false)]) }, enabled = canManage) {
-                            Text("Back up now")
+                            Text(stringResource(Res.string.robot_back_up_now))
                         }
                         // Restoring was only captured for the loaded map.
                         OutlinedButton(onClick = { onRestore(floor, previews[previewKey(floor, backup = true)]) }, enabled = canManage && selected && floor.backupAt != null) {
-                            Text("Restore backup")
+                            Text(stringResource(Res.string.robot_restore_backup))
                         }
                     }
                     HorizontalDivider()
                 }
                 if (canAddMap) {
                     OutlinedButton(onClick = onStartMapping, enabled = canManage && !unsavedMap, modifier = Modifier.fillMaxWidth()) {
-                        Icon(Icons.Default.Map, null); Spacer(Modifier.width(8.dp)); Text("Map another floor")
+                        Icon(Icons.Default.Map, null); Spacer(Modifier.width(8.dp)); Text(stringResource(Res.string.robot_map_another_floor))
                     }
                 }
                 TextButton(onClick = onRecheck, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Default.Refresh, null); Spacer(Modifier.width(8.dp)); Text("Re-check")
+                    Icon(Icons.Default.Refresh, null); Spacer(Modifier.width(8.dp)); Text(stringResource(Res.string.robot_recheck))
                 }
             }
         }
@@ -3041,23 +3264,23 @@ private fun RenameMapDialog(floor: FloorMap, onConfirm: (String) -> Unit, onDism
     val problem = mapNameBlocker(name.trim())
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Rename map") },
+        title = { Text(stringResource(Res.string.robot_rename_map)) },
         text = {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
                 singleLine = true,
-                label = { Text("Map name") },
+                label = { Text(stringResource(Res.string.robot_map_name)) },
                 isError = problem != null && name.isNotEmpty(),
                 supportingText = { if (problem != null && name.isNotEmpty()) Text(problem) },
             )
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(name.trim()) }, enabled = problem == null && name.trim() != floor.name) {
-                Text("Rename")
+                Text(stringResource(Res.string.robot_rename))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.common_cancel)) } },
     )
 }
 
@@ -3091,12 +3314,11 @@ private fun KeepMapDialog(
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Keep which map?") },
+        title = { Text(stringResource(Res.string.robot_keep_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    "Single-level mode keeps one map. The robot deletes the others with their rooms " +
-                        "and zones. This can't be undone.",
+                    stringResource(Res.string.robot_keep_text),
                 )
                 floorMaps.forEach { floor ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -3110,9 +3332,9 @@ private fun KeepMapDialog(
             TextButton(
                 onClick = { onConfirm(keep) },
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            ) { Text("Keep this map") }
+            ) { Text(stringResource(Res.string.robot_keep_confirm)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.common_cancel)) } },
     )
 }
 
@@ -3135,7 +3357,7 @@ private fun SavedMapPreview(label: String, map: ParsedMap?, failed: Boolean, mod
         ) {
             when {
                 map != null -> SavedMapImage(map, Modifier.fillMaxSize().padding(6.dp))
-                failed -> Text("Couldn't load", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                failed -> Text(stringResource(Res.string.robot_couldnt_load), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 else -> CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
             }
         }
@@ -3171,20 +3393,19 @@ internal fun SavedMapImage(map: ParsedMap, modifier: Modifier = Modifier) {
 private fun BackupMapDialog(floor: FloorMap, picture: ParsedMap?, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Back up \"${floor.name}\"?") },
+        title = { Text(stringResource(Res.string.robot_backup_title, floor.name)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // The map as the robot will save it; absent while the sheet is still fetching it.
                 picture?.let { DialogMapPicture(it) }
                 Text(
-                    "The robot saves this map as it is now, with its rooms, zones, walls and carpets. " +
-                        (floor.backupAt?.let { "It keeps one backup per map, so this replaces the backup from ${formatCleanRecordTime(it)}." }
-                            ?: "It keeps one backup per map."),
+                    floor.backupAt?.let { stringResource(Res.string.robot_backup_text_replace, formatCleanRecordTime(it)) }
+                        ?: stringResource(Res.string.robot_backup_text),
                 )
             }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Back up") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(Res.string.robot_back_up)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.common_cancel)) } },
     )
 }
 
@@ -3192,15 +3413,16 @@ private fun BackupMapDialog(floor: FloorMap, picture: ParsedMap?, onConfirm: () 
 private fun RestoreBackupDialog(floor: FloorMap, picture: ParsedMap?, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Restore \"${floor.name}\"?") },
+        title = { Text(stringResource(Res.string.robot_restore_title, floor.name)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 // The backup the map goes back to; absent while the sheet is still fetching it.
                 picture?.let { DialogMapPicture(it) }
                 Text(
-                    "The map goes back to the backup from ${floor.backupAt?.let { formatCleanRecordTime(it) } ?: "earlier"}. " +
-                        "Everything changed on it since then is lost: rooms, room names, no-go zones, walls, carpets " +
-                        "and thresholds. Check your routines afterwards.",
+                    stringResource(
+                        Res.string.robot_restore_text,
+                        floor.backupAt?.let { formatCleanRecordTime(it) } ?: stringResource(Res.string.robot_earlier),
+                    ),
                 )
             }
         },
@@ -3208,9 +3430,9 @@ private fun RestoreBackupDialog(floor: FloorMap, picture: ParsedMap?, onConfirm:
             TextButton(
                 onClick = onConfirm,
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            ) { Text("Restore") }
+            ) { Text(stringResource(Res.string.robot_restore)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.common_cancel)) } },
     )
 }
 
@@ -3233,20 +3455,19 @@ private fun DeleteMapDialog(floor: FloorMap, onConfirm: () -> Unit, onDismiss: (
     AlertDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
-        title = { Text("Delete \"${floor.name}\"?") },
+        title = { Text(stringResource(Res.string.robot_delete_title, floor.name)) },
         text = {
             Text(
-                "The robot forgets this map and everything on it: rooms, room names, floor types, " +
-                    "no-go zones, walls, carpets and thresholds. This can't be undone.",
+                stringResource(Res.string.robot_delete_text),
             )
         },
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            ) { Text("Delete map") }
+            ) { Text(stringResource(Res.string.robot_delete_map)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.common_cancel)) } },
     )
 }
 
@@ -3263,12 +3484,13 @@ private fun batteryColor(battery: Int?): Color = when {
 private fun stateLabel(state: Int?): String =
     if (state == null) "—" else VacuumStateCodes.describe(state)
 
+@Composable
 private fun dryingLabel(remainingDrySec: Long?): String {
     val left = remainingDrySec?.takeIf { it > 0 }?.let { s ->
         val m = s / 60
-        if (m >= 60) "${m / 60}h ${m % 60}m left" else "${m}m left"
+        if (m >= 60) stringResource(Res.string.robot_left_hm, m / 60, m % 60) else stringResource(Res.string.robot_left_m, m)
     }
-    return if (left != null) "Drying mop · $left" else "Drying mop"
+    return if (left != null) stringResource(Res.string.robot_drying_mop_left, left) else stringResource(Res.string.robot_drying_mop)
 }
 
 
