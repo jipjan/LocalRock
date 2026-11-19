@@ -1,5 +1,202 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.settings_after_cleaning
+import com.kodraliu.localrock.resources.settings_also_advertised
+import com.kodraliu.localrock.resources.settings_at_set_time
+import com.kodraliu.localrock.resources.settings_auto_empties_since_reset
+import com.kodraliu.localrock.resources.settings_auto_empty_mode
+import com.kodraliu.localrock.resources.settings_back
+import com.kodraliu.localrock.resources.settings_beeping
+import com.kodraliu.localrock.resources.settings_beta_checking
+import com.kodraliu.localrock.resources.settings_beta_features
+import com.kodraliu.localrock.resources.settings_beta_intro
+import com.kodraliu.localrock.resources.settings_beta_none
+import com.kodraliu.localrock.resources.settings_beta_sub
+import com.kodraliu.localrock.resources.settings_bin_emptied
+import com.kodraliu.localrock.resources.settings_bit
+import com.kodraliu.localrock.resources.settings_cancel
+import com.kodraliu.localrock.resources.settings_care_how
+import com.kodraliu.localrock.resources.settings_carpet_cleaning
+import com.kodraliu.localrock.resources.settings_carpet_mode
+import com.kodraliu.localrock.resources.settings_carpet_sub
+import com.kodraliu.localrock.resources.settings_child_lock
+import com.kodraliu.localrock.resources.settings_child_lock_off
+import com.kodraliu.localrock.resources.settings_child_lock_on
+import com.kodraliu.localrock.resources.settings_clean
+import com.kodraliu.localrock.resources.settings_cleaning_history
+import com.kodraliu.localrock.resources.settings_cleans_count
+import com.kodraliu.localrock.resources.settings_close
+import com.kodraliu.localrock.resources.settings_daily_at
+import com.kodraliu.localrock.resources.settings_dnd
+import com.kodraliu.localrock.resources.settings_dnd_add_period
+import com.kodraliu.localrock.resources.settings_dnd_anytime
+import com.kodraliu.localrock.resources.settings_dnd_delete_period
+import com.kodraliu.localrock.resources.settings_dnd_enable
+import com.kodraliu.localrock.resources.settings_dnd_multi_intro
+import com.kodraliu.localrock.resources.settings_dnd_note
+import com.kodraliu.localrock.resources.settings_dnd_sub
+import com.kodraliu.localrock.resources.settings_dnd_tap_change
+import com.kodraliu.localrock.resources.settings_dnd_tap_close
+import com.kodraliu.localrock.resources.settings_dock_settings
+import com.kodraliu.localrock.resources.settings_dock_settings_title
+import com.kodraliu.localrock.resources.settings_dock_sub
+import com.kodraliu.localrock.resources.settings_dry_mops_at
+import com.kodraliu.localrock.resources.settings_drying_time
+import com.kodraliu.localrock.resources.settings_dust_bag
+import com.kodraliu.localrock.resources.settings_empty
+import com.kodraliu.localrock.resources.settings_empty_tank_text
+import com.kodraliu.localrock.resources.settings_empty_tank_title
+import com.kodraliu.localrock.resources.settings_emptying_tank
+import com.kodraliu.localrock.resources.settings_end
+import com.kodraliu.localrock.resources.settings_end_time
+import com.kodraliu.localrock.resources.settings_feature
+import com.kodraliu.localrock.resources.settings_filter
+import com.kodraliu.localrock.resources.settings_find_robot
+import com.kodraliu.localrock.resources.settings_find_robot_sub
+import com.kodraliu.localrock.resources.settings_firmware_version
+import com.kodraliu.localrock.resources.settings_floor_cleaning
+import com.kodraliu.localrock.resources.settings_floor_sub
+import com.kodraliu.localrock.resources.settings_fw_available
+import com.kodraliu.localrock.resources.settings_fw_check
+import com.kodraliu.localrock.resources.settings_fw_check_sub
+import com.kodraliu.localrock.resources.settings_fw_checking
+import com.kodraliu.localrock.resources.settings_fw_installed
+import com.kodraliu.localrock.resources.settings_fw_required
+import com.kodraliu.localrock.resources.settings_fw_unavailable
+import com.kodraliu.localrock.resources.settings_fw_up_to_date
+import com.kodraliu.localrock.resources.settings_fw_updates
+import com.kodraliu.localrock.resources.settings_go
+import com.kodraliu.localrock.resources.settings_guide_dust_bag
+import com.kodraliu.localrock.resources.settings_guide_filter
+import com.kodraliu.localrock.resources.settings_guide_main_brush
+import com.kodraliu.localrock.resources.settings_guide_maintenance_brush
+import com.kodraliu.localrock.resources.settings_guide_sensor
+import com.kodraliu.localrock.resources.settings_guide_side_brush
+import com.kodraliu.localrock.resources.settings_guide_strainer
+import com.kodraliu.localrock.resources.settings_hide
+import com.kodraliu.localrock.resources.settings_history
+import com.kodraliu.localrock.resources.settings_hour
+import com.kodraliu.localrock.resources.settings_install
+import com.kodraliu.localrock.resources.settings_internal_tank
+import com.kodraliu.localrock.resources.settings_internal_tank_sub
+import com.kodraliu.localrock.resources.settings_last_clean_covered
+import com.kodraliu.localrock.resources.settings_last_clean_took
+import com.kodraliu.localrock.resources.settings_led_off
+import com.kodraliu.localrock.resources.settings_led_on
+import com.kodraliu.localrock.resources.settings_left
+import com.kodraliu.localrock.resources.settings_lifetime_stats
+import com.kodraliu.localrock.resources.settings_live_view
+import com.kodraliu.localrock.resources.settings_live_view_sub
+import com.kodraliu.localrock.resources.settings_load_history
+import com.kodraliu.localrock.resources.settings_main_brush
+import com.kodraliu.localrock.resources.settings_maint_load_failed
+import com.kodraliu.localrock.resources.settings_maintenance
+import com.kodraliu.localrock.resources.settings_maintenance_brush
+import com.kodraliu.localrock.resources.settings_maintenance_sub
+import com.kodraliu.localrock.resources.settings_map_not_loaded
+import com.kodraliu.localrock.resources.settings_map_not_loaded_text
+import com.kodraliu.localrock.resources.settings_maps
+import com.kodraliu.localrock.resources.settings_maps_sub
+import com.kodraliu.localrock.resources.settings_minute
+import com.kodraliu.localrock.resources.settings_model
+import com.kodraliu.localrock.resources.settings_mop_drying
+import com.kodraliu.localrock.resources.settings_mop_drying_off
+import com.kodraliu.localrock.resources.settings_mop_drying_on
+import com.kodraliu.localrock.resources.settings_mop_wash_frequency
+import com.kodraliu.localrock.resources.settings_mop_washes_since_reset
+import com.kodraliu.localrock.resources.settings_more_options
+import com.kodraliu.localrock.resources.settings_more_options_sub
+import com.kodraliu.localrock.resources.settings_no_cleans
+import com.kodraliu.localrock.resources.settings_no_cruises
+import com.kodraliu.localrock.resources.settings_no_history
+import com.kodraliu.localrock.resources.settings_no_history_text
+import com.kodraliu.localrock.resources.settings_no_map_for_clean
+import com.kodraliu.localrock.resources.settings_no_timeline
+import com.kodraliu.localrock.resources.settings_nothing_found
+import com.kodraliu.localrock.resources.settings_obstacle_avoidance
+import com.kodraliu.localrock.resources.settings_obstacle_sub
+import com.kodraliu.localrock.resources.settings_off
+import com.kodraliu.localrock.resources.settings_off_peak_charging
+import com.kodraliu.localrock.resources.settings_off_peak_electricity
+import com.kodraliu.localrock.resources.settings_pets
+import com.kodraliu.localrock.resources.settings_pets_sub
+import com.kodraliu.localrock.resources.settings_pin_arrived
+import com.kodraliu.localrock.resources.settings_pin_go
+import com.kodraliu.localrock.resources.settings_pin_go_sub
+import com.kodraliu.localrock.resources.settings_pin_sent
+import com.kodraliu.localrock.resources.settings_pin_tap_map
+import com.kodraliu.localrock.resources.settings_pin_target_set
+import com.kodraliu.localrock.resources.settings_rc_backward
+import com.kodraliu.localrock.resources.settings_rc_each_tap
+import com.kodraliu.localrock.resources.settings_rc_forward
+import com.kodraliu.localrock.resources.settings_rc_left
+import com.kodraliu.localrock.resources.settings_rc_right
+import com.kodraliu.localrock.resources.settings_rc_stop
+import com.kodraliu.localrock.resources.settings_rc_tap
+import com.kodraliu.localrock.resources.settings_refresh
+import com.kodraliu.localrock.resources.settings_remote_control
+import com.kodraliu.localrock.resources.settings_remote_control_title
+import com.kodraliu.localrock.resources.settings_remote_sub
+import com.kodraliu.localrock.resources.settings_replace
+import com.kodraliu.localrock.resources.settings_report_github
+import com.kodraliu.localrock.resources.settings_reset
+import com.kodraliu.localrock.resources.settings_reset_text
+import com.kodraliu.localrock.resources.settings_reset_title
+import com.kodraliu.localrock.resources.settings_retry
+import com.kodraliu.localrock.resources.settings_robot_reply
+import com.kodraliu.localrock.resources.settings_robot_settings
+import com.kodraliu.localrock.resources.settings_save
+import com.kodraliu.localrock.resources.settings_schedules
+import com.kodraliu.localrock.resources.settings_schedules_sub
+import com.kodraliu.localrock.resources.settings_search
+import com.kodraliu.localrock.resources.settings_sensor
+import com.kodraliu.localrock.resources.settings_sessions
+import com.kodraliu.localrock.resources.settings_show
+import com.kodraliu.localrock.resources.settings_side_brush
+import com.kodraliu.localrock.resources.settings_spot_here
+import com.kodraliu.localrock.resources.settings_spot_once_there
+import com.kodraliu.localrock.resources.settings_spot_started
+import com.kodraliu.localrock.resources.settings_start
+import com.kodraliu.localrock.resources.settings_start_time
+import com.kodraliu.localrock.resources.settings_status_led
+import com.kodraliu.localrock.resources.settings_strainer
+import com.kodraliu.localrock.resources.settings_tab_cleaning
+import com.kodraliu.localrock.resources.settings_tab_navigating
+import com.kodraliu.localrock.resources.settings_time_range
+import com.kodraliu.localrock.resources.settings_timeline
+import com.kodraliu.localrock.resources.settings_timeline_reading
+import com.kodraliu.localrock.resources.settings_title
+import com.kodraliu.localrock.resources.settings_total
+import com.kodraliu.localrock.resources.settings_total_area
+import com.kodraliu.localrock.resources.settings_total_line
+import com.kodraliu.localrock.resources.settings_total_time
+import com.kodraliu.localrock.resources.settings_unknown
+import com.kodraliu.localrock.resources.settings_unknown_value
+import com.kodraliu.localrock.resources.settings_unlisted_count
+import com.kodraliu.localrock.resources.settings_unlisted_text
+import com.kodraliu.localrock.resources.settings_unnamed
+import com.kodraliu.localrock.resources.settings_used
+import com.kodraliu.localrock.resources.settings_valley_limit
+import com.kodraliu.localrock.resources.settings_voice_assistant
+import com.kodraliu.localrock.resources.settings_voice_commands
+import com.kodraliu.localrock.resources.settings_voice_downloading
+import com.kodraliu.localrock.resources.settings_voice_load_error
+import com.kodraliu.localrock.resources.settings_voice_pack
+import com.kodraliu.localrock.resources.settings_voice_pack_sub
+import com.kodraliu.localrock.resources.settings_voice_reading
+import com.kodraliu.localrock.resources.settings_voice_sub
+import com.kodraliu.localrock.resources.settings_voice_switch_text
+import com.kodraliu.localrock.resources.settings_voice_switch_title
+import com.kodraliu.localrock.resources.settings_voice_switching
+import com.kodraliu.localrock.resources.settings_volume
+import com.kodraliu.localrock.resources.settings_wash_water_temperature
+import com.kodraliu.localrock.resources.settings_washing_mode
+import com.kodraliu.localrock.resources.settings_when_full
+import com.kodraliu.localrock.resources.settings_when_needed
+import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.getString
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.material3.Tab
@@ -240,6 +437,7 @@ fun VacuumSettingsScreen(
         runCatching { repository.fetchCleanHistory() }
     }
 
+    val emptyingTankMessage = stringResource(Res.string.settings_emptying_tank)
     Box(Modifier.fillMaxSize()) {
     when (route) {
         SettingsRoute.Root -> SettingsRootScreen(
@@ -266,24 +464,24 @@ fun VacuumSettingsScreen(
                     }
                 },
                 pages = listOf(
-                    "Cleaning history" to { route = SettingsRoute.History },
-                    "Schedules" to onSchedule,
-                    "Maintenance" to { route = SettingsRoute.Maintenance },
-                    "Carpet cleaning" to { route = SettingsRoute.Carpet },
-                    "Floor cleaning" to { route = SettingsRoute.Floor },
-                    "Dock settings" to { route = SettingsRoute.DockSettings },
-                    "Obstacle avoidance" to { route = SettingsRoute.Obstacle },
-                    "Pets" to { route = SettingsRoute.Pets },
-                    "Maps" to onMaps,
-                    "Voice assistant" to { route = SettingsRoute.RobotSettings },
-                    "Voice pack" to { route = SettingsRoute.VoicePack },
-                    "More options" to { route = SettingsRoute.RobotSettings },
-                    "Do Not Disturb" to { route = SettingsRoute.DndMode },
-                    "Off-peak charging" to { route = SettingsRoute.Valley },
-                    "Beta features" to { route = SettingsRoute.BetaFeatures },
-                    "Pin & Go" to onPinGo,
-                    "Remote control" to onRemote,
-                ) + listOfNotNull(onLiveView?.let { "Live view" to it }),
+                    stringResource(Res.string.settings_cleaning_history) to { route = SettingsRoute.History },
+                    stringResource(Res.string.settings_schedules) to onSchedule,
+                    stringResource(Res.string.settings_maintenance) to { route = SettingsRoute.Maintenance },
+                    stringResource(Res.string.settings_carpet_cleaning) to { route = SettingsRoute.Carpet },
+                    stringResource(Res.string.settings_floor_cleaning) to { route = SettingsRoute.Floor },
+                    stringResource(Res.string.settings_dock_settings) to { route = SettingsRoute.DockSettings },
+                    stringResource(Res.string.settings_obstacle_avoidance) to { route = SettingsRoute.Obstacle },
+                    stringResource(Res.string.settings_pets) to { route = SettingsRoute.Pets },
+                    stringResource(Res.string.settings_maps) to onMaps,
+                    stringResource(Res.string.settings_voice_assistant) to { route = SettingsRoute.RobotSettings },
+                    stringResource(Res.string.settings_voice_pack) to { route = SettingsRoute.VoicePack },
+                    stringResource(Res.string.settings_more_options) to { route = SettingsRoute.RobotSettings },
+                    stringResource(Res.string.settings_dnd) to { route = SettingsRoute.DndMode },
+                    stringResource(Res.string.settings_off_peak_charging) to { route = SettingsRoute.Valley },
+                    stringResource(Res.string.settings_beta_features) to { route = SettingsRoute.BetaFeatures },
+                    stringResource(Res.string.settings_pin_go) to onPinGo,
+                    stringResource(Res.string.settings_remote_control) to onRemote,
+                ) + listOfNotNull(onLiveView?.let { liveView -> stringResource(Res.string.settings_live_view) to liveView }),
             ),
             lastClean = cleanHistory.filter { !it.isPatrol }.maxByOrNull { it.beginEpoch },
             summary = cleanSummary,
@@ -334,19 +532,19 @@ fun VacuumSettingsScreen(
             onBack = { route = SettingsRoute.Root },
         )
         SettingsRoute.Floor -> FeatureSectionScreen(
-            title = "Floor cleaning",
+            title = stringResource(Res.string.settings_floor_cleaning),
             features = betaFeatures.inSection(FeatureSection.FLOOR),
             onToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
             onBack = { route = SettingsRoute.Root },
         )
         SettingsRoute.Pets -> FeatureSectionScreen(
-            title = "Pets",
+            title = stringResource(Res.string.settings_pets),
             features = betaFeatures.inSection(FeatureSection.PETS),
             onToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
             onBack = { route = SettingsRoute.Root },
         )
         SettingsRoute.Obstacle -> FeatureSectionScreen(
-            title = "Obstacle avoidance",
+            title = stringResource(Res.string.settings_obstacle_avoidance),
             features = betaFeatures.inSection(FeatureSection.OBSTACLE),
             onToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
             onBack = { route = SettingsRoute.Root },
@@ -373,7 +571,7 @@ fun VacuumSettingsScreen(
             onWashModeChange = { mode -> viewModel.run { it.setWashMode(mode) } },
             onWashFrequencyChange = { mode, minutes -> viewModel.run { it.setWashFrequency(mode, minutes) } },
             onAutoEmptyModeChange = { mode -> viewModel.run { it.setAutoEmptyMode(mode) } },
-            onEmptyWaterTank = { viewModel.run("Emptying the water tank") { it.emptyInbuiltWaterTank() } },
+            onEmptyWaterTank = { viewModel.run(emptyingTankMessage) { it.emptyInbuiltWaterTank() } },
             features = betaFeatures.inSection(FeatureSection.DOCK),
             onFeatureToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
             valleySettings = valleySettings,
@@ -445,11 +643,12 @@ fun VacuumPinGoScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
     val parsedMap by viewModel.repository.parsedMap.collectAsState()
     val busy by viewModel.busy.collectAsState()
     val status by viewModel.status.collectAsState()
+    val spotStartedMessage = stringResource(Res.string.settings_spot_started)
     PinGoScreen(
         parsedMap = parsedMap,
         busy = busy,
         travelling = status.state == VacuumStateCodes.GOING_TO_TARGET,
-        onSpot = { viewModel.run("Spot cleaning started") { it.spotClean() } },
+        onSpot = { viewModel.run(spotStartedMessage) { it.spotClean() } },
         // A refusal is shown by run(); onSent only fires once the robot has accepted the target.
         onGoto = { x, y, onSent ->
             viewModel.run {
@@ -492,21 +691,23 @@ fun VacuumHistoryScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
 internal data class SettingsSearchEntry(val title: String, val where: String, val open: () -> Unit)
 
 /** Every page and every option the robot reports, for the Settings search. */
+@Composable
 private fun settingsSearchIndex(
     features: List<BetaFeatureState>,
     openSection: (FeatureSection) -> Unit,
     pages: List<Pair<String, () -> Unit>>,
 ): List<SettingsSearchEntry> {
     val sectionName = mapOf(
-        FeatureSection.CARPET to "Carpet cleaning", FeatureSection.FLOOR to "Floor cleaning",
-        FeatureSection.OBSTACLE to "Obstacle avoidance", FeatureSection.PETS to "Pets",
-        FeatureSection.DOCK to "Dock settings", FeatureSection.ROBOT to "More options",
-        FeatureSection.BETA to "Beta features",
+        FeatureSection.CARPET to stringResource(Res.string.settings_carpet_cleaning), FeatureSection.FLOOR to stringResource(Res.string.settings_floor_cleaning),
+        FeatureSection.OBSTACLE to stringResource(Res.string.settings_obstacle_avoidance), FeatureSection.PETS to stringResource(Res.string.settings_pets),
+        FeatureSection.DOCK to stringResource(Res.string.settings_dock_settings), FeatureSection.ROBOT to stringResource(Res.string.settings_more_options),
+        FeatureSection.BETA to stringResource(Res.string.settings_beta_features),
     )
-    return pages.map { (title, open) -> SettingsSearchEntry(title, "Settings", open) } +
+    val settings = stringResource(Res.string.settings_title)
+    return pages.map { (title, open) -> SettingsSearchEntry(title, settings, open) } +
         features.filter { it.answered }.map { f ->
             val section = f.def.section
-            SettingsSearchEntry(f.def.title, "${sectionName[section] ?: "Settings"} · ${f.def.description}") { openSection(section) }
+            SettingsSearchEntry(f.def.title, "${sectionName[section] ?: settings} · ${f.def.description}") { openSection(section) }
         }
 }
 
@@ -555,7 +756,7 @@ private fun SettingsRootScreen(
                         TextField(
                             value = query,
                             onValueChange = { query = it },
-                            placeholder = { Text("Search settings") },
+                            placeholder = { Text(stringResource(Res.string.settings_search)) },
                             singleLine = true,
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
@@ -564,19 +765,19 @@ private fun SettingsRootScreen(
                             modifier = Modifier.fillMaxWidth().focusRequester(focus),
                         )
                     } else {
-                        Text("Settings")
+                        Text(stringResource(Res.string.settings_title))
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = { if (searching) { searching = false; query = "" } else onBack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.settings_back))
                     }
                 },
                 actions = {
                     // As the official app: search at the top right.
                     if (!searching) {
                         IconButton(onClick = { searching = true }) {
-                            Icon(Icons.Default.Search, contentDescription = "Search settings")
+                            Icon(Icons.Default.Search, contentDescription = stringResource(Res.string.settings_search))
                         }
                     }
                 },
@@ -593,7 +794,7 @@ private fun SettingsRootScreen(
                 }
                 LazyColumn(contentPadding = padding) {
                     if (terms.isNotEmpty() && hits.isEmpty()) {
-                        item { Text("Nothing found for \"${query.trim()}\".", Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        item { Text(stringResource(Res.string.settings_nothing_found, query.trim()), Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     }
                     items(hits.size) { i ->
                         val hit = hits[i]
@@ -612,33 +813,33 @@ private fun SettingsRootScreen(
                 item { HistoryOverviewCard(lastClean = lastClean, summary = summary, onClick = onHistory) }
                 item {
                     SettingsGroup(listOf(
-                        GroupRow(Icons.Default.Schedule, AppColors.Water, "Schedules", "Clean at set times", onSchedule),
-                        GroupRow(Icons.Default.Build, AppColors.Good, "Maintenance", maintenanceSummary ?: "Brush life and consumables", onMaintenance),
+                        GroupRow(Icons.Default.Schedule, AppColors.Water, stringResource(Res.string.settings_schedules), stringResource(Res.string.settings_schedules_sub), onSchedule),
+                        GroupRow(Icons.Default.Build, AppColors.Good, stringResource(Res.string.settings_maintenance), maintenanceSummary ?: stringResource(Res.string.settings_maintenance_sub), onMaintenance),
                     ))
                 }
                 item {
                     SettingsGroup(listOfNotNull(
-                        GroupRow(Icons.Default.GridView, AppColors.Good, "Carpet cleaning", "Carpet mode and deep cleaning", onCarpet),
-                        onFloor?.let { GroupRow(Icons.Default.CleaningServices, AppColors.AccentCyan, "Floor cleaning", "Floor types, FlexiArm and gaps", it) },
-                        GroupRow(Icons.Default.Home, AppColors.Water, "Dock settings", "Auto-empty, wash and dry options", onDockSettings),
-                        onObstacle?.let { GroupRow(Icons.Default.Sensors, AppColors.AccentYellow, "Obstacle avoidance", "Collision and object detection", it) },
-                        onPets?.let { GroupRow(Icons.Default.Pets, AppColors.AccentPurple, "Pets", "Pet care and Pet Snaps", it) },
+                        GroupRow(Icons.Default.GridView, AppColors.Good, stringResource(Res.string.settings_carpet_cleaning), stringResource(Res.string.settings_carpet_sub), onCarpet),
+                        onFloor?.let { GroupRow(Icons.Default.CleaningServices, AppColors.AccentCyan, stringResource(Res.string.settings_floor_cleaning), stringResource(Res.string.settings_floor_sub), it) },
+                        GroupRow(Icons.Default.Home, AppColors.Water, stringResource(Res.string.settings_dock_settings), stringResource(Res.string.settings_dock_sub), onDockSettings),
+                        onObstacle?.let { GroupRow(Icons.Default.Sensors, AppColors.AccentYellow, stringResource(Res.string.settings_obstacle_avoidance), stringResource(Res.string.settings_obstacle_sub), it) },
+                        onPets?.let { GroupRow(Icons.Default.Pets, AppColors.AccentPurple, stringResource(Res.string.settings_pets), stringResource(Res.string.settings_pets_sub), it) },
                     ))
                 }
                 item {
                     SettingsGroup(listOfNotNull(
-                        GroupRow(Icons.Default.Map, AppColors.Warn, "Maps", "Saved maps, floors and backups", onMaps),
-                        GroupRow(Icons.Default.RecordVoiceOver, AppColors.AccentIndigo, "Voice assistant", "Voice, volume and language", onVoice),
-                        onLiveView?.let { GroupRow(Icons.Default.Videocam, AppColors.AccentRed, "Live view", "See through the robot's camera", it) },
-                        GroupRow(Icons.Default.Settings, AppColors.AccentPurple, "More options", "Child lock, lights and more", onRobotSettings),
-                        GroupRow(Icons.Default.Bedtime, AppColors.AccentIndigo, "Do Not Disturb", "Set quiet hours for cleaning", onDndMode),
-                        onBetaFeatures?.let { GroupRow(Icons.Default.Science, AppColors.AccentCyan, "Beta features", "Other options your robot reports", it) },
+                        GroupRow(Icons.Default.Map, AppColors.Warn, stringResource(Res.string.settings_maps), stringResource(Res.string.settings_maps_sub), onMaps),
+                        GroupRow(Icons.Default.RecordVoiceOver, AppColors.AccentIndigo, stringResource(Res.string.settings_voice_assistant), stringResource(Res.string.settings_voice_sub), onVoice),
+                        onLiveView?.let { GroupRow(Icons.Default.Videocam, AppColors.AccentRed, stringResource(Res.string.settings_live_view), stringResource(Res.string.settings_live_view_sub), it) },
+                        GroupRow(Icons.Default.Settings, AppColors.AccentPurple, stringResource(Res.string.settings_more_options), stringResource(Res.string.settings_more_options_sub), onRobotSettings),
+                        GroupRow(Icons.Default.Bedtime, AppColors.AccentIndigo, stringResource(Res.string.settings_dnd), stringResource(Res.string.settings_dnd_sub), onDndMode),
+                        onBetaFeatures?.let { GroupRow(Icons.Default.Science, AppColors.AccentCyan, stringResource(Res.string.settings_beta_features), stringResource(Res.string.settings_beta_sub), it) },
                     ))
                 }
                 item {
                     SettingsGroup(listOf(
-                        GroupRow(Icons.Default.Place, AppColors.AccentPurple, "Pin & Go", "Send the robot to a spot on the map", onPinGo),
-                        GroupRow(Icons.Default.Gamepad, AppColors.AccentCyan, "Remote control", "Drive the robot by hand", onRemote),
+                        GroupRow(Icons.Default.Place, AppColors.AccentPurple, stringResource(Res.string.settings_pin_go), stringResource(Res.string.settings_pin_go_sub), onPinGo),
+                        GroupRow(Icons.Default.Gamepad, AppColors.AccentCyan, stringResource(Res.string.settings_remote_control), stringResource(Res.string.settings_remote_sub), onRemote),
                     ))
                 }
                 item {
@@ -648,9 +849,9 @@ private fun SettingsRootScreen(
                         color = MaterialTheme.colorScheme.surfaceContainer,
                     ) {
                         Column {
-                            SettingRowInfo(icon = Icons.Default.Router, iconTint = AppColors.AccentIndigo, title = "Model", value = modelName ?: "Unknown")
+                            SettingRowInfo(icon = Icons.Default.Router, iconTint = AppColors.AccentIndigo, title = stringResource(Res.string.settings_model), value = modelName ?: stringResource(Res.string.settings_unknown))
                             HorizontalDivider(Modifier.padding(start = 72.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                            SettingRowInfo(icon = Icons.Default.Memory, iconTint = AppColors.AccentCyan, title = "Firmware version", value = firmwareVersion ?: "Unknown")
+                            SettingRowInfo(icon = Icons.Default.Memory, iconTint = AppColors.AccentCyan, title = stringResource(Res.string.settings_firmware_version), value = firmwareVersion ?: stringResource(Res.string.settings_unknown))
                             // The update check is hidden for now; FirmwareUpdateRow and the view model stay in place.
                             if (SHOW_FIRMWARE_UPDATE_CHECK) {
                                 HorizontalDivider(Modifier.padding(start = 72.dp), color = MaterialTheme.colorScheme.outlineVariant)
@@ -707,8 +908,8 @@ private fun DndScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Do Not Disturb") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                title = { Text(stringResource(Res.string.settings_dnd)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) } },
             )
         },
     ) { padding ->
@@ -723,10 +924,10 @@ private fun DndScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("Enable quiet hours", style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(Res.string.settings_dnd_enable), style = MaterialTheme.typography.bodyLarge)
                         Text(
                             if (enabled) "${formatTime(startHour, startMinute)} – ${formatTime(endHour, endMinute)}"
-                            else "Robot will clean anytime",
+                            else stringResource(Res.string.settings_dnd_anytime),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -739,18 +940,18 @@ private fun DndScreen(
 
                 if (enabled) {
                     HorizontalDivider()
-                    Text("Start time", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(Res.string.settings_start_time), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        NumberStepper2(label = "Hour", value = startHour, range = 0..23, onValueChange = { startHour = it; commit() })
+                        NumberStepper2(label = stringResource(Res.string.settings_hour), value = startHour, range = 0..23, onValueChange = { startHour = it; commit() })
                         Text(":", style = MaterialTheme.typography.headlineMedium)
-                        NumberStepper2(label = "Minute", value = startMinute, range = 0..59, step = 15, onValueChange = { startMinute = it; commit() })
+                        NumberStepper2(label = stringResource(Res.string.settings_minute), value = startMinute, range = 0..59, step = 15, onValueChange = { startMinute = it; commit() })
                     }
 
-                    Text("End time", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(Res.string.settings_end_time), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        NumberStepper2(label = "Hour", value = endHour, range = 0..23, onValueChange = { endHour = it; commit() })
+                        NumberStepper2(label = stringResource(Res.string.settings_hour), value = endHour, range = 0..23, onValueChange = { endHour = it; commit() })
                         Text(":", style = MaterialTheme.typography.headlineMedium)
-                        NumberStepper2(label = "Minute", value = endMinute, range = 0..59, step = 15, onValueChange = { endMinute = it; commit() })
+                        NumberStepper2(label = stringResource(Res.string.settings_minute), value = endMinute, range = 0..59, step = 15, onValueChange = { endMinute = it; commit() })
                     }
 
                     Surface(
@@ -759,7 +960,7 @@ private fun DndScreen(
                         shape = MaterialTheme.shapes.medium,
                     ) {
                         Text(
-                            "Robot won't start cleaning between ${formatTime(startHour, startMinute)} and ${formatTime(endHour, endMinute)}.",
+                            stringResource(Res.string.settings_dnd_note, formatTime(startHour, startMinute), formatTime(endHour, endMinute)),
                             modifier = Modifier.padding(14.dp),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -793,14 +994,14 @@ private fun VoicePackScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
         runCatching { repository.fetchVoicePack() }
         runCatching { viewModel.loadVoicePacks() }
             .onSuccess { packs = it }
-            .onFailure { loadError = "The server has no voice packs for this robot (${it.message})." }
+            .onFailure { loadError = getString(Res.string.settings_voice_load_error, "${it.message}") }
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Voice pack") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                title = { Text(stringResource(Res.string.settings_voice_pack)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) } },
             )
         },
     ) { padding ->
@@ -812,8 +1013,8 @@ private fun VoicePackScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
                 Surface(color = MaterialTheme.colorScheme.secondaryContainer) {
                     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            if (percent in 1..99) "Downloading ${pack.title}… $percent%"
-                            else "Switching to ${pack.title}… the robot downloads it from your server and installs it",
+                            if (percent in 1..99) stringResource(Res.string.settings_voice_downloading, pack.title, percent)
+                            else stringResource(Res.string.settings_voice_switching, pack.title),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
@@ -828,7 +1029,7 @@ private fun VoicePackScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
             LazyColumn(Modifier.fillMaxSize()) {
                 loadError?.let { item { Text(it, Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error) } }
                 if (packs == null && loadError == null) {
-                    item { Text("Reading the voice packs from the server…", Modifier.padding(16.dp)) }
+                    item { Text(stringResource(Res.string.settings_voice_reading), Modifier.padding(16.dp)) }
                 }
                 packs?.let { list ->
                     items(list.size) { i ->
@@ -846,7 +1047,7 @@ private fun VoicePackScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
                             ) {
                                 Column(Modifier.weight(1f)) {
                                     Text(pack.title, style = MaterialTheme.typography.bodyLarge)
-                                    val detail = listOfNotNull(pack.subTitle?.takeIf { it != pack.title }, if (pack.voiceControl) "voice commands" else null)
+                                    val detail = listOfNotNull(pack.subTitle?.takeIf { it != pack.title }, if (pack.voiceControl) stringResource(Res.string.settings_voice_commands) else null)
                                         .joinToString(" · ")
                                     if (detail.isNotEmpty()) {
                                         Text(detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -870,8 +1071,8 @@ private fun VoicePackScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
     confirm?.let { pack ->
         AlertDialog(
             onDismissRequest = { confirm = null },
-            title = { Text("Switch to ${pack.title}?") },
-            text = { Text("The robot downloads the voice from your server and installs it. This takes a minute or two; keep it on the dock.") },
+            title = { Text(stringResource(Res.string.settings_voice_switch_title, pack.title)) },
+            text = { Text(stringResource(Res.string.settings_voice_switch_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     confirm = null
@@ -880,9 +1081,9 @@ private fun VoicePackScreen(viewModel: VacuumViewModel, onBack: () -> Unit) {
                         viewModel.report { it.installVoicePack(pack) }.join()
                         launched = null
                     }
-                }) { Text("Install") }
+                }) { Text(stringResource(Res.string.settings_install)) }
             },
-            dismissButton = { TextButton(onClick = { confirm = null }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { confirm = null }) { Text(stringResource(Res.string.settings_cancel)) } },
         )
     }
 }
@@ -908,8 +1109,8 @@ private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPer
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Do Not Disturb") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                title = { Text(stringResource(Res.string.settings_dnd)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) } },
             )
         },
     ) { padding ->
@@ -919,8 +1120,7 @@ private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPer
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(
-                    "The robot won't resume cleaning, speaks more quietly and dims its lights during these hours. " +
-                        "Up to $MAX_DND_PERIODS periods.",
+                    stringResource(Res.string.settings_dnd_multi_intro, MAX_DND_PERIODS),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -934,29 +1134,29 @@ private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPer
                                         style = MaterialTheme.typography.titleMedium,
                                     )
                                     Text(
-                                        if (editing == index) "Tap to close" else "Tap to change the times",
+                                        if (editing == index) stringResource(Res.string.settings_dnd_tap_close) else stringResource(Res.string.settings_dnd_tap_change),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                                 IconButton(onClick = { open(null); onChange(periods.filterIndexed { i, _ -> i != index }) }) {
-                                    Icon(Icons.Filled.Delete, "Delete period")
+                                    Icon(Icons.Filled.Delete, stringResource(Res.string.settings_dnd_delete_period))
                                 }
                                 Switch(checked = period.enabled, onCheckedChange = { replace(index, period.copy(enabled = it)) })
                             }
                             val d = draft
                             if (editing == index && d != null) {
-                                DndTimeRow("Start", d.startHour, d.startMinute) { h, m -> draft = d.copy(startHour = h, startMinute = m) }
-                                DndTimeRow("End", d.endHour, d.endMinute) { h, m -> draft = d.copy(endHour = h, endMinute = m) }
+                                DndTimeRow(stringResource(Res.string.settings_start), d.startHour, d.startMinute) { h, m -> draft = d.copy(startHour = h, startMinute = m) }
+                                DndTimeRow(stringResource(Res.string.settings_end), d.endHour, d.endMinute) { h, m -> draft = d.copy(endHour = h, endMinute = m) }
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                                    TextButton(onClick = { open(null) }) { Text("Cancel") }
+                                    TextButton(onClick = { open(null) }) { Text(stringResource(Res.string.settings_cancel)) }
                                     Button(
                                         onClick = {
                                             replace(index, d.copy(enabled = period.enabled))
                                             open(null)
                                         },
                                         enabled = d.times != period.times && periods.none { it !== period && it.times == d.times },
-                                    ) { Text("Save") }
+                                    ) { Text(stringResource(Res.string.settings_save)) }
                                 }
                             }
                         }
@@ -973,7 +1173,7 @@ private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPer
                             onChange(periods + added)
                         },
                         modifier = Modifier.fillMaxWidth(),
-                    ) { Text("Add period") }
+                    ) { Text(stringResource(Res.string.settings_dnd_add_period)) }
                 }
             }
         }
@@ -984,9 +1184,9 @@ private fun MultiDndScreen(robotPeriods: List<DndPeriod>, onChange: (List<DndPer
 private fun DndTimeRow(label: String, hour: Int, minute: Int, onChange: (Int, Int) -> Unit) {
     Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-        NumberStepper2("Hour", hour, 0..23) { onChange(it, minute) }
+        NumberStepper2(stringResource(Res.string.settings_hour), hour, 0..23) { onChange(it, minute) }
         Text(":", style = MaterialTheme.typography.headlineMedium)
-        NumberStepper2("Minute", minute, 0..59, step = 15) { onChange(hour, it) }
+        NumberStepper2(stringResource(Res.string.settings_minute), minute, 0..59, step = 15) { onChange(hour, it) }
     }
 }
 
@@ -1022,20 +1222,20 @@ private fun HistoryOverviewCard(lastClean: CleanRecord?, summary: CleanSummary?,
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.History, null, tint = AppColors.AccentCyan)
                 Spacer(Modifier.width(12.dp))
-                Text("Cleaning history", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Text(stringResource(Res.string.settings_cleaning_history), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 HistoryTile(
                     value = lastClean?.let { "${it.durationSeconds / 60}" } ?: "–",
                     unit = "min",
-                    label = "Last clean took",
+                    label = stringResource(Res.string.settings_last_clean_took),
                     modifier = Modifier.weight(1f),
                 )
                 HistoryTile(
                     value = lastClean?.let { oneDecimal(it.areaMm2 / 1_000_000f) } ?: "–",
                     unit = "m²",
-                    label = "Last clean covered",
+                    label = stringResource(Res.string.settings_last_clean_covered),
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -1045,9 +1245,9 @@ private fun HistoryOverviewCard(lastClean: CleanRecord?, summary: CleanSummary?,
                         .padding(horizontal = 14.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("Total", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    Text(stringResource(Res.string.settings_total), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                     Text(
-                        "${s.totalTimeSec / 60} min · ${(s.totalAreaMm2 / 1_000_000f).roundToInt()} m² · ${s.totalCount} cleans",
+                        stringResource(Res.string.settings_total_line, "${s.totalTimeSec / 60}", "${(s.totalAreaMm2 / 1_000_000f).roundToInt()}", pluralStringResource(Res.plurals.settings_cleans_count, s.totalCount, s.totalCount)),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                     )
@@ -1127,12 +1327,12 @@ private fun MaintenanceScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Maintenance") },
+                title = { Text(stringResource(Res.string.settings_maintenance)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) }
                 },
                 actions = {
-                    IconButton(onClick = onRefresh) { Icon(Icons.Default.Refresh, "Refresh") }
+                    IconButton(onClick = onRefresh) { Icon(Icons.Default.Refresh, stringResource(Res.string.settings_refresh)) }
                 },
             )
         },
@@ -1150,8 +1350,8 @@ private fun MaintenanceScreen(
                             Modifier.size(48.dp),
                             MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        Text("Could not load consumable data", style = MaterialTheme.typography.titleMedium)
-                        OutlinedButton(onClick = onRefresh) { Text("Retry") }
+                        Text(stringResource(Res.string.settings_maint_load_failed), style = MaterialTheme.typography.titleMedium)
+                        OutlinedButton(onClick = onRefresh) { Text(stringResource(Res.string.settings_retry)) }
                     }
                 }
             } else {
@@ -1160,7 +1360,8 @@ private fun MaintenanceScreen(
                         ConsumableItem(
                             icon = Icons.Default.Cached,
                             iconTint = AppColors.Good,
-                            title = "Main Brush",
+                            title = stringResource(Res.string.settings_main_brush),
+                            careGuide = stringResource(Res.string.settings_guide_main_brush),
                             usedSeconds = consumables.mainBrushWorkTime ?: 0L,
                             maxSeconds = ConsumableStatus.MAIN_BRUSH_LIFETIME_S,
                             onReset = { onReset("main_brush_work_time") },
@@ -1170,7 +1371,8 @@ private fun MaintenanceScreen(
                         ConsumableItem(
                             icon = Icons.Default.Autorenew,
                             iconTint = AppColors.Water,
-                            title = "Side Brush",
+                            title = stringResource(Res.string.settings_side_brush),
+                            careGuide = stringResource(Res.string.settings_guide_side_brush),
                             usedSeconds = consumables.sideBrushWorkTime ?: 0L,
                             maxSeconds = ConsumableStatus.SIDE_BRUSH_LIFETIME_S,
                             onReset = { onReset("side_brush_work_time") },
@@ -1180,7 +1382,8 @@ private fun MaintenanceScreen(
                         ConsumableItem(
                             icon = Icons.Default.Air,
                             iconTint = AppColors.AccentPurple,
-                            title = "Filter",
+                            title = stringResource(Res.string.settings_filter),
+                            careGuide = stringResource(Res.string.settings_guide_filter),
                             usedSeconds = consumables.filterWorkTime ?: 0L,
                             maxSeconds = ConsumableStatus.FILTER_LIFETIME_S,
                             onReset = { onReset("filter_work_time") },
@@ -1190,7 +1393,8 @@ private fun MaintenanceScreen(
                         ConsumableItem(
                             icon = Icons.Default.Sensors,
                             iconTint = AppColors.Warn,
-                            title = "Sensor",
+                            title = stringResource(Res.string.settings_sensor),
+                            careGuide = stringResource(Res.string.settings_guide_sensor),
                             usedSeconds = consumables.sensorDirtyTime ?: 0L,
                             maxSeconds = ConsumableStatus.SENSOR_LIFETIME_S,
                             onReset = { onReset("sensor_dirty_time") },
@@ -1201,7 +1405,8 @@ private fun MaintenanceScreen(
                             ConsumableItem(
                                 icon = Icons.Default.CleaningServices,
                                 iconTint = AppColors.AccentCyan,
-                                title = "Maintenance Brush",
+                                title = stringResource(Res.string.settings_maintenance_brush),
+                                careGuide = stringResource(Res.string.settings_guide_maintenance_brush),
                                 usedSeconds = used,
                                 maxSeconds = ConsumableStatus.CLEANING_BRUSH_LIFETIME_S,
                                 onReset = { onReset("cleaning_brush_work_times") },
@@ -1214,10 +1419,11 @@ private fun MaintenanceScreen(
                             CountedConsumableItem(
                                 icon = Icons.Default.FilterAlt,
                                 iconTint = AppColors.AccentIndigo,
-                                title = "Strainer",
+                                title = stringResource(Res.string.settings_strainer),
+                                careGuide = stringResource(Res.string.settings_guide_strainer),
                                 count = count,
-                                countLabel = "Mop washes since reset",
-                                advice = "Clean" to "when needed",
+                                countLabel = stringResource(Res.string.settings_mop_washes_since_reset),
+                                advice = stringResource(Res.string.settings_clean) to stringResource(Res.string.settings_when_needed),
                                 onReset = { onReset("strainer_work_times") },
                             )
                         }
@@ -1227,10 +1433,11 @@ private fun MaintenanceScreen(
                             CountedConsumableItem(
                                 icon = Icons.Default.Delete,
                                 iconTint = AppColors.Good,
-                                title = "Dust bag",
+                                title = stringResource(Res.string.settings_dust_bag),
+                                careGuide = stringResource(Res.string.settings_guide_dust_bag),
                                 count = count,
-                                countLabel = "Auto-empties since reset",
-                                advice = "Replace" to "when full",
+                                countLabel = stringResource(Res.string.settings_auto_empties_since_reset),
+                                advice = stringResource(Res.string.settings_replace) to stringResource(Res.string.settings_when_full),
                                 onReset = { onReset("dust_collection_work_times") },
                             )
                         }
@@ -1241,23 +1448,14 @@ private fun MaintenanceScreen(
     }
 }
 
-/** How to look after each part, shown from its card's arrow, as the official app's part pages. */
-private val CARE_GUIDE = mapOf(
-    "Main Brush" to "Replace after about 300 hours of cleaning.\n\nOnce a week, take the brush out, cut away hair wound around it and clean the end caps. A worn brush leaves dust behind on carpets.",
-    "Side Brush" to "Replace after about 200 hours of cleaning.\n\nOnce a month, pull it off and remove hair from around its base. Replace it sooner when the bristles are bent.",
-    "Filter" to "Replace after about 150 hours of cleaning.\n\nOnce a week, tap the dust out of the filter over a bin. Rinse it only if it is a washable filter, and let it dry completely before putting it back.",
-    "Sensor" to "Clean after about 30 hours of cleaning.\n\nWipe the cliff sensors underneath, the wall sensor, the charging contacts and the camera window with a soft dry cloth, then reset the counter.",
-    "Maintenance Brush" to "Replace after about 300 hours.\n\nThis brush in the dock scrubs the mop wash tray. Rinse off hair and dirt when you clean the tray.",
-    "Strainer" to "Clean when needed; the robot counts mop washes since the last reset.\n\nTake out the strainer in the dock's wash tray, rinse it under the tap and put it back.",
-    "Dust bag" to "Replace when it is full; the dock warns you.\n\nThe robot counts how often the dock emptied it since the last reset, which gives an idea of how full it is.",
-)
-
 /** One part as the official app's maintenance card: picture, two figures, a reset and the care guide. */
 @Composable
 private fun MaintenanceCard(
     icon: ImageVector,
     iconTint: Color,
     title: String,
+    /** How to look after the part, shown from the card's arrow, as the official app's part pages. */
+    careGuide: String,
     firstValue: String,
     firstLabel: String,
     secondValue: String,
@@ -1286,7 +1484,7 @@ private fun MaintenanceCard(
                     }
                 }
                 IconButton(onClick = { guide = true }) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "How to look after the ${title.lowercase()}")
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(Res.string.settings_care_how, title.lowercase(), title))
                 }
             }
             // A light button, as the official card's: resetting is occasional and asks first.
@@ -1297,16 +1495,16 @@ private fun MaintenanceCard(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
-            ) { Text("Reset") }
+            ) { Text(stringResource(Res.string.settings_reset)) }
         }
     }
     if (confirm) {
         AlertDialog(
             onDismissRequest = { confirm = false },
-            title = { Text("Reset the ${title.lowercase()}?") },
-            text = { Text("Do this after cleaning or replacing it. The counter starts again from zero.") },
-            confirmButton = { TextButton(onClick = { confirm = false; onReset() }) { Text("Reset") } },
-            dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } },
+            title = { Text(stringResource(Res.string.settings_reset_title, title.lowercase(), title)) },
+            text = { Text(stringResource(Res.string.settings_reset_text)) },
+            confirmButton = { TextButton(onClick = { confirm = false; onReset() }) { Text(stringResource(Res.string.settings_reset)) } },
+            dismissButton = { TextButton(onClick = { confirm = false }) { Text(stringResource(Res.string.settings_cancel)) } },
         )
     }
     if (guide) {
@@ -1314,8 +1512,8 @@ private fun MaintenanceCard(
             onDismissRequest = { guide = false },
             icon = { Icon(icon, null, tint = iconTint) },
             title = { Text(title) },
-            text = { Text(CARE_GUIDE[title] ?: "Clean or replace it when it is worn.") },
-            confirmButton = { TextButton(onClick = { guide = false }) { Text("Close") } },
+            text = { Text(careGuide) },
+            confirmButton = { TextButton(onClick = { guide = false }) { Text(stringResource(Res.string.settings_close)) } },
         )
     }
 }
@@ -1330,9 +1528,9 @@ private fun MaintenanceFigure(value: String, label: String, modifier: Modifier =
 
 /** A part the robot counts uses of rather than timing: no lifetime, just the count and a reset. */
 @Composable
-private fun CountedConsumableItem(icon: ImageVector, iconTint: Color, title: String, count: Long, countLabel: String, advice: Pair<String, String>, onReset: () -> Unit) =
+private fun CountedConsumableItem(icon: ImageVector, iconTint: Color, title: String, careGuide: String, count: Long, countLabel: String, advice: Pair<String, String>, onReset: () -> Unit) =
     MaintenanceCard(
-        icon = icon, iconTint = iconTint, title = title,
+        icon = icon, iconTint = iconTint, title = title, careGuide = careGuide,
         firstValue = "$count", firstLabel = countLabel,
         secondValue = advice.first, secondLabel = advice.second,
         onReset = onReset,
@@ -1343,6 +1541,7 @@ private fun ConsumableItem(
     icon: ImageVector,
     iconTint: Color,
     title: String,
+    careGuide: String,
     usedSeconds: Long,
     maxSeconds: Long,
     onReset: () -> Unit,
@@ -1356,9 +1555,9 @@ private fun ConsumableItem(
         else -> MaterialTheme.colorScheme.error
     }
     MaintenanceCard(
-        icon = icon, iconTint = iconTint, title = title,
-        firstValue = "${usedSeconds / 3600} h", firstLabel = "Used",
-        secondValue = "$percent %", secondLabel = "Left", secondColor = color,
+        icon = icon, iconTint = iconTint, title = title, careGuide = careGuide,
+        firstValue = "${usedSeconds / 3600} h", firstLabel = stringResource(Res.string.settings_used),
+        secondValue = "$percent %", secondLabel = stringResource(Res.string.settings_left), secondColor = color,
         onReset = onReset,
     )
 }
@@ -1384,12 +1583,12 @@ private fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("History") },
+                title = { Text(stringResource(Res.string.settings_history)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) }
                 },
                 actions = {
-                    IconButton(onClick = onRefresh) { Icon(Icons.Default.Refresh, "Refresh") }
+                    IconButton(onClick = onRefresh) { Icon(Icons.Default.Refresh, stringResource(Res.string.settings_refresh)) }
                 },
             )
         },
@@ -1402,14 +1601,14 @@ private fun HistoryScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         Icon(Icons.Default.History, null, Modifier.size(48.dp), MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("No history yet", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(Res.string.settings_no_history), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Complete a cleaning session to see it here",
+                            stringResource(Res.string.settings_no_history_text),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                         )
-                        OutlinedButton(onClick = onRefresh) { Text("Load history") }
+                        OutlinedButton(onClick = onRefresh) { Text(stringResource(Res.string.settings_load_history)) }
                     }
                 }
             } else {
@@ -1422,15 +1621,15 @@ private fun HistoryScreen(
                     }
                     item {
                         SecondaryTabRow(selectedTabIndex = if (navigating) 1 else 0) {
-                            Tab(selected = !navigating, onClick = { navigating = false }, text = { Text("Cleaning") })
-                            Tab(selected = navigating, onClick = { navigating = true }, text = { Text("Navigating") })
+                            Tab(selected = !navigating, onClick = { navigating = false }, text = { Text(stringResource(Res.string.settings_tab_cleaning)) })
+                            Tab(selected = navigating, onClick = { navigating = true }, text = { Text(stringResource(Res.string.settings_tab_navigating)) })
                         }
                     }
                     if (shown.isEmpty()) {
                         item {
                             Text(
-                                if (navigating) "No cruises or pet searches yet. The robot keeps only the most recent one."
-                                else "No cleans yet.",
+                                if (navigating) stringResource(Res.string.settings_no_cruises)
+                                else stringResource(Res.string.settings_no_cleans),
                                 modifier = Modifier.padding(24.dp),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1460,15 +1659,15 @@ private fun CleanSummaryCard(summary: CleanSummary) {
         shape = MaterialTheme.shapes.extraLarge,
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Lifetime Stats", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(Res.string.settings_lifetime_stats), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                SummaryStatItem("${summary.totalCount}", "Sessions")
-                SummaryStatItem("${totalAreaM2.roundToInt()} m²", "Total area")
+                SummaryStatItem("${summary.totalCount}", stringResource(Res.string.settings_sessions))
+                SummaryStatItem("${totalAreaM2.roundToInt()} m²", stringResource(Res.string.settings_total_area))
                 SummaryStatItem(
                     if (totalHours > 0) "${totalHours}h ${totalMinutes}m" else "${totalMinutes}m",
-                    "Total time",
+                    stringResource(Res.string.settings_total_time),
                 )
-                summary.dustCollectionCount?.let { SummaryStatItem("$it", "Bin emptied") }
+                summary.dustCollectionCount?.let { SummaryStatItem("$it", stringResource(Res.string.settings_bin_emptied)) }
             }
         }
     }
@@ -1517,7 +1716,7 @@ private fun CleanRecordDetailScreen(
         topBar = {
             TopAppBar(
                 title = { Text(formatCleanRecordTime(record.beginEpoch)) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) } },
             )
         },
     ) { padding ->
@@ -1533,7 +1732,7 @@ private fun CleanRecordDetailScreen(
                             val m = map
                             when {
                                 m != null -> SavedMapImage(m, Modifier.fillMaxSize().padding(8.dp))
-                                mapLoaded -> Text("The robot has no map for this clean.", style = MaterialTheme.typography.bodySmall)
+                                mapLoaded -> Text(stringResource(Res.string.settings_no_map_for_clean), style = MaterialTheme.typography.bodySmall)
                                 else -> CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
                             }
                         }
@@ -1541,14 +1740,14 @@ private fun CleanRecordDetailScreen(
                 }
                 item { CleanRecordRow(record) }
                 item { HorizontalDivider() }
-                item { Text("Timeline", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(16.dp)) }
+                item { Text(stringResource(Res.string.settings_timeline), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(16.dp)) }
                 val list = changes
                 when {
                     list == null -> item {
-                        Text("Reading the timeline from the robot…", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(Res.string.settings_timeline_reading), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
                     }
                     list.isEmpty() -> item {
-                        Text("No timeline for this clean.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(Res.string.settings_no_timeline), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall)
                     }
                     else -> items(list.size) { i ->
                         TimelineRow(list[i], first = i == 0, last = i == list.lastIndex)
@@ -1766,9 +1965,9 @@ private fun DockSettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Dock Settings") },
+                title = { Text(stringResource(Res.string.settings_dock_settings_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) }
                 },
             )
         },
@@ -1779,7 +1978,7 @@ private fun DockSettingsScreen(
                     SettingRowClickable(
                         icon = Icons.Default.WaterDrop,
                         iconTint = AppColors.Water,
-                        title = "Mop wash frequency",
+                        title = stringResource(Res.string.settings_mop_wash_frequency),
                         subtitle = washFrequencyLabel(smartWash),
                         enabled = washFrequencyEnabled,
                         onClick = { dialogTarget = "wash_freq" },
@@ -1790,7 +1989,7 @@ private fun DockSettingsScreen(
                     SettingRowClickable(
                         icon = Icons.Default.WaterDrop,
                         iconTint = AppColors.AccentCyan,
-                        title = "Washing mode",
+                        title = stringResource(Res.string.settings_washing_mode),
                         subtitle = dockCapabilities.washModeLabel(dockSettings.washMode, dockType),
                         enabled = washModeEnabled,
                         onClick = { dialogTarget = "wash_mode" },
@@ -1802,7 +2001,7 @@ private fun DockSettingsScreen(
                         SettingRowClickable(
                             icon = Icons.Default.Thermostat,
                             iconTint = AppColors.Warn,
-                            title = "Washing water temperature",
+                            title = stringResource(Res.string.settings_wash_water_temperature),
                             subtitle = DockOptions.washWaterTemperature.labelFor(temperature),
                             enabled = !busy,
                             onClick = { dialogTarget = "wash_temp" },
@@ -1817,7 +2016,7 @@ private fun DockSettingsScreen(
                             SettingRowClickable(
                                 icon = Icons.Default.Air,
                                 iconTint = AppColors.AccentCyan,
-                                title = "Mop drying",
+                                title = stringResource(Res.string.settings_mop_drying),
                                 subtitle = dryStartLabel(dockSettings),
                                 enabled = !busy,
                                 onClick = { dialogTarget = "dry_start" },
@@ -1826,8 +2025,8 @@ private fun DockSettingsScreen(
                             SettingRowSwitch(
                                 icon = Icons.Default.Air,
                                 iconTint = AppColors.AccentCyan,
-                                title = "Mop drying",
-                                subtitle = if (drying) "Dries the mops on the dock after cleaning" else "Mops are left wet on the dock",
+                                title = stringResource(Res.string.settings_mop_drying),
+                                subtitle = if (drying) stringResource(Res.string.settings_mop_drying_on) else stringResource(Res.string.settings_mop_drying_off),
                                 checked = drying,
                                 enabled = !busy,
                                 onCheckedChange = onMopDryingChange,
@@ -1840,7 +2039,7 @@ private fun DockSettingsScreen(
                             SettingRowClickable(
                                 icon = Icons.Default.Schedule,
                                 iconTint = AppColors.AccentCyan,
-                                title = "Drying time",
+                                title = stringResource(Res.string.settings_drying_time),
                                 subtitle = dryTimeLabel(seconds),
                                 enabled = !busy,
                                 onClick = { dialogTarget = "dry_time" },
@@ -1853,7 +2052,7 @@ private fun DockSettingsScreen(
                     SettingRowClickable(
                         icon = Icons.Default.Delete,
                         iconTint = AppColors.Good,
-                        title = "Auto-empty mode",
+                        title = stringResource(Res.string.settings_auto_empty_mode),
                         subtitle = dockCapabilities.autoEmptyModeLabel(dockSettings.autoEmptyMode),
                         enabled = autoEmptyEnabled,
                         onClick = { dialogTarget = "auto_empty" },
@@ -1865,8 +2064,8 @@ private fun DockSettingsScreen(
                         SettingRowClickable(
                             icon = Icons.Default.Schedule,
                             iconTint = AppColors.Good,
-                            title = "Off-peak electricity",
-                            subtitle = if (valley.enabled) "${clockText(valley.startHour, valley.startMinute)} to ${clockText(valley.endHour, valley.endMinute)}" else "Off",
+                            title = stringResource(Res.string.settings_off_peak_electricity),
+                            subtitle = if (valley.enabled) stringResource(Res.string.settings_time_range, clockText(valley.startHour, valley.startMinute), clockText(valley.endHour, valley.endMinute)) else stringResource(Res.string.settings_off),
                             enabled = !busy,
                             onClick = onOpenValley,
                         )
@@ -1877,8 +2076,8 @@ private fun DockSettingsScreen(
                     SettingRowClickable(
                         icon = Icons.Default.WaterDrop,
                         iconTint = AppColors.Water,
-                        title = "Internal water tank",
-                        subtitle = "Empty through the dock",
+                        title = stringResource(Res.string.settings_internal_tank),
+                        subtitle = stringResource(Res.string.settings_internal_tank_sub),
                         enabled = !busy,
                         onClick = { confirmEmptyTank = true },
                     )
@@ -1894,18 +2093,18 @@ private fun DockSettingsScreen(
     if (confirmEmptyTank) {
         AlertDialog(
             onDismissRequest = { confirmEmptyTank = false },
-            title = { Text("Empty the water tank?") },
-            text = { Text("The dock pumps the water out of the robot's built-in tank. Make sure the robot is on the dock.") },
+            title = { Text(stringResource(Res.string.settings_empty_tank_title)) },
+            text = { Text(stringResource(Res.string.settings_empty_tank_text)) },
             confirmButton = {
-                TextButton(onClick = { confirmEmptyTank = false; onEmptyWaterTank() }) { Text("Empty") }
+                TextButton(onClick = { confirmEmptyTank = false; onEmptyWaterTank() }) { Text(stringResource(Res.string.settings_empty)) }
             },
-            dismissButton = { TextButton(onClick = { confirmEmptyTank = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { confirmEmptyTank = false }) { Text(stringResource(Res.string.settings_cancel)) } },
         )
     }
 
     when (dialogTarget) {
         "wash_freq" -> SimplePickerDialog(
-            title = "Mop wash frequency",
+            title = stringResource(Res.string.settings_mop_wash_frequency),
             options = washFrequencyOptions.map { it.label },
             selected = washFrequencyIndex,
             onSelect = {
@@ -1917,7 +2116,7 @@ private fun DockSettingsScreen(
             onDismiss = { dialogTarget = null },
         )
         "wash_mode" -> SimplePickerDialog(
-            title = "Washing mode",
+            title = stringResource(Res.string.settings_washing_mode),
             options = washModes.map { it.second },
             selected = washModeIndex,
             onSelect = { onWashModeChange(washModes[it].first); dialogTarget = null },
@@ -1925,7 +2124,7 @@ private fun DockSettingsScreen(
             onDismiss = { dialogTarget = null },
         )
         "wash_temp" -> SimplePickerDialog(
-            title = "Washing water temperature",
+            title = stringResource(Res.string.settings_wash_water_temperature),
             options = DockOptions.washWaterTemperature.map { it.label },
             selected = DockOptions.washWaterTemperature.indexOfFirst { it.code == dockSettings.washWaterTemperature },
             onSelect = { onWashWaterTemperatureChange(DockOptions.washWaterTemperature[it].code); dialogTarget = null },
@@ -1933,8 +2132,8 @@ private fun DockSettingsScreen(
             onDismiss = { dialogTarget = null },
         )
         "dry_start" -> SimplePickerDialog(
-            title = "Mop drying",
-            options = listOf("Off", "After cleaning", "At a set time"),
+            title = stringResource(Res.string.settings_mop_drying),
+            options = listOf(stringResource(Res.string.settings_off), stringResource(Res.string.settings_after_cleaning), stringResource(Res.string.settings_at_set_time)),
             selected = dockSettings.dryStart ?: -1,
             onSelect = {
                 if (it == DRY_START_SCHEDULED) dialogTarget = "dry_schedule"
@@ -1950,7 +2149,7 @@ private fun DockSettingsScreen(
             onDismiss = { dialogTarget = null },
         )
         "dry_time" -> SimplePickerDialog(
-            title = "Drying time",
+            title = stringResource(Res.string.settings_drying_time),
             options = DockOptions.dryTime.map { it.label },
             selected = DockOptions.dryTime.indexOfFirst { it.code == dockSettings.dryTimeSeconds },
             onSelect = { onDryTimeChange(DockOptions.dryTime[it].code); dialogTarget = null },
@@ -1958,7 +2157,7 @@ private fun DockSettingsScreen(
             onDismiss = { dialogTarget = null },
         )
         "auto_empty" -> SimplePickerDialog(
-            title = "Auto-empty mode",
+            title = stringResource(Res.string.settings_auto_empty_mode),
             options = autoEmptyModes.map { it.second },
             selected = autoEmptyModes.indexOfFirst { it.first == dockSettings.autoEmptyMode },
             onSelect = { onAutoEmptyModeChange(autoEmptyModes[it].first); dialogTarget = null },
@@ -1998,8 +2197,8 @@ private fun ValleyScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Off-peak electricity") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                title = { Text(stringResource(Res.string.settings_off_peak_electricity)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) } },
             )
         },
     ) { padding ->
@@ -2014,9 +2213,9 @@ private fun ValleyScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("Limit charging and drying to off-peak hours", style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(Res.string.settings_valley_limit), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            if (enabled) "${clockText(startHour, startMinute)} to ${clockText(endHour, endMinute)}" else "Off",
+                            if (enabled) stringResource(Res.string.settings_time_range, clockText(startHour, startMinute), clockText(endHour, endMinute)) else stringResource(Res.string.settings_off),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -2033,9 +2232,9 @@ private fun ValleyScreen(
                 }
                 if (enabled) {
                     HorizontalDivider()
-                    Text("Start time", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(Res.string.settings_start_time), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     ClockStepper(startHour, startMinute, onHourChange = { startHour = it; timesTouched = true }, onMinuteChange = { startMinute = it; timesTouched = true })
-                    Text("End time", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(Res.string.settings_end_time), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     ClockStepper(endHour, endMinute, onHourChange = { endHour = it; timesTouched = true }, onMinuteChange = { endMinute = it; timesTouched = true })
                 }
             }
@@ -2043,14 +2242,15 @@ private fun ValleyScreen(
     }
 }
 
+@Composable
 private fun dryStartLabel(dock: DockSettings): String = when (dock.dryStart) {
-    DRY_START_OFF -> "Off"
-    DRY_START_AFTER_CLEANING -> "After cleaning"
+    DRY_START_OFF -> stringResource(Res.string.settings_off)
+    DRY_START_AFTER_CLEANING -> stringResource(Res.string.settings_after_cleaning)
     DRY_START_SCHEDULED -> {
         val h = dock.dryScheduleHour; val m = dock.dryScheduleMinute
-        if (h != null && m != null) "Daily at ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}" else "At a set time"
+        if (h != null && m != null) stringResource(Res.string.settings_daily_at, clockText(h, m)) else stringResource(Res.string.settings_at_set_time)
     }
-    else -> "Unknown (${dock.dryStart})"
+    else -> stringResource(Res.string.settings_unknown_value, "${dock.dryStart}")
 }
 
 /** The time the dock starts drying the mops each day. */
@@ -2060,10 +2260,10 @@ private fun DryScheduleDialog(hour: Int, minute: Int, onSave: (Int, Int) -> Unit
     var m by remember { mutableIntStateOf(minute) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Dry the mops at") },
+        title = { Text(stringResource(Res.string.settings_dry_mops_at)) },
         text = { ClockStepper(h, m, onHourChange = { h = it }, onMinuteChange = { m = it }) },
-        confirmButton = { TextButton(onClick = { onSave(h, m) }) { Text("Save") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = { onSave(h, m) }) { Text(stringResource(Res.string.settings_save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.settings_cancel)) } },
     )
 }
 
@@ -2098,7 +2298,7 @@ private fun SimplePickerDialog(
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.settings_cancel)) } },
     )
 }
 
@@ -2121,9 +2321,9 @@ private fun RobotSettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Robot Settings") },
+                title = { Text(stringResource(Res.string.settings_robot_settings)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) }
                 },
             )
         },
@@ -2134,8 +2334,8 @@ private fun RobotSettingsScreen(
                     SettingRowClickable(
                         icon = Icons.Default.Sensors,
                         iconTint = MaterialTheme.colorScheme.primary,
-                        title = "Find Robot",
-                        subtitle = if (findTriggered) "Beeping…" else "Make the robot beep to locate it",
+                        title = stringResource(Res.string.settings_find_robot),
+                        subtitle = if (findTriggered) stringResource(Res.string.settings_beeping) else stringResource(Res.string.settings_find_robot_sub),
                         onClick = { onFindRobot(); findTriggered = true },
                     )
                 }
@@ -2149,8 +2349,8 @@ private fun RobotSettingsScreen(
                         SettingRowClickable(
                             icon = Icons.Default.Sensors,
                             iconTint = MaterialTheme.colorScheme.primary,
-                            title = "Voice pack",
-                            subtitle = "The language and voice the robot speaks with",
+                            title = stringResource(Res.string.settings_voice_pack),
+                            subtitle = stringResource(Res.string.settings_voice_pack_sub),
                             onClick = onVoicePack,
                         )
                     }
@@ -2160,8 +2360,8 @@ private fun RobotSettingsScreen(
                     SettingRowSwitch(
                         icon = Icons.Default.Lock,
                         iconTint = AppColors.Warn,
-                        title = "Child Lock",
-                        subtitle = if (robotSettings.childLock) "Buttons locked on robot" else "Buttons active on robot",
+                        title = stringResource(Res.string.settings_child_lock),
+                        subtitle = if (robotSettings.childLock) stringResource(Res.string.settings_child_lock_on) else stringResource(Res.string.settings_child_lock_off),
                         checked = robotSettings.childLock,
                         onCheckedChange = onChildLockChange,
                     )
@@ -2171,8 +2371,8 @@ private fun RobotSettingsScreen(
                     SettingRowSwitch(
                         icon = Icons.Default.Lightbulb,
                         iconTint = AppColors.AccentYellow,
-                        title = "Status LED",
-                        subtitle = if (robotSettings.ledEnabled) "LED indicator on" else "LED indicator off",
+                        title = stringResource(Res.string.settings_status_led),
+                        subtitle = if (robotSettings.ledEnabled) stringResource(Res.string.settings_led_on) else stringResource(Res.string.settings_led_off),
                         checked = robotSettings.ledEnabled,
                         onCheckedChange = onLedChange,
                     )
@@ -2214,7 +2414,7 @@ private fun VolumeSliderRow(volume: Int, onVolumeChange: (Int) -> Job) {
                     )
                 }
             }
-            Text("Volume", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Text(stringResource(Res.string.settings_volume), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             Text(volumeLabel(shown), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Row(
@@ -2309,7 +2509,7 @@ private fun FeatureSectionScreen(
         topBar = {
             TopAppBar(
                 title = { Text(title) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) } },
             )
         },
     ) { padding ->
@@ -2338,8 +2538,8 @@ private fun CarpetScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Carpet cleaning") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                title = { Text(stringResource(Res.string.settings_carpet_cleaning)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) } },
             )
         },
     ) { padding ->
@@ -2349,8 +2549,8 @@ private fun CarpetScreen(
                     SettingRowClickable(
                         icon = Icons.Default.GridView,
                         iconTint = AppColors.Good,
-                        title = "Carpet mode",
-                        subtitle = modes.firstOrNull { it.first == carpetMode }?.second ?: "Unknown ($carpetMode)",
+                        title = stringResource(Res.string.settings_carpet_mode),
+                        subtitle = modes.firstOrNull { it.first == carpetMode }?.second ?: stringResource(Res.string.settings_unknown_value, "$carpetMode"),
                         onClick = { showDialog = true },
                     )
                 }
@@ -2363,7 +2563,7 @@ private fun CarpetScreen(
     }
     if (showDialog) {
         SimplePickerDialog(
-            title = "Carpet mode",
+            title = stringResource(Res.string.settings_carpet_mode),
             options = modes.map { it.second },
             selected = modes.indexOfFirst { it.first == carpetMode },
             onSelect = { onCarpetModeChange(modes[it].first); showDialog = false },
@@ -2388,8 +2588,8 @@ private fun BetaFeaturesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Beta features") },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
+                title = { Text(stringResource(Res.string.settings_beta_features)) },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) } },
             )
         },
     ) { padding ->
@@ -2397,7 +2597,7 @@ private fun BetaFeaturesScreen(
             LazyColumn(contentPadding = padding) {
                 item {
                     Text(
-                        "Options your robot reports as supported. Once on, the robot uses them during its cleaning cycle.",
+                        stringResource(Res.string.settings_beta_intro),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(16.dp),
@@ -2406,7 +2606,7 @@ private fun BetaFeaturesScreen(
                 if (loading) {
                     item {
                         Text(
-                            "Checking your robot…",
+                            stringResource(Res.string.settings_beta_checking),
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(16.dp),
                         )
@@ -2414,7 +2614,7 @@ private fun BetaFeaturesScreen(
                 } else if (features.isEmpty() && unlisted.isEmpty()) {
                     item {
                         Text(
-                            "Your robot doesn't report any beta features.",
+                            stringResource(Res.string.settings_beta_none),
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(16.dp),
                         )
@@ -2424,7 +2624,7 @@ private fun BetaFeaturesScreen(
                     Column {
                         FeatureToggleRow(f, onToggle)
                         Text(
-                            "Robot reply: ${f.raw}",
+                            stringResource(Res.string.settings_robot_reply, "${f.raw}"),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = 76.dp, end = 16.dp, bottom = 10.dp),
@@ -2440,16 +2640,16 @@ private fun BetaFeaturesScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Column(Modifier.weight(1f)) {
-                                    Text("Also advertised by your robot", style = MaterialTheme.typography.bodyLarge)
+                                    Text(stringResource(Res.string.settings_also_advertised), style = MaterialTheme.typography.bodyLarge)
                                     Text(
-                                        "${unlisted.size} features with no controls yet",
+                                        pluralStringResource(Res.plurals.settings_unlisted_count, unlisted.size, unlisted.size),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                                 Icon(
                                     if (showUnlisted) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                    contentDescription = if (showUnlisted) "Hide" else "Show",
+                                    contentDescription = if (showUnlisted) stringResource(Res.string.settings_hide) else stringResource(Res.string.settings_show),
                                 )
                             }
                         }
@@ -2459,17 +2659,16 @@ private fun BetaFeaturesScreen(
                         item {
                             Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                                 Text(
-                                    "These are the feature bits your robot reports that LocalRock has no switch for. " +
-                                        "Tell us which you want, and your robot model, on GitHub.",
+                                    stringResource(Res.string.settings_unlisted_text),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                                 TextButton(onClick = { uriHandler.openUri(BETA_FEATURES_ISSUE_URL) }) {
-                                    Text("Report on GitHub")
+                                    Text(stringResource(Res.string.settings_report_github))
                                 }
                                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                                    Text("Feature", Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                                    Text("Bit", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                    Text(stringResource(Res.string.settings_feature), Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                                    Text(stringResource(Res.string.settings_bit), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                                 }
                             }
                         }
@@ -2478,7 +2677,7 @@ private fun BetaFeaturesScreen(
                                 HorizontalDivider()
                                 Row(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                                     Text(
-                                        f.name ?: "Unnamed",
+                                        f.name ?: stringResource(Res.string.settings_unnamed),
                                         Modifier.weight(1f),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = if (f.name == null) MaterialTheme.colorScheme.onSurfaceVariant else Color.Unspecified,
@@ -2555,22 +2754,22 @@ private fun FirmwareUpdateRow(state: FirmwareUpdateState, onCheck: () -> Unit) {
     val tint: Color
     when (state) {
         FirmwareUpdateState.Idle -> {
-            value = "Check for updates"
-            supporting = "Ask the cloud whether newer firmware is available."
+            value = stringResource(Res.string.settings_fw_check)
+            supporting = stringResource(Res.string.settings_fw_check_sub)
             tint = MaterialTheme.colorScheme.primary
         }
         FirmwareUpdateState.Checking -> {
-            value = "Checking…"
+            value = stringResource(Res.string.settings_fw_checking)
             supporting = null
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         }
         is FirmwareUpdateState.UpToDate -> {
-            value = "Up to date"
-            supporting = state.current?.let { "Installed: $it" }
+            value = stringResource(Res.string.settings_fw_up_to_date)
+            supporting = state.current?.let { stringResource(Res.string.settings_fw_installed, it) }
             tint = AppColors.Good
         }
         is FirmwareUpdateState.Available -> {
-            value = if (state.force) "Update required" else "Update available"
+            value = if (state.force) stringResource(Res.string.settings_fw_required) else stringResource(Res.string.settings_fw_available)
             supporting = buildString {
                 append(state.current ?: "?"); append("  →  "); append(state.latest ?: "?")
                 state.notes?.takeIf { it.isNotBlank() }?.let { append("\n"); append(it) }
@@ -2578,7 +2777,7 @@ private fun FirmwareUpdateRow(state: FirmwareUpdateState, onCheck: () -> Unit) {
             tint = MaterialTheme.colorScheme.primary
         }
         is FirmwareUpdateState.Unavailable -> {
-            value = "Check unavailable"
+            value = stringResource(Res.string.settings_fw_unavailable)
             supporting = state.reason
             tint = AppColors.Warn
         }
@@ -2593,7 +2792,7 @@ private fun FirmwareUpdateRow(state: FirmwareUpdateState, onCheck: () -> Unit) {
                 Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.SystemUpdate, null, Modifier.size(22.dp), tint) }
             }
             Column(Modifier.weight(1f)) {
-                Text("Firmware updates", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(Res.string.settings_fw_updates), style = MaterialTheme.typography.bodyLarge)
                 Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (supporting != null) {
                     Text(supporting, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -2645,9 +2844,9 @@ private fun RemoteControlScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Remote Control") },
+                title = { Text(stringResource(Res.string.settings_remote_control_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) }
                 },
             )
         },
@@ -2661,7 +2860,7 @@ private fun RemoteControlScreen(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Text(
-                    "Tap to move the robot",
+                    stringResource(Res.string.settings_rc_tap),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -2670,12 +2869,12 @@ private fun RemoteControlScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    RcButton(Icons.Default.KeyboardArrowUp, "Forward") { onMove(0.3, 0.0) }
+                    RcButton(Icons.Default.KeyboardArrowUp, stringResource(Res.string.settings_rc_forward)) { onMove(0.3, 0.0) }
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        RcButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Turn left") { onMove(0.0, 0.3) }
+                        RcButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, stringResource(Res.string.settings_rc_left)) { onMove(0.0, 0.3) }
                         FilledIconButton(
                             onClick = onStop,
                             modifier = Modifier.size(72.dp),
@@ -2684,15 +2883,15 @@ private fun RemoteControlScreen(
                                 contentColor = MaterialTheme.colorScheme.onErrorContainer,
                             ),
                         ) {
-                            Icon(Icons.Default.Stop, "Stop", Modifier.size(32.dp))
+                            Icon(Icons.Default.Stop, stringResource(Res.string.settings_rc_stop), Modifier.size(32.dp))
                         }
-                        RcButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Turn right") { onMove(0.0, -0.3) }
+                        RcButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, stringResource(Res.string.settings_rc_right)) { onMove(0.0, -0.3) }
                     }
-                    RcButton(Icons.Default.KeyboardArrowDown, "Backward") { onMove(-0.3, 0.0) }
+                    RcButton(Icons.Default.KeyboardArrowDown, stringResource(Res.string.settings_rc_backward)) { onMove(-0.3, 0.0) }
                 }
                 Spacer(Modifier.height(32.dp))
                 Text(
-                    "Each tap moves the robot for 1.5 seconds",
+                    stringResource(Res.string.settings_rc_each_tap),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -2730,9 +2929,9 @@ private fun PinGoScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pin & Go") },
+                title = { Text(stringResource(Res.string.settings_pin_go)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) }
                 },
                 actions = {
                     if (tapPoint != null && parsedMap != null && !sent) {
@@ -2744,7 +2943,7 @@ private fun PinGoScreen(
                                 val (xMm, yMm) = pm.canvasToMm(tp, imageSize.width.toFloat(), imageSize.height.toFloat())
                                 onGoto(xMm, yMm) { if (tapPoint == tp) sent = true }
                             }
-                        }) { Text("Go") }
+                        }) { Text(stringResource(Res.string.settings_go)) }
                     }
                 },
             )
@@ -2758,9 +2957,9 @@ private fun PinGoScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Icon(Icons.Default.Map, null, Modifier.size(48.dp), MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("Map not loaded", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(Res.string.settings_map_not_loaded), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Go back to the main screen and wait for the map to load",
+                            stringResource(Res.string.settings_map_not_loaded_text),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -2809,14 +3008,14 @@ private fun PinGoScreen(
                         onClick = onSpot,
                         enabled = !busy && !travelling,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(top = 12.dp),
-                    ) { Text(if (travelling) "Spot clean (once it is there)" else "Spot clean here (1.5 m × 1.5 m)") }
+                    ) { Text(if (travelling) stringResource(Res.string.settings_spot_once_there) else stringResource(Res.string.settings_spot_here)) }
                 }
                 Text(
                     text = when {
-                        sent && !travelling -> "The robot is at the pin."
-                        sent -> "Command sent! Robot is heading there."
-                        tapPoint != null -> "Target set — tap Go to send the robot there."
-                        else -> "Tap on the map to set a destination."
+                        sent && !travelling -> stringResource(Res.string.settings_pin_arrived)
+                        sent -> stringResource(Res.string.settings_pin_sent)
+                        tapPoint != null -> stringResource(Res.string.settings_pin_target_set)
+                        else -> stringResource(Res.string.settings_pin_tap_map)
                     },
                     modifier = Modifier
                         .fillMaxWidth()

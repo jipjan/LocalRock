@@ -9,7 +9,7 @@ class DetailPanelTest {
     @Test
     fun everyPanelHasANonBlankTitle() {
         DetailPanel.entries.forEach { panel ->
-            assertTrue(panel.title().isNotBlank(), "empty title for $panel")
+            assertTrue(panel.titleRes().key.isNotBlank(), "empty title for $panel")
         }
     }
 
