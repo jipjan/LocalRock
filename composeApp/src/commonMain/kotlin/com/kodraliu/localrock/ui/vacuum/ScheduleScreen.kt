@@ -1,5 +1,35 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.schedule_add
+import com.kodraliu.localrock.resources.schedule_day_fri
+import com.kodraliu.localrock.resources.schedule_day_mon
+import com.kodraliu.localrock.resources.schedule_day_sat
+import com.kodraliu.localrock.resources.schedule_day_short_fri
+import com.kodraliu.localrock.resources.schedule_day_short_mon
+import com.kodraliu.localrock.resources.schedule_day_short_sat
+import com.kodraliu.localrock.resources.schedule_day_short_sun
+import com.kodraliu.localrock.resources.schedule_day_short_thu
+import com.kodraliu.localrock.resources.schedule_day_short_tue
+import com.kodraliu.localrock.resources.schedule_day_short_wed
+import com.kodraliu.localrock.resources.schedule_day_sun
+import com.kodraliu.localrock.resources.schedule_day_thu
+import com.kodraliu.localrock.resources.schedule_day_tue
+import com.kodraliu.localrock.resources.schedule_day_wed
+import com.kodraliu.localrock.resources.schedule_days
+import com.kodraliu.localrock.resources.schedule_delete
+import com.kodraliu.localrock.resources.schedule_empty
+import com.kodraliu.localrock.resources.schedule_empty_text
+import com.kodraliu.localrock.resources.schedule_every_day
+import com.kodraliu.localrock.resources.schedule_new
+import com.kodraliu.localrock.resources.schedule_time
+import com.kodraliu.localrock.resources.schedule_title
+import com.kodraliu.localrock.resources.schedule_weekdays
+import com.kodraliu.localrock.resources.schedule_weekends
+import com.kodraliu.localrock.resources.settings_back
+import com.kodraliu.localrock.resources.settings_cancel
+import com.kodraliu.localrock.resources.settings_save
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,9 +96,9 @@ fun ScheduleScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Schedule") },
+                title = { Text(stringResource(Res.string.schedule_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(Res.string.settings_back)) }
                 },
             )
         },
@@ -78,9 +108,9 @@ fun ScheduleScreen(
                 Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Icon(Icons.Default.Schedule, null, Modifier.size(48.dp), MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text("No schedules yet", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(Res.string.schedule_empty), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "Tap + to schedule a recurring clean",
+                            stringResource(Res.string.schedule_empty_text),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -108,7 +138,7 @@ fun ScheduleScreen(
                     .align(Alignment.BottomEnd)
                     .padding(end = 16.dp, bottom = 16.dp + padding.calculateBottomPadding()),
             ) {
-                Icon(Icons.Default.Add, "Add schedule")
+                Icon(Icons.Default.Add, stringResource(Res.string.schedule_add))
             }
         }
     }
@@ -154,7 +184,7 @@ private fun TimerRow(timer: CleanTimer, onToggle: () -> Unit, onDelete: () -> Un
             )
         }
         IconButton(onClick = onDelete) {
-            Icon(Icons.Default.Delete, "Delete", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(Icons.Default.Delete, stringResource(Res.string.schedule_delete), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(checked = timer.enabled, onCheckedChange = { onToggle() })
     }
@@ -168,14 +198,16 @@ private fun AddTimerDialog(onAdd: (hour: Int, minute: Int, weekdays: Set<Int>) -
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("New schedule") },
+        title = { Text(stringResource(Res.string.schedule_new)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Time", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.schedule_time), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 ClockStepper(hour, minute, onHourChange = { hour = it }, onMinuteChange = { minute = it })
-                Text("Days", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(Res.string.schedule_days), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    val dayLabels = listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
+                    val dayLabels = listOf(
+                        stringResource(Res.string.schedule_day_short_sun), stringResource(Res.string.schedule_day_short_mon), stringResource(Res.string.schedule_day_short_tue), stringResource(Res.string.schedule_day_short_wed), stringResource(Res.string.schedule_day_short_thu), stringResource(Res.string.schedule_day_short_fri), stringResource(Res.string.schedule_day_short_sat),
+                    )
                     dayLabels.forEachIndexed { index, label ->
                         val selected = index in weekdays
                         Surface(
@@ -198,10 +230,10 @@ private fun AddTimerDialog(onAdd: (hour: Int, minute: Int, weekdays: Set<Int>) -
             }
         },
         confirmButton = {
-            TextButton(onClick = { onAdd(hour, minute, weekdays) }) { Text("Save") }
+            TextButton(onClick = { onAdd(hour, minute, weekdays) }) { Text(stringResource(Res.string.settings_save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(Res.string.settings_cancel)) }
         },
     )
 }
@@ -225,11 +257,14 @@ internal fun steppedWithWrap(value: Int, delta: Int, min: Int, max: Int): Int {
     return ((value - min + delta) % size + size) % size + min
 }
 
+@Composable
 private fun formatWeekdays(days: Set<Int>): String {
-    if (days.isEmpty()) return "Every day"
-    val names = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
-    if (days == setOf(1, 2, 3, 4, 5)) return "Weekdays"
-    if (days == setOf(0, 6)) return "Weekends"
-    if (days.size == 7) return "Every day"
+    if (days.isEmpty()) return stringResource(Res.string.schedule_every_day)
+    val names = listOf(
+        stringResource(Res.string.schedule_day_sun), stringResource(Res.string.schedule_day_mon), stringResource(Res.string.schedule_day_tue), stringResource(Res.string.schedule_day_wed), stringResource(Res.string.schedule_day_thu), stringResource(Res.string.schedule_day_fri), stringResource(Res.string.schedule_day_sat),
+    )
+    if (days == setOf(1, 2, 3, 4, 5)) return stringResource(Res.string.schedule_weekdays)
+    if (days == setOf(0, 6)) return stringResource(Res.string.schedule_weekends)
+    if (days.size == 7) return stringResource(Res.string.schedule_every_day)
     return days.sorted().joinToString(", ") { names.getOrElse(it) { "$it" } }
 }

@@ -1,5 +1,9 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.settings_clock_min
+import com.kodraliu.localrock.resources.settings_hour
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -36,13 +40,13 @@ internal fun ClockStepper(hour: Int, minute: Int, onHourChange: (Int) -> Unit, o
     val use24 = rememberUse24HourClock()
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         if (use24) {
-            NumberStepper("Hour", hour, 0, 23) { onHourChange(it) }
+            NumberStepper(stringResource(Res.string.settings_hour), hour, 0, 23) { onHourChange(it) }
         } else {
-            NumberStepper("Hour", hour12Of(hour), 1, 12) { onHourChange(hour24Of(it, pm = hour >= 12)) }
+            NumberStepper(stringResource(Res.string.settings_hour), hour12Of(hour), 1, 12) { onHourChange(hour24Of(it, pm = hour >= 12)) }
         }
         Text(":", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         // One minute a step, with hold-to-repeat on the buttons, so any minute can be reached.
-        NumberStepper("Min", minute, 0, 59) { onMinuteChange(it) }
+        NumberStepper(stringResource(Res.string.settings_clock_min), minute, 0, 59) { onMinuteChange(it) }
         if (!use24) {
             OutlinedButton(
                 onClick = { onHourChange((hour + 12) % 24) },
