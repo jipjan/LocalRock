@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Robot screen: view model messages -->
+    <string name="robot_firmware_no_info">No firmware info returned</string>
+    <string name="robot_firmware_not_checked">Your server doesn't check for firmware updates, so it can't say whether newer firmware exists.</string>
+    <string name="robot_new_routine_name">Routine %1$d</string>
+    <string name="robot_order_saved">Cleaning order saved</string>
+    <string name="robot_order_removed">Default order removed</string>
+    <string name="robot_routine_still_running">"%1$s" is still running. Run it again to stop it first.</string>
+    <string name="robot_routine_not_started">The server did not start "%1$s"</string>
+    <string name="robot_routine_not_started_status">The server did not start "%1$s" (%2$s)</string>
+    <string name="robot_routine_stopping">Stopping "%1$s"</string>
+    <string name="robot_routine_started">"%1$s" started</string>
+    <string name="robot_no_answer">The robot didn't answer in time</string>
+
+    <!-- Robot screen: cleaning options -->
+    <string name="robot_fan_quiet">Quiet</string>
+    <string name="robot_fan_standard">Standard</string>
+    <string name="robot_fan_strong">Strong</string>
+    <string name="robot_fan_max">MAX</string>
+    <string name="robot_off">Off</string>
+    <string name="robot_water_low">Low</string>
+    <string name="robot_water_med">Med</string>
+    <string name="robot_water_high">High</string>
+    <string name="robot_route_standard">Standard</string>
+    <string name="robot_route_deep">Deep</string>
+    <string name="robot_route_deep_plus">Deep+</string>
+    <string name="robot_route_fast">Fast</string>
+    <string name="robot_room_fallback">Room %1$d</string>
+
+    <!-- Robot screen: action messages -->
+    <string name="robot_room_settings_saved">Room settings saved</string>
+    <string name="robot_multi_level_on">Multi-level maps on</string>
+    <string name="robot_multi_level_off">Multi-level maps off</string>
+    <string name="robot_map_saving_on">Map saving on</string>
+    <string name="robot_mapping_started">Mapping started</string>
+    <string name="robot_new_map_saved">New map saved</string>
+    <string name="robot_cleaning_started">Cleaning started</string>
+    <string name="robot_cleaning_resumed">Cleaning resumed</string>
+    <string name="robot_returning_to_dock">Returning to dock</string>
+    <string name="robot_area_skipped">Area skipped</string>
+    <string name="robot_returning_to_empty">Returning to empty the bin</string>
+    <string name="robot_returning_to_wash">Returning to wash the mop</string>
+    <string name="robot_map_renamed">Map renamed</string>
+    <string name="robot_map_deleted">Map deleted</string>
+    <string name="robot_map_backed_up">Map backed up</string>
+    <string name="robot_map_restored">Map restored from backup</string>
+
+    <!-- Robot screen: skip area and return to dock -->
+    <string name="robot_skip_title">Skip this area?</string>
+    <string name="robot_skip_text">The robot leaves the area it is cleaning now and goes on to the next. It is skipped this time only.</string>
+    <string name="robot_skip">Skip</string>
+    <string name="robot_dock_title">Back to the dock</string>
+    <string name="robot_dock_charge">Return to charge (ends the clean)</string>
+    <string name="robot_dock_empty">Empty the bin, then carry on</string>
+    <string name="robot_dock_wash">Wash the mop, then carry on</string>
+
+    <!-- Robot screen: top bar and map -->
+    <string name="robot_go_back">Go back</string>
+    <string name="robot_live_view">Live view</string>
+    <string name="robot_edit_map">Edit map</string>
+    <string name="robot_settings">Settings</string>
+    <string name="robot_back">Back</string>
+    <string name="robot_add_area">Add area</string>
+    <string name="robot_skip_area">Skip area</string>
+    <string name="robot_refresh_map">Refresh map</string>
+    <string name="robot_choose_map">Choose map</string>
+    <string name="robot_switch_map">Switch map</string>
+    <string name="robot_loaded">Loaded</string>
+    <string name="robot_last_clean_completed">Cleaning completed · %1$d min · %2$d m²</string>
+    <string name="robot_last_clean_ended_early">Cleaning ended early · %1$d min · %2$d m²</string>
+    <string name="robot_close">Close</string>
+    <string name="robot_cleaning_rooms">Cleaning %1$s</string>
+    <string name="robot_no_go_drop">No-go: drop</string>
+    <string name="robot_no_map">No map loaded</string>
+    <string name="robot_no_map_text">Load the latest map from your robot.</string>
+    <string name="robot_loading">Loading…</string>
+    <string name="robot_load_map">Load map</string>
+    <string name="robot_saved_maps">Saved maps</string>
+
+    <!-- Robot screen: status card -->
+    <string name="robot_paused_at_dock">Paused at the dock</string>
+    <string name="robot_spot_clean">Spot clean · 1.5 m × 1.5 m</string>
+    <string name="robot_area_so_far">%1$s so far</string>
+    <string name="robot_area_last_clean">%1$s last clean</string>
+    <string name="robot_no_cleaning_yet">No cleaning recorded yet</string>
+    <string name="robot_battery_charging">Battery, charging</string>
+    <string name="robot_battery">Battery</string>
+    <string name="robot_hide_timeline">Hide the clean's timeline</string>
+    <string name="robot_show_timeline">Show the clean's timeline</string>
+    <string name="robot_reading_timeline">Reading the clean's timeline…</string>
+    <string name="robot_drying_mop">Drying mop</string>
+    <string name="robot_drying_mop_left">Drying mop · %1$s</string>
+    <string name="robot_left_hm">%1$dh %2$dm left</string>
+    <string name="robot_left_m">%1$dm left</string>
+
+    <!-- Robot screen: control bar -->
+    <string name="robot_mode_mop">Mop</string>
+    <string name="robot_mode_vac_mop">Vac &amp; Mop</string>
+    <string name="robot_mode_vacuum">Vacuum</string>
+    <string name="robot_plan_smart">SmartPlan</string>
+    <string name="robot_plan_general">General</string>
+    <string name="robot_plan_custom">Custom</string>
+    <string name="robot_clear_selection">Clear room selection</string>
+    <string name="robot_stop_cleaning">Stop cleaning</string>
+    <string name="robot_more_actions">More actions</string>
+    <string name="robot_tab_full">Full</string>
+    <string name="robot_tab_room">Room</string>
+    <string name="robot_tab_zones">Zones</string>
+    <string name="robot_tab_routine">Routine</string>
+    <string name="robot_tap_rooms">Tap the rooms on the map</string>
+    <string name="robot_pause">Pause</string>
+    <string name="robot_clean_rooms">Clean rooms</string>
+    <string name="robot_resume">Resume</string>
+    <string name="robot_clean">Clean</string>
+    <string name="robot_return_to_dock">Return to dock</string>
+    <string name="robot_start_cleans_selected">Start cleans the selected rooms</string>
+
+    <!-- Robot screen: more actions -->
+    <string name="robot_action_rooms">Rooms</string>
+    <string name="robot_action_zone_clean">Zone clean</string>
+    <string name="robot_action_pin_go">Pin &amp; Go</string>
+    <string name="robot_action_remote">Remote</string>
+    <string name="robot_action_schedule">Schedule</string>
+    <string name="robot_action_dock">Dock &amp; care</string>
+    <string name="robot_action_history">History</string>
+    <string name="robot_action_maps">Maps</string>
+    <string name="robot_action_routines">Routines</string>
+
+    <!-- Robot screen: cleaning mode sheet -->
+    <string name="robot_smartplan_text">SmartPlan picks suction, water and route for each room.</string>
+    <string name="robot_reading_room_settings">Reading the room settings from the robot.</string>
+    <string name="robot_room_settings_failed">Couldn't read the room settings from the robot. Close this sheet and open it again.</string>
+    <string name="robot_subtitle_vac_then_mop">Vacuums everything first, then mops it</string>
+    <string name="robot_subtitle_vac_mop">Vac &amp; Mop for daily clean</string>
+    <string name="robot_subtitle_mop">Mop only for delicate floors</string>
+    <string name="robot_subtitle_vacuum">Vacuum only mode</string>
+    <string name="robot_suction_power">Suction power</string>
+    <string name="robot_water_flow">Water flow</string>
+    <string name="robot_route">Route</string>
+    <string name="robot_more_cleaning_settings">More cleaning settings</string>
+    <string name="robot_page_vac_then_mop">Vacuum, then mop</string>
+    <string name="robot_other">Other</string>
+    <string name="robot_summary_vacuum">Vacuum %1$s</string>
+    <string name="robot_summary_mop">Mop %1$s</string>
+    <string name="robot_summary_vac_mop">Vacuum %1$s, mop %2$s</string>
+    <string name="robot_room_modes_load_map">Load the map to set up each room.</string>
+    <string name="robot_room_modes_text">Each room is cleaned with its own suction, water and route.</string>
+    <string name="robot_save_room_settings">Save room settings</string>
+    <string name="robot_vac_then_mop_title">Vacuum first, then mop</string>
+    <string name="robot_vac_then_mop_text">Vacuums everything before it starts mopping</string>
+    <string name="robot_corner_title">Intensive corner mopping</string>
+    <string name="robot_corner_text">Mops corners and edges more thoroughly</string>
+    <string name="robot_water_custom">Custom</string>
+    <string name="robot_custom_amount">Custom amount %1$d of %2$d</string>
+    <string name="robot_less_water">Less water</string>
+    <string name="robot_more_water">More water</string>
+    <string name="robot_cleaning_count">Cleaning count</string>
+    <string name="robot_once">once</string>
+    <string name="robot_twice">twice</string>
+
+    <!-- Robot screen: dock sheet -->
+    <string name="robot_dock_control">Dock control</string>
+    <string name="robot_dock_settings">Dock settings</string>
+    <string name="robot_clean_water_tank">Clean water tank</string>
+    <string name="robot_unknown">Unknown</string>
+    <string name="robot_empty_refill">Empty — refill</string>
+    <string name="robot_ok">OK</string>
+    <string name="robot_dirty_water_tank">Dirty water tank</string>
+    <string name="robot_full_empty_it">Full — empty it</string>
+    <string name="robot_latch_open">Latch open</string>
+    <string name="robot_dust_bag">Dust bag</string>
+    <string name="robot_missing">Missing</string>
+    <string name="robot_duct_blocked">Duct blocked</string>
+    <string name="robot_mop_dryer">Mop dryer</string>
+    <string name="robot_drying_left">Drying — %1$dm left</string>
+    <string name="robot_drying">Drying</string>
+    <string name="robot_dock_empty_action">Empty</string>
+    <string name="robot_dock_wash_action">Wash</string>
+    <string name="robot_stop_dry">Stop dry</string>
+    <string name="robot_dry">Dry</string>
+    <string name="robot_mop_wash_frequency">Mop wash frequency</string>
+    <string name="robot_washing_mode">Washing mode</string>
+    <string name="robot_auto_empty_mode">Auto-empty mode</string>
+
+    <!-- Robot screen: rooms and cleaning order -->
+    <string name="robot_select_rooms">Select rooms</string>
+    <string name="robot_load_map_first">Load the map first to discover your rooms.</string>
+    <string name="robot_tap_rooms_hint">Tap rooms to select — they'll be cleaned in the order you pick.</string>
+    <string name="robot_rooms_selected_hint">%1$d selected — tap to reorder or remove.</string>
+    <string name="robot_clean_selected_rooms">Clean selected rooms</string>
+    <string name="robot_default_order">Default cleaning order</string>
+    <string name="robot_default_order_text">Clean without picking rooms goes through them in this order. Rooms you pick are still cleaned in the order you tap them.</string>
+    <string name="robot_move_up">Move %1$s up</string>
+    <string name="robot_move_down">Move %1$s down</string>
+    <string name="robot_room_generic">room</string>
+    <string name="robot_save_order">Save order</string>
+    <string name="robot_remove_order">Remove default order</string>
+
+    <!-- Robot screen: maps sheet -->
+    <string name="robot_maps_intro">The maps stored on your robot. The robot keeps one backup of each map: back it up while the map looks right, and restore it if the map goes wrong. Moved the dock somewhere the map doesn't cover? Delete the map, then let the robot map the home again.</string>
+    <string name="robot_map_saving_off">Map saving is off</string>
+    <string name="robot_map_saving_off_text">This robot does not keep a map yet, so there are no rooms, zones or floors to work with. Turn map saving on to let it store one.</string>
+    <string name="robot_turn_on_map_saving">Turn on map saving</string>
+    <string name="robot_multi_level">Multi-level maps</string>
+    <string name="robot_multi_level_text">Keep up to one map per floor. Turning this off keeps one map and deletes the rest.</string>
+    <string name="robot_smart_floor">Recognise the floor automatically</string>
+    <string name="robot_smart_floor_text">Off: you pick the map before cleaning another floor.</string>
+    <string name="robot_new_map_unsaved">New map not saved</string>
+    <string name="robot_new_map_unsaved_text">The robot has built a new map. Stop the mapping run when it has covered the home, then save it so it is kept and split into rooms.</string>
+    <string name="robot_save_new_map">Save new map</string>
+    <string name="robot_checking_maps">Checking robot for saved maps…</string>
+    <string name="robot_no_saved_maps">No saved maps on the robot.</string>
+    <string name="robot_no_saved_maps_text">The robot leaves the dock and drives through the home to build a new map. Stop it once it has covered everything, then save the map here. Open the doors to every room you want on it.</string>
+    <string name="robot_map_the_home">Map the home</string>
+    <string name="robot_recheck">Re-check</string>
+    <string name="robot_currently_loaded">Currently loaded</string>
+    <string name="robot_backup_from">Backup from %1$s</string>
+    <string name="robot_no_backup">No backup yet</string>
+    <string name="robot_rename_named">Rename %1$s</string>
+    <string name="robot_delete_named">Delete %1$s</string>
+    <string name="robot_load">Load</string>
+    <string name="robot_preview_map">Map</string>
+    <string name="robot_preview_backup">Backup</string>
+    <string name="robot_back_up_now">Back up now</string>
+    <string name="robot_restore_backup">Restore backup</string>
+    <string name="robot_map_another_floor">Map another floor</string>
+    <string name="robot_couldnt_load">Couldn't load</string>
+
+    <!-- Robot screen: map dialogs -->
+    <string name="robot_rename_map">Rename map</string>
+    <string name="robot_map_name">Map name</string>
+    <string name="robot_rename">Rename</string>
+    <string name="robot_keep_title">Keep which map?</string>
+    <string name="robot_keep_text">Single-level mode keeps one map. The robot deletes the others with their rooms and zones. This can't be undone.</string>
+    <string name="robot_keep_confirm">Keep this map</string>
+    <string name="robot_backup_title">Back up "%1$s"?</string>
+    <string name="robot_backup_text">The robot saves this map as it is now, with its rooms, zones, walls and carpets. It keeps one backup per map.</string>
+    <string name="robot_backup_text_replace">The robot saves this map as it is now, with its rooms, zones, walls and carpets. It keeps one backup per map, so this replaces the backup from %1$s.</string>
+    <string name="robot_back_up">Back up</string>
+    <string name="robot_restore_title">Restore "%1$s"?</string>
+    <string name="robot_restore_text">The map goes back to the backup from %1$s. Everything changed on it since then is lost: rooms, room names, no-go zones, walls, carpets and thresholds. Check your routines afterwards.</string>
+    <string name="robot_earlier">earlier</string>
+    <string name="robot_restore">Restore</string>
+    <string name="robot_delete_title">Delete "%1$s"?</string>
+    <string name="robot_delete_text">The robot forgets this map and everything on it: rooms, room names, floor types, no-go zones, walls, carpets and thresholds. This can't be undone.</string>
+    <string name="robot_delete_map">Delete map</string>
+
+    <!-- Obstacles on the map -->
+    <string name="robot_obstacle">Obstacle</string>
+    <string name="robot_obstacle_not_sent">The robot didn't send it</string>
+    <string name="robot_obstacle_confidence">%1$d% confidence</string>
+    <string name="robot_obstacle_ignored">Ignored</string>
+    <string name="robot_obstacle_no_photo">The robot kept no photo of this obstacle.</string>
+    <string name="robot_obstacle_photo">Photo of the obstacle</string>
+    <string name="robot_obstacle_photo_failed">Couldn't load the photo: %1$s</string>
+
+    <!-- Camera live view -->
+    <string name="camera_go_back">Go back</string>
+    <string name="camera_unsupported">Camera live view isn't available on this platform yet.</string>
+    <string name="camera_live">LIVE</string>
+    <string name="camera_talk_needs_mic">Talk-back needs the microphone.</string>
+    <string name="camera_talk_unavailable">Talk-back is not available on this device yet.</string>
+    <string name="camera_looking_for_pet">Looking for the pet</string>
+    <string name="camera_returning_to_dock">Returning to dock</string>
+    <string name="camera_cruise_started">Cruise started</string>
+    <string name="camera_back_to_map">Back to the map</string>
+    <string name="camera_retry">Retry</string>
+    <string name="camera_change_pin">Change PIN</string>
+    <string name="camera_pin_intro_typed">The live view is protected by a camera PIN stored on the robot. Enter your existing PIN, or pick a new one and register it on the robot.</string>
+    <string name="camera_pin_intro_pattern">The live view is protected by a camera PIN stored on the robot. Draw your existing pattern, or draw a new one and register it on the robot.</string>
+    <string name="camera_pin">Camera PIN</string>
+    <string name="camera_draw_pattern_hint">Draw a pattern of at least 4 dots</string>
+    <string name="camera_pattern_captured">Pattern captured</string>
+    <string name="camera_start">Start live view</string>
+    <string name="camera_set_pin">Set as new PIN on robot</string>
+    <string name="camera_draw_instead">Draw a pattern instead</string>
+    <string name="camera_type_instead">Type a PIN instead</string>
+    <string name="camera_pause">Pause</string>
+    <string name="camera_end">End</string>
+    <string name="camera_dock">Dock</string>
+    <string name="camera_pin_go">Pin &amp; Go</string>
+    <string name="camera_cruise">Cruise</string>
+    <string name="camera_find_pet">Find pet</string>
+    <string name="camera_drive_forward">Drive forward</string>
+    <string name="camera_turn_left">Turn left</string>
+    <string name="camera_turn_right">Turn right</string>
+    <string name="camera_stop_talking">Stop talking</string>
+    <string name="camera_talk">Talk through the robot</string>
+    <string name="camera_cruise_text">Tap the map to set the points to drive past, in order.</string>
+    <string name="camera_start_cruise">Start cruise</string>
+    <string name="camera_clear">Clear</string>
+
+    <!-- Zone cleaning -->
+    <string name="zone_title_routine">Routine zones</string>
+    <string name="zone_title_add_area">Add area</string>
+    <string name="zone_title">Zone Clean</string>
+    <string name="zone_back">Back</string>
+    <string name="zone_draw_mode">Draw mode</string>
+    <string name="zone_pan_mode">Pan mode</string>
+    <string name="zone_clear">Clear zones</string>
+    <string name="zone_area_added">Area added to the clean</string>
+    <string name="zone_use">Use</string>
+    <string name="zone_clean">Clean</string>
+    <string name="zone_start">Start</string>
+    <string name="zone_map_not_loaded">Map not loaded</string>
+    <string name="zone_map_not_loaded_text">Go back and wait for the map to load first</string>
+    <string name="zone_started">Zone cleaning started!</string>
+    <string name="zone_hint_pan">Pinch to zoom · Double-tap to reset · Switch to draw mode to add zones</string>
+    <string name="zone_hint_draw">Drag on the map to draw a zone · Switch to pan mode to navigate</string>
+
+    <!-- Counts -->
+    <plurals name="robot_rooms_selected">
+        <item quantity="one">%1$d room</item>
+        <item quantity="other">%1$d rooms</item>
+    </plurals>
+    <plurals name="zone_count">
+        <item quantity="one">%1$d zone(s) — tap Start to begin</item>
+        <item quantity="other">%1$d zone(s) — tap Start to begin</item>
+    </plurals>
+</resources>

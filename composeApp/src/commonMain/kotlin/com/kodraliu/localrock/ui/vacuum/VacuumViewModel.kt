@@ -21,6 +21,17 @@ import com.kodraliu.localrock.resources.routine_editor_need_target
 import com.kodraliu.localrock.resources.routines_deleted
 import com.kodraliu.localrock.resources.routines_not_editable
 import com.kodraliu.localrock.resources.routines_saved
+import com.kodraliu.localrock.resources.robot_firmware_no_info
+import com.kodraliu.localrock.resources.robot_firmware_not_checked
+import com.kodraliu.localrock.resources.robot_no_answer
+import com.kodraliu.localrock.resources.robot_order_removed
+import com.kodraliu.localrock.resources.robot_order_saved
+import com.kodraliu.localrock.resources.robot_routine_not_started
+import com.kodraliu.localrock.resources.robot_routine_not_started_status
+import com.kodraliu.localrock.resources.robot_routine_started
+import com.kodraliu.localrock.resources.robot_routine_still_running
+import com.kodraliu.localrock.resources.robot_routine_stopping
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import com.kodraliu.localrock.shared.vacuum.edited
 import kotlin.coroutines.cancellation.CancellationException
@@ -138,9 +149,9 @@ class VacuumViewModel(
             _firmwareUpdate.value = try {
                 val info = container.deviceRepository.checkFirmwareUpdate(device.duid)
                 when {
-                    info == null -> FirmwareUpdateState.Unavailable("No firmware info returned")
+                    info == null -> FirmwareUpdateState.Unavailable(getString(Res.string.robot_firmware_no_info))
                     !info.namesAVersion -> FirmwareUpdateState.Unavailable(
-                        "Your server doesn't check for firmware updates, so it can't say whether newer firmware exists.",
+                        getString(Res.string.robot_firmware_not_checked),
                     )
                     info.updatable -> FirmwareUpdateState.Available(
                         current = info.currentVersion ?: firmwareVersion,
@@ -284,12 +295,12 @@ class VacuumViewModel(
     private val _routineSaving = MutableStateFlow(false)
     val routineSaving: StateFlow<Boolean> = _routineSaving.asStateFlow()
 
-    fun newRoutine() {
-        val count = (routines.value as? RoutinesState.Loaded)?.routines?.size ?: 0
+    /** [name] is the new routine's default name, "Routine <n>" in the app's language. */
+    fun newRoutine(name: String) {
         _routineEdit.value = RoutineEdit(
             sceneId = null,
             savedName = null,
-            draft = RoutineDraft("Routine ${count + 1}", listOf(RoutineStep(RoutineStepKind.FULL, mapFlag = currentMapFlag()))),
+            draft = RoutineDraft(name, listOf(RoutineStep(RoutineStepKind.FULL, mapFlag = currentMapFlag()))),
         )
     }
 
@@ -388,14 +399,14 @@ class VacuumViewModel(
         container.appSettings.cleanOrder(device.duid, repository.currentFloorFlag.value)
 
     /** Kept only once the robot has taken the order, so the app never remembers one it refused. */
-    fun saveDefaultCleanOrder(order: List<Int>) = run("Cleaning order saved") {
+    fun saveDefaultCleanOrder(order: List<Int>) = run(Res.string.robot_order_saved) {
         it.saveCleanSequence(order)
         container.appSettings.setCleanOrder(device.duid, it.currentFloorFlag.value, order)
     }
 
     fun removeDefaultCleanOrder() {
         container.appSettings.setCleanOrder(device.duid, repository.currentFloorFlag.value, emptyList())
-        container.messages.success("Default order removed")
+        viewModelScope.launch { container.messages.success(getString(Res.string.robot_order_removed)) }
     }
 
     /**
@@ -422,6 +433,19 @@ class VacuumViewModel(
         successMessage: String? = null,
         onError: ((String) -> Unit)? = null,
         action: suspend (VacuumRepository) -> Unit,
+    ) = runAction({ successMessage }, onError, action)
+
+    /** [run] with the success message as a string resource, read in the app's language. */
+    fun run(
+        successMessage: StringResource?,
+        onError: ((String) -> Unit)? = null,
+        action: suspend (VacuumRepository) -> Unit,
+    ) = runAction({ successMessage?.let { getString(it) } }, onError, action)
+
+    private fun runAction(
+        successMessage: suspend () -> String?,
+        onError: ((String) -> Unit)?,
+        action: suspend (VacuumRepository) -> Unit,
     ) {
         viewModelScope.launch {
             pendingActions++
@@ -433,7 +457,7 @@ class VacuumViewModel(
 
                         runCatching { repository.refreshStatus() }
                         coroutineContext.ensureActive()
-                        successMessage?.let { container.messages.success(it) }
+                        successMessage()?.let { container.messages.success(it) }
                     } catch (e: Throwable) {
                         coroutineContext.ensureActive()
                         val text = describe(e)
@@ -469,19 +493,31 @@ sealed interface RoutinesState {
     data class Failed(val reason: String) : RoutinesState
 }
 
-/** What to tell the user once the server has answered a run request; a refusal is thrown. */
-internal fun routineRunMessage(name: String, result: SceneRunResult): String {
+/** The message for a run request's answer, as a string resource and its arguments. */
+internal data class RoutineRunText(val accepted: Boolean, val resource: StringResource, val args: List<String>)
+
+/** What to tell the user once the server has answered a run request. */
+internal fun routineRunText(name: String, result: SceneRunResult): RoutineRunText {
     if (!result.accepted) {
         val active = result.activeSceneName
-        throw IllegalStateException(
-            if (result.status == "routine_in_progress" && active != null) {
-                "\"$active\" is still running. Run it again to stop it first."
-            } else {
-                "The server did not start \"$name\"" + (result.status?.let { " ($it)" } ?: "")
-            }
-        )
+        val status = result.status
+        return when {
+            status == "routine_in_progress" && active != null ->
+                RoutineRunText(false, Res.string.robot_routine_still_running, listOf(active))
+            status != null -> RoutineRunText(false, Res.string.robot_routine_not_started_status, listOf(name, status))
+            else -> RoutineRunText(false, Res.string.robot_routine_not_started, listOf(name))
+        }
     }
-    return if (result.status == "cancel_requested") "Stopping \"$name\"" else "\"$name\" started"
+    return if (result.status == "cancel_requested") RoutineRunText(true, Res.string.robot_routine_stopping, listOf(name))
+    else RoutineRunText(true, Res.string.robot_routine_started, listOf(name))
+}
+
+/** [routineRunText] in the app's language; a refusal is thrown. */
+internal suspend fun routineRunMessage(name: String, result: SceneRunResult): String {
+    val text = routineRunText(name, result)
+    val message = getString(text.resource, *text.args.toTypedArray())
+    if (!text.accepted) throw IllegalStateException(message)
+    return message
 }
 
 /**
@@ -502,13 +538,13 @@ fun validateRoomName(name: String): String {
     return clean
 }
 
-private fun describe(e: Throwable): String {
+private suspend fun describe(e: Throwable): String {
     val parts = mutableListOf<String>()
     var current: Throwable? = e
     while (current != null) {
         val msg = current.message
         parts += when {
-            current is TimeoutCancellationException -> "The robot didn't answer in time"
+            current is TimeoutCancellationException -> getString(Res.string.robot_no_answer)
             msg.isNullOrBlank() -> current::class.simpleName ?: "Throwable"
             else -> msg
         }

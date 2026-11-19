@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Robot screen: view model messages -->
+    <string name="robot_firmware_no_info">Keine Firmware-Informationen erhalten</string>
+    <string name="robot_firmware_not_checked">Dein Server sucht nicht nach Firmware-Updates und kann daher nicht sagen, ob es neuere Firmware gibt.</string>
+    <string name="robot_new_routine_name">Routine %1$d</string>
+    <string name="robot_order_saved">Reinigungsreihenfolge gespeichert</string>
+    <string name="robot_order_removed">Standardreihenfolge entfernt</string>
+    <string name="robot_routine_still_running">„%1$s“ läuft noch. Starte sie erneut, um sie zuerst zu stoppen.</string>
+    <string name="robot_routine_not_started">Der Server hat „%1$s“ nicht gestartet</string>
+    <string name="robot_routine_not_started_status">Der Server hat „%1$s“ nicht gestartet (%2$s)</string>
+    <string name="robot_routine_stopping">„%1$s“ wird gestoppt</string>
+    <string name="robot_routine_started">„%1$s“ gestartet</string>
+    <string name="robot_no_answer">Der Roboter hat nicht rechtzeitig geantwortet</string>
+
+    <!-- Robot screen: cleaning options -->
+    <string name="robot_fan_quiet">Leise</string>
+    <string name="robot_fan_standard">Standard</string>
+    <string name="robot_fan_strong">Stark</string>
+    <string name="robot_fan_max">MAX</string>
+    <string name="robot_off">Aus</string>
+    <string name="robot_water_low">Niedrig</string>
+    <string name="robot_water_med">Mittel</string>
+    <string name="robot_water_high">Hoch</string>
+    <string name="robot_route_standard">Standard</string>
+    <string name="robot_route_deep">Gründlich</string>
+    <string name="robot_route_deep_plus">Gründlich+</string>
+    <string name="robot_route_fast">Schnell</string>
+    <string name="robot_room_fallback">Raum %1$d</string>
+
+    <!-- Robot screen: action messages -->
+    <string name="robot_room_settings_saved">Raumeinstellungen gespeichert</string>
+    <string name="robot_multi_level_on">Mehrstöckige Karten an</string>
+    <string name="robot_multi_level_off">Mehrstöckige Karten aus</string>
+    <string name="robot_map_saving_on">Kartenspeicherung an</string>
+    <string name="robot_mapping_started">Kartierung gestartet</string>
+    <string name="robot_new_map_saved">Neue Karte gespeichert</string>
+    <string name="robot_cleaning_started">Reinigung gestartet</string>
+    <string name="robot_cleaning_resumed">Reinigung fortgesetzt</string>
+    <string name="robot_returning_to_dock">Fährt zurück zur Station</string>
+    <string name="robot_area_skipped">Bereich übersprungen</string>
+    <string name="robot_returning_to_empty">Fährt zur Station, um den Behälter zu leeren</string>
+    <string name="robot_returning_to_wash">Fährt zur Station, um den Mopp zu waschen</string>
+    <string name="robot_map_renamed">Karte umbenannt</string>
+    <string name="robot_map_deleted">Karte gelöscht</string>
+    <string name="robot_map_backed_up">Karte gesichert</string>
+    <string name="robot_map_restored">Karte aus der Sicherung wiederhergestellt</string>
+
+    <!-- Robot screen: skip area and return to dock -->
+    <string name="robot_skip_title">Diesen Bereich überspringen?</string>
+    <string name="robot_skip_text">Der Roboter verlässt den Bereich, den er gerade reinigt, und macht mit dem nächsten weiter. Er wird nur dieses Mal übersprungen.</string>
+    <string name="robot_skip">Überspringen</string>
+    <string name="robot_dock_title">Zurück zur Station</string>
+    <string name="robot_dock_charge">Zum Laden zurückkehren (beendet die Reinigung)</string>
+    <string name="robot_dock_empty">Behälter leeren, dann weitermachen</string>
+    <string name="robot_dock_wash">Mopp waschen, dann weitermachen</string>
+
+    <!-- Robot screen: top bar and map -->
+    <string name="robot_go_back">Zurück</string>
+    <string name="robot_live_view">Live-Ansicht</string>
+    <string name="robot_edit_map">Karte bearbeiten</string>
+    <string name="robot_settings">Einstellungen</string>
+    <string name="robot_back">Zurück</string>
+    <string name="robot_add_area">Bereich hinzufügen</string>
+    <string name="robot_skip_area">Bereich überspringen</string>
+    <string name="robot_refresh_map">Karte aktualisieren</string>
+    <string name="robot_choose_map">Karte wählen</string>
+    <string name="robot_switch_map">Karte wechseln</string>
+    <string name="robot_loaded">Geladen</string>
+    <string name="robot_last_clean_completed">Reinigung abgeschlossen · %1$d min · %2$d m²</string>
+    <string name="robot_last_clean_ended_early">Reinigung vorzeitig beendet · %1$d min · %2$d m²</string>
+    <string name="robot_close">Schließen</string>
+    <string name="robot_cleaning_rooms">Reinigt %1$s</string>
+    <string name="robot_no_go_drop">Sperrzone: Absturz</string>
+    <string name="robot_no_map">Keine Karte geladen</string>
+    <string name="robot_no_map_text">Lade die aktuelle Karte von deinem Roboter.</string>
+    <string name="robot_loading">Wird geladen…</string>
+    <string name="robot_load_map">Karte laden</string>
+    <string name="robot_saved_maps">Gespeicherte Karten</string>
+
+    <!-- Robot screen: status card -->
+    <string name="robot_paused_at_dock">An der Station pausiert</string>
+    <string name="robot_spot_clean">Spotreinigung · 1,5 m × 1,5 m</string>
+    <string name="robot_area_so_far">%1$s bisher</string>
+    <string name="robot_area_last_clean">%1$s letzte Reinigung</string>
+    <string name="robot_no_cleaning_yet">Noch keine Reinigung aufgezeichnet</string>
+    <string name="robot_battery_charging">Akku, lädt</string>
+    <string name="robot_battery">Akku</string>
+    <string name="robot_hide_timeline">Verlauf der Reinigung ausblenden</string>
+    <string name="robot_show_timeline">Verlauf der Reinigung anzeigen</string>
+    <string name="robot_reading_timeline">Verlauf der Reinigung wird gelesen…</string>
+    <string name="robot_drying_mop">Mopp wird getrocknet</string>
+    <string name="robot_drying_mop_left">Mopp wird getrocknet · %1$s</string>
+    <string name="robot_left_hm">noch %1$d h %2$d min</string>
+    <string name="robot_left_m">noch %1$d min</string>
+
+    <!-- Robot screen: control bar -->
+    <string name="robot_mode_mop">Wischen</string>
+    <string name="robot_mode_vac_mop">Saugen &amp; Wischen</string>
+    <string name="robot_mode_vacuum">Saugen</string>
+    <string name="robot_plan_smart">SmartPlan</string>
+    <string name="robot_plan_general">Allgemein</string>
+    <string name="robot_plan_custom">Individuell</string>
+    <string name="robot_clear_selection">Raumauswahl aufheben</string>
+    <string name="robot_stop_cleaning">Reinigung stoppen</string>
+    <string name="robot_more_actions">Weitere Aktionen</string>
+    <string name="robot_tab_full">Komplett</string>
+    <string name="robot_tab_room">Raum</string>
+    <string name="robot_tab_zones">Zonen</string>
+    <string name="robot_tab_routine">Routine</string>
+    <string name="robot_tap_rooms">Tippe auf die Räume auf der Karte</string>
+    <string name="robot_pause">Pause</string>
+    <string name="robot_clean_rooms">Räume reinigen</string>
+    <string name="robot_resume">Fortsetzen</string>
+    <string name="robot_clean">Reinigen</string>
+    <string name="robot_return_to_dock">Zurück zur Station</string>
+    <string name="robot_start_cleans_selected">Start reinigt die ausgewählten Räume</string>
+
+    <!-- Robot screen: more actions -->
+    <string name="robot_action_rooms">Räume</string>
+    <string name="robot_action_zone_clean">Zonenreinigung</string>
+    <string name="robot_action_pin_go">Pin &amp; Go</string>
+    <string name="robot_action_remote">Fernsteuerung</string>
+    <string name="robot_action_schedule">Zeitplan</string>
+    <string name="robot_action_dock">Station &amp; Pflege</string>
+    <string name="robot_action_history">Verlauf</string>
+    <string name="robot_action_maps">Karten</string>
+    <string name="robot_action_routines">Routinen</string>
+
+    <!-- Robot screen: cleaning mode sheet -->
+    <string name="robot_smartplan_text">SmartPlan wählt Saugkraft, Wasser und Route für jeden Raum.</string>
+    <string name="robot_reading_room_settings">Die Raumeinstellungen werden vom Roboter gelesen.</string>
+    <string name="robot_room_settings_failed">Die Raumeinstellungen konnten nicht vom Roboter gelesen werden. Schließe dieses Fenster und öffne es erneut.</string>
+    <string name="robot_subtitle_vac_then_mop">Saugt zuerst alles und wischt dann</string>
+    <string name="robot_subtitle_vac_mop">Saugen &amp; Wischen für die tägliche Reinigung</string>
+    <string name="robot_subtitle_mop">Nur Wischen für empfindliche Böden</string>
+    <string name="robot_subtitle_vacuum">Nur Saugen</string>
+    <string name="robot_suction_power">Saugkraft</string>
+    <string name="robot_water_flow">Wassermenge</string>
+    <string name="robot_route">Route</string>
+    <string name="robot_more_cleaning_settings">Weitere Reinigungseinstellungen</string>
+    <string name="robot_page_vac_then_mop">Erst saugen, dann wischen</string>
+    <string name="robot_other">Andere</string>
+    <string name="robot_summary_vacuum">Saugen %1$s</string>
+    <string name="robot_summary_mop">Wischen %1$s</string>
+    <string name="robot_summary_vac_mop">Saugen %1$s, Wischen %2$s</string>
+    <string name="robot_room_modes_load_map">Lade die Karte, um jeden Raum einzurichten.</string>
+    <string name="robot_room_modes_text">Jeder Raum wird mit eigener Saugkraft, Wassermenge und Route gereinigt.</string>
+    <string name="robot_save_room_settings">Raumeinstellungen speichern</string>
+    <string name="robot_vac_then_mop_title">Erst saugen, dann wischen</string>
+    <string name="robot_vac_then_mop_text">Saugt alles, bevor er mit dem Wischen beginnt</string>
+    <string name="robot_corner_title">Intensives Wischen von Ecken</string>
+    <string name="robot_corner_text">Wischt Ecken und Kanten gründlicher</string>
+    <string name="robot_water_custom">Individuell</string>
+    <string name="robot_custom_amount">Eigene Menge %1$d von %2$d</string>
+    <string name="robot_less_water">Weniger Wasser</string>
+    <string name="robot_more_water">Mehr Wasser</string>
+    <string name="robot_cleaning_count">Durchgänge</string>
+    <string name="robot_once">einmal</string>
+    <string name="robot_twice">zweimal</string>
+
+    <!-- Robot screen: dock sheet -->
+    <string name="robot_dock_control">Stationssteuerung</string>
+    <string name="robot_dock_settings">Stationseinstellungen</string>
+    <string name="robot_clean_water_tank">Frischwassertank</string>
+    <string name="robot_unknown">Unbekannt</string>
+    <string name="robot_empty_refill">Leer – nachfüllen</string>
+    <string name="robot_ok">OK</string>
+    <string name="robot_dirty_water_tank">Schmutzwassertank</string>
+    <string name="robot_full_empty_it">Voll – leeren</string>
+    <string name="robot_latch_open">Verriegelung offen</string>
+    <string name="robot_dust_bag">Staubbeutel</string>
+    <string name="robot_missing">Fehlt</string>
+    <string name="robot_duct_blocked">Kanal verstopft</string>
+    <string name="robot_mop_dryer">Mopptrockner</string>
+    <string name="robot_drying_left">Trocknet – noch %1$d min</string>
+    <string name="robot_drying">Trocknet</string>
+    <string name="robot_dock_empty_action">Leeren</string>
+    <string name="robot_dock_wash_action">Waschen</string>
+    <string name="robot_stop_dry">Trocknen stoppen</string>
+    <string name="robot_dry">Trocknen</string>
+    <string name="robot_mop_wash_frequency">Mopp-Waschintervall</string>
+    <string name="robot_washing_mode">Waschmodus</string>
+    <string name="robot_auto_empty_mode">Absaugmodus</string>
+
+    <!-- Robot screen: rooms and cleaning order -->
+    <string name="robot_select_rooms">Räume auswählen</string>
+    <string name="robot_load_map_first">Lade zuerst die Karte, um deine Räume zu finden.</string>
+    <string name="robot_tap_rooms_hint">Tippe Räume an, um sie auszuwählen – sie werden in der gewählten Reihenfolge gereinigt.</string>
+    <string name="robot_rooms_selected_hint">%1$d ausgewählt – tippe, um die Reihenfolge zu ändern oder zu entfernen.</string>
+    <string name="robot_clean_selected_rooms">Ausgewählte Räume reinigen</string>
+    <string name="robot_default_order">Standard-Reinigungsreihenfolge</string>
+    <string name="robot_default_order_text">Eine Reinigung ohne ausgewählte Räume geht sie in dieser Reihenfolge durch. Ausgewählte Räume werden weiter in der Reihenfolge gereinigt, in der du sie antippst.</string>
+    <string name="robot_move_up">%1$s nach oben</string>
+    <string name="robot_move_down">%1$s nach unten</string>
+    <string name="robot_room_generic">Raum</string>
+    <string name="robot_save_order">Reihenfolge speichern</string>
+    <string name="robot_remove_order">Standardreihenfolge entfernen</string>
+
+    <!-- Robot screen: maps sheet -->
+    <string name="robot_maps_intro">Die auf deinem Roboter gespeicherten Karten. Der Roboter behält eine Sicherung pro Karte: Sichere sie, solange die Karte stimmt, und stelle sie wieder her, wenn die Karte nicht mehr passt. Station an einen Ort gestellt, den die Karte nicht abdeckt? Lösche die Karte und lass den Roboter dein Zuhause neu kartieren.</string>
+    <string name="robot_map_saving_off">Kartenspeicherung ist aus</string>
+    <string name="robot_map_saving_off_text">Dieser Roboter speichert noch keine Karte, daher gibt es keine Räume, Zonen oder Etagen. Schalte die Kartenspeicherung ein, damit er eine speichert.</string>
+    <string name="robot_turn_on_map_saving">Kartenspeicherung einschalten</string>
+    <string name="robot_multi_level">Mehrstöckige Karten</string>
+    <string name="robot_multi_level_text">Bis zu einer Karte pro Etage behalten. Beim Ausschalten bleibt eine Karte erhalten, die anderen werden gelöscht.</string>
+    <string name="robot_smart_floor">Etage automatisch erkennen</string>
+    <string name="robot_smart_floor_text">Aus: Du wählst die Karte, bevor eine andere Etage gereinigt wird.</string>
+    <string name="robot_new_map_unsaved">Neue Karte nicht gespeichert</string>
+    <string name="robot_new_map_unsaved_text">Der Roboter hat eine neue Karte erstellt. Stoppe die Kartierungsfahrt, wenn er dein Zuhause abgedeckt hat, und speichere die Karte dann, damit sie erhalten bleibt und in Räume aufgeteilt wird.</string>
+    <string name="robot_save_new_map">Neue Karte speichern</string>
+    <string name="robot_checking_maps">Gespeicherte Karten auf dem Roboter werden gesucht…</string>
+    <string name="robot_no_saved_maps">Keine gespeicherten Karten auf dem Roboter.</string>
+    <string name="robot_no_saved_maps_text">Der Roboter verlässt die Station und fährt durch dein Zuhause, um eine neue Karte zu erstellen. Stoppe ihn, sobald er alles abgedeckt hat, und speichere die Karte dann hier. Öffne die Türen zu allen Räumen, die auf die Karte sollen.</string>
+    <string name="robot_map_the_home">Zuhause kartieren</string>
+    <string name="robot_recheck">Erneut prüfen</string>
+    <string name="robot_currently_loaded">Aktuell geladen</string>
+    <string name="robot_backup_from">Sicherung vom %1$s</string>
+    <string name="robot_no_backup">Noch keine Sicherung</string>
+    <string name="robot_rename_named">%1$s umbenennen</string>
+    <string name="robot_delete_named">%1$s löschen</string>
+    <string name="robot_load">Laden</string>
+    <string name="robot_preview_map">Karte</string>
+    <string name="robot_preview_backup">Sicherung</string>
+    <string name="robot_back_up_now">Jetzt sichern</string>
+    <string name="robot_restore_backup">Sicherung wiederherstellen</string>
+    <string name="robot_map_another_floor">Weitere Etage kartieren</string>
+    <string name="robot_couldnt_load">Laden fehlgeschlagen</string>
+
+    <!-- Robot screen: map dialogs -->
+    <string name="robot_rename_map">Karte umbenennen</string>
+    <string name="robot_map_name">Kartenname</string>
+    <string name="robot_rename">Umbenennen</string>
+    <string name="robot_keep_title">Welche Karte behalten?</string>
+    <string name="robot_keep_text">Im einstöckigen Modus bleibt eine Karte erhalten. Der Roboter löscht die anderen mit ihren Räumen und Zonen. Das lässt sich nicht rückgängig machen.</string>
+    <string name="robot_keep_confirm">Diese Karte behalten</string>
+    <string name="robot_backup_title">„%1$s“ sichern?</string>
+    <string name="robot_backup_text">Der Roboter speichert diese Karte so, wie sie jetzt ist, mit Räumen, Zonen, Wänden und Teppichen. Er behält eine Sicherung pro Karte.</string>
+    <string name="robot_backup_text_replace">Der Roboter speichert diese Karte so, wie sie jetzt ist, mit Räumen, Zonen, Wänden und Teppichen. Er behält eine Sicherung pro Karte, daher ersetzt das die Sicherung vom %1$s.</string>
+    <string name="robot_back_up">Sichern</string>
+    <string name="robot_restore_title">„%1$s“ wiederherstellen?</string>
+    <string name="robot_restore_text">Die Karte wird auf die Sicherung vom %1$s zurückgesetzt. Alles, was seitdem geändert wurde, geht verloren: Räume, Raumnamen, Sperrzonen, Wände, Teppiche und Schwellen. Prüfe danach deine Routinen.</string>
+    <string name="robot_earlier">früher</string>
+    <string name="robot_restore">Wiederherstellen</string>
+    <string name="robot_delete_title">„%1$s“ löschen?</string>
+    <string name="robot_delete_text">Der Roboter vergisst diese Karte und alles darauf: Räume, Raumnamen, Bodenarten, Sperrzonen, Wände, Teppiche und Schwellen. Das lässt sich nicht rückgängig machen.</string>
+    <string name="robot_delete_map">Karte löschen</string>
+
+    <!-- Obstacles on the map -->
+    <string name="robot_obstacle">Hindernis</string>
+    <string name="robot_obstacle_not_sent">Der Roboter hat es nicht gesendet</string>
+    <string name="robot_obstacle_confidence">%1$d % Sicherheit</string>
+    <string name="robot_obstacle_ignored">Ignoriert</string>
+    <string name="robot_obstacle_no_photo">Der Roboter hat kein Foto dieses Hindernisses behalten.</string>
+    <string name="robot_obstacle_photo">Foto des Hindernisses</string>
+    <string name="robot_obstacle_photo_failed">Foto konnte nicht geladen werden: %1$s</string>
+
+    <!-- Camera live view -->
+    <string name="camera_go_back">Zurück</string>
+    <string name="camera_unsupported">Die Live-Ansicht der Kamera ist auf dieser Plattform noch nicht verfügbar.</string>
+    <string name="camera_live">LIVE</string>
+    <string name="camera_talk_needs_mic">Zum Sprechen wird das Mikrofon benötigt.</string>
+    <string name="camera_talk_unavailable">Sprechen ist auf diesem Gerät noch nicht verfügbar.</string>
+    <string name="camera_looking_for_pet">Sucht das Haustier</string>
+    <string name="camera_returning_to_dock">Fährt zurück zur Station</string>
+    <string name="camera_cruise_started">Rundfahrt gestartet</string>
+    <string name="camera_back_to_map">Zurück zur Karte</string>
+    <string name="camera_retry">Erneut versuchen</string>
+    <string name="camera_change_pin">PIN ändern</string>
+    <string name="camera_pin_intro_typed">Die Live-Ansicht ist durch eine Kamera-PIN geschützt, die auf dem Roboter gespeichert ist. Gib deine bestehende PIN ein oder wähle eine neue und registriere sie auf dem Roboter.</string>
+    <string name="camera_pin_intro_pattern">Die Live-Ansicht ist durch eine Kamera-PIN geschützt, die auf dem Roboter gespeichert ist. Zeichne dein bestehendes Muster oder zeichne ein neues und registriere es auf dem Roboter.</string>
+    <string name="camera_pin">Kamera-PIN</string>
+    <string name="camera_draw_pattern_hint">Zeichne ein Muster aus mindestens 4 Punkten</string>
+    <string name="camera_pattern_captured">Muster erfasst</string>
+    <string name="camera_start">Live-Ansicht starten</string>
+    <string name="camera_set_pin">Als neue PIN auf dem Roboter festlegen</string>
+    <string name="camera_draw_instead">Stattdessen Muster zeichnen</string>
+    <string name="camera_type_instead">Stattdessen PIN eingeben</string>
+    <string name="camera_pause">Pause</string>
+    <string name="camera_end">Beenden</string>
+    <string name="camera_dock">Station</string>
+    <string name="camera_pin_go">Pin &amp; Go</string>
+    <string name="camera_cruise">Rundfahrt</string>
+    <string name="camera_find_pet">Haustier finden</string>
+    <string name="camera_drive_forward">Vorwärts fahren</string>
+    <string name="camera_turn_left">Nach links drehen</string>
+    <string name="camera_turn_right">Nach rechts drehen</string>
+    <string name="camera_stop_talking">Sprechen beenden</string>
+    <string name="camera_talk">Über den Roboter sprechen</string>
+    <string name="camera_cruise_text">Tippe auf die Karte, um die Punkte festzulegen, die der Reihe nach angefahren werden.</string>
+    <string name="camera_start_cruise">Rundfahrt starten</string>
+    <string name="camera_clear">Leeren</string>
+
+    <!-- Zone cleaning -->
+    <string name="zone_title_routine">Zonen der Routine</string>
+    <string name="zone_title_add_area">Bereich hinzufügen</string>
+    <string name="zone_title">Zonenreinigung</string>
+    <string name="zone_back">Zurück</string>
+    <string name="zone_draw_mode">Zeichenmodus</string>
+    <string name="zone_pan_mode">Verschiebemodus</string>
+    <string name="zone_clear">Zonen löschen</string>
+    <string name="zone_area_added">Bereich zur Reinigung hinzugefügt</string>
+    <string name="zone_use">Übernehmen</string>
+    <string name="zone_clean">Reinigen</string>
+    <string name="zone_start">Start</string>
+    <string name="zone_map_not_loaded">Karte nicht geladen</string>
+    <string name="zone_map_not_loaded_text">Geh zurück und warte, bis die Karte geladen ist</string>
+    <string name="zone_started">Zonenreinigung gestartet!</string>
+    <string name="zone_hint_pan">Zum Zoomen auseinanderziehen · Doppeltippen zum Zurücksetzen · Zum Hinzufügen von Zonen in den Zeichenmodus wechseln</string>
+    <string name="zone_hint_draw">Auf der Karte ziehen, um eine Zone zu zeichnen · Zum Bewegen in den Verschiebemodus wechseln</string>
+
+    <!-- Counts -->
+    <plurals name="robot_rooms_selected">
+        <item quantity="one">%1$d Raum</item>
+        <item quantity="other">%1$d Räume</item>
+    </plurals>
+    <plurals name="zone_count">
+        <item quantity="one">%1$d Zone – tippe auf Start, um zu beginnen</item>
+        <item quantity="other">%1$d Zonen – tippe auf Start, um zu beginnen</item>
+    </plurals>
+</resources>

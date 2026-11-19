@@ -1,5 +1,14 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.robot_obstacle
+import com.kodraliu.localrock.resources.robot_obstacle_confidence
+import com.kodraliu.localrock.resources.robot_obstacle_ignored
+import com.kodraliu.localrock.resources.robot_obstacle_no_photo
+import com.kodraliu.localrock.resources.robot_obstacle_not_sent
+import com.kodraliu.localrock.resources.robot_obstacle_photo
+import com.kodraliu.localrock.resources.robot_obstacle_photo_failed
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -90,21 +99,22 @@ private val OBSTACLE_FILL = Color(0xFF5E666B).copy(alpha = 0.55f)
 internal fun ObstacleSheetContent(obstacle: MapObstacle, loadPhoto: suspend (String) -> ByteArray) {
     var photo by remember(obstacle) { mutableStateOf<ImageBitmap?>(null) }
     var failure by remember(obstacle) { mutableStateOf<String?>(null) }
+    val notSent = stringResource(Res.string.robot_obstacle_not_sent)
     LaunchedEffect(obstacle) {
         val id = obstacle.photoId ?: return@LaunchedEffect
         runCatching { loadPhoto(id).decodeToImageBitmap() }
             .onSuccess { photo = it }
-            .onFailure { failure = it.message ?: "The robot didn't send it" }
+            .onFailure { failure = it.message ?: notSent }
     }
     // The photo is capped so it fits a half-open sheet on a phone, and the sheet scrolls for the rest.
     val photoFrame = Modifier.heightIn(max = 320.dp).aspectRatio(1f, matchHeightConstraintsFirst = true)
     Column(
         Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
     ) {
-        Text(obstacle.typeName ?: "Obstacle", style = MaterialTheme.typography.titleLarge)
+        Text(obstacle.typeName ?: stringResource(Res.string.robot_obstacle), style = MaterialTheme.typography.titleLarge)
         val details = listOfNotNull(
-            obstacle.confidence?.takeIf { it > 0f }?.let { "${(it * 100).roundToInt()}% confidence" },
-            "Ignored".takeIf { obstacle.ignored },
+            obstacle.confidence?.takeIf { it > 0f }?.let { stringResource(Res.string.robot_obstacle_confidence, (it * 100).roundToInt()) },
+            stringResource(Res.string.robot_obstacle_ignored).takeIf { obstacle.ignored },
         )
         if (details.isNotEmpty()) {
             Text(
@@ -117,18 +127,18 @@ internal fun ObstacleSheetContent(obstacle: MapObstacle, loadPhoto: suspend (Str
         val current = photo
         when {
             obstacle.photoId == null -> Text(
-                "The robot kept no photo of this obstacle.",
+                stringResource(Res.string.robot_obstacle_no_photo),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             current != null -> Image(
                 bitmap = current,
-                contentDescription = "Photo of the obstacle",
+                contentDescription = stringResource(Res.string.robot_obstacle_photo),
                 modifier = photoFrame.align(Alignment.CenterHorizontally).clip(MaterialTheme.shapes.medium),
                 contentScale = ContentScale.Fit,
             )
             failure != null -> Text(
-                "Couldn't load the photo: $failure",
+                stringResource(Res.string.robot_obstacle_photo_failed, failure.orEmpty()),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
             )

@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Robot screen: view model messages -->
+    <string name="robot_firmware_no_info">Geen firmware-informatie ontvangen</string>
+    <string name="robot_firmware_not_checked">Je server controleert niet op firmware-updates en kan dus niet zeggen of er nieuwere firmware is.</string>
+    <string name="robot_new_routine_name">Routine %1$d</string>
+    <string name="robot_order_saved">Reinigingsvolgorde opgeslagen</string>
+    <string name="robot_order_removed">Standaardvolgorde verwijderd</string>
+    <string name="robot_routine_still_running">"%1$s" loopt nog. Start hem opnieuw om hem eerst te stoppen.</string>
+    <string name="robot_routine_not_started">De server heeft "%1$s" niet gestart</string>
+    <string name="robot_routine_not_started_status">De server heeft "%1$s" niet gestart (%2$s)</string>
+    <string name="robot_routine_stopping">"%1$s" wordt gestopt</string>
+    <string name="robot_routine_started">"%1$s" gestart</string>
+    <string name="robot_no_answer">De robot antwoordde niet op tijd</string>
+
+    <!-- Robot screen: cleaning options -->
+    <string name="robot_fan_quiet">Stil</string>
+    <string name="robot_fan_standard">Gebalanceerd</string>
+    <string name="robot_fan_strong">Turbo</string>
+    <string name="robot_fan_max">Max</string>
+    <string name="robot_off">Uit</string>
+    <string name="robot_water_low">Laag</string>
+    <string name="robot_water_med">Medium</string>
+    <string name="robot_water_high">Hoog</string>
+    <string name="robot_route_standard">Standaard</string>
+    <string name="robot_route_deep">Grondig</string>
+    <string name="robot_route_deep_plus">Grondig+</string>
+    <string name="robot_route_fast">Snel</string>
+    <string name="robot_room_fallback">Kamer %1$d</string>
+
+    <!-- Robot screen: action messages -->
+    <string name="robot_room_settings_saved">Kamerinstellingen opgeslagen</string>
+    <string name="robot_multi_level_on">Kaarten voor meerdere verdiepingen aan</string>
+    <string name="robot_multi_level_off">Kaarten voor meerdere verdiepingen uit</string>
+    <string name="robot_map_saving_on">Kaart opslaan aan</string>
+    <string name="robot_mapping_started">In kaart brengen gestart</string>
+    <string name="robot_new_map_saved">Nieuwe kaart opgeslagen</string>
+    <string name="robot_cleaning_started">Reinigen gestart</string>
+    <string name="robot_cleaning_resumed">Reinigen hervat</string>
+    <string name="robot_returning_to_dock">Terug naar Dock</string>
+    <string name="robot_area_skipped">Gebied overgeslagen</string>
+    <string name="robot_returning_to_empty">Terugkeren om te legen</string>
+    <string name="robot_returning_to_wash">Terugkeren om de mop te wassen</string>
+    <string name="robot_map_renamed">Kaart hernoemd</string>
+    <string name="robot_map_deleted">Kaart verwijderd</string>
+    <string name="robot_map_backed_up">Back-up van kaart gemaakt</string>
+    <string name="robot_map_restored">Kaart hersteld vanaf back-up</string>
+
+    <!-- Robot screen: skip area and return to dock -->
+    <string name="robot_skip_title">Dit gebied overslaan?</string>
+    <string name="robot_skip_text">De robot verlaat het gebied dat hij nu reinigt en gaat door naar het volgende. Het wordt alleen deze keer overgeslagen.</string>
+    <string name="robot_skip">Overslaan</string>
+    <string name="robot_dock_title">Terug naar Dock</string>
+    <string name="robot_dock_charge">Terugkeren naar opladen (beëindigt de reiniging)</string>
+    <string name="robot_dock_empty">Halverwege terugkeren naar dockingstation voor legen</string>
+    <string name="robot_dock_wash">Mop halverwege wassen</string>
+
+    <!-- Robot screen: top bar and map -->
+    <string name="robot_go_back">Terug</string>
+    <string name="robot_live_view">Kijken op afstand</string>
+    <string name="robot_edit_map">Kaart bewerken</string>
+    <string name="robot_settings">Instellingen</string>
+    <string name="robot_back">Terug</string>
+    <string name="robot_add_area">Gebied toevoegen</string>
+    <string name="robot_skip_area">Gebied overslaan</string>
+    <string name="robot_refresh_map">Kaart vernieuwen</string>
+    <string name="robot_choose_map">Kaart kiezen</string>
+    <string name="robot_switch_map">Andere kaart</string>
+    <string name="robot_loaded">Geladen</string>
+    <string name="robot_last_clean_completed">Reiniging voltooid · %1$d min · %2$d m²</string>
+    <string name="robot_last_clean_ended_early">Reiniging vroegtijdig beëindigd · %1$d min · %2$d m²</string>
+    <string name="robot_close">Sluiten</string>
+    <string name="robot_cleaning_rooms">Reinigt %1$s</string>
+    <string name="robot_no_go_drop">Verboden: afgrond</string>
+    <string name="robot_no_map">Geen kaart geladen</string>
+    <string name="robot_no_map_text">Laad de nieuwste kaart van je robot.</string>
+    <string name="robot_loading">Laden…</string>
+    <string name="robot_load_map">Kaart laden</string>
+    <string name="robot_saved_maps">Opgeslagen kaarten</string>
+
+    <!-- Robot screen: status card -->
+    <string name="robot_paused_at_dock">Gepauzeerd bij het dock</string>
+    <string name="robot_spot_clean">Spotreiniging · 1,5 m × 1,5 m</string>
+    <string name="robot_area_so_far">%1$s tot nu toe</string>
+    <string name="robot_area_last_clean">%1$s laatste reiniging</string>
+    <string name="robot_no_cleaning_yet">Nog geen reiniging vastgelegd</string>
+    <string name="robot_battery_charging">Batterij, opladen</string>
+    <string name="robot_battery">Batterij</string>
+    <string name="robot_hide_timeline">Tijdlijn van de reiniging verbergen</string>
+    <string name="robot_show_timeline">Tijdlijn van de reiniging tonen</string>
+    <string name="robot_reading_timeline">Tijdlijn van de reiniging lezen…</string>
+    <string name="robot_drying_mop">Mop drogen</string>
+    <string name="robot_drying_mop_left">Mop drogen · %1$s</string>
+    <string name="robot_left_hm">nog %1$du %2$dm</string>
+    <string name="robot_left_m">nog %1$dm</string>
+
+    <!-- Robot screen: control bar -->
+    <string name="robot_mode_mop">Dweilen</string>
+    <string name="robot_mode_vac_mop">Stofzuigen en dweilen</string>
+    <string name="robot_mode_vacuum">Stofzuigen</string>
+    <string name="robot_plan_smart">SmartPlan</string>
+    <string name="robot_plan_general">Algemeen</string>
+    <string name="robot_plan_custom">Aangepast</string>
+    <string name="robot_clear_selection">Kamerselectie wissen</string>
+    <string name="robot_stop_cleaning">Reinigen stoppen</string>
+    <string name="robot_more_actions">Meer acties</string>
+    <string name="robot_tab_full">Volledig</string>
+    <string name="robot_tab_room">Kamer</string>
+    <string name="robot_tab_zones">Zones</string>
+    <string name="robot_tab_routine">Routine</string>
+    <string name="robot_tap_rooms">Tik op de kamers op de kaart</string>
+    <string name="robot_pause">Pauzeren</string>
+    <string name="robot_clean_rooms">Kamers reinigen</string>
+    <string name="robot_resume">Hervatten</string>
+    <string name="robot_clean">Reinigen</string>
+    <string name="robot_return_to_dock">Terug naar Dock</string>
+    <string name="robot_start_cleans_selected">Starten reinigt de gekozen kamers</string>
+
+    <!-- Robot screen: more actions -->
+    <string name="robot_action_rooms">Kamers</string>
+    <string name="robot_action_zone_clean">Zones reinigen</string>
+    <string name="robot_action_pin_go">Pin &amp; Go</string>
+    <string name="robot_action_remote">Afstandsbediening</string>
+    <string name="robot_action_schedule">Schema</string>
+    <string name="robot_action_dock">Dockingstation</string>
+    <string name="robot_action_history">Geschiedenis</string>
+    <string name="robot_action_maps">Kaarten</string>
+    <string name="robot_action_routines">Routines</string>
+
+    <!-- Robot screen: cleaning mode sheet -->
+    <string name="robot_smartplan_text">SmartPlan kiest zuigkracht, water en route voor elke kamer.</string>
+    <string name="robot_reading_room_settings">De kamerinstellingen worden van de robot gelezen.</string>
+    <string name="robot_room_settings_failed">Kon de kamerinstellingen niet van de robot lezen. Sluit dit venster en open het opnieuw.</string>
+    <string name="robot_subtitle_vac_then_mop">Stofzuigt eerst alles en dweilt daarna</string>
+    <string name="robot_subtitle_vac_mop">Stofzuigen en dweilen voor dagelijkse reiniging</string>
+    <string name="robot_subtitle_mop">Alleen dweilen voor kwetsbare vloeren</string>
+    <string name="robot_subtitle_vacuum">Alleen stofzuigen</string>
+    <string name="robot_suction_power">Zuigkracht</string>
+    <string name="robot_water_flow">Waterstroom</string>
+    <string name="robot_route">Route</string>
+    <string name="robot_more_cleaning_settings">Meer reinigingsinstellingen</string>
+    <string name="robot_page_vac_then_mop">Eerst stofzuigen dan dweilen</string>
+    <string name="robot_other">Anders</string>
+    <string name="robot_summary_vacuum">Stofzuigen %1$s</string>
+    <string name="robot_summary_mop">Dweilen %1$s</string>
+    <string name="robot_summary_vac_mop">Stofzuigen %1$s, dweilen %2$s</string>
+    <string name="robot_room_modes_load_map">Laad de kaart om elke kamer in te stellen.</string>
+    <string name="robot_room_modes_text">Elke kamer wordt gereinigd met een eigen zuigkracht, waterstroom en route.</string>
+    <string name="robot_save_room_settings">Kamerinstellingen opslaan</string>
+    <string name="robot_vac_then_mop_title">Eerst stofzuigen dan dweilen</string>
+    <string name="robot_vac_then_mop_text">Stofzuigt alles voordat hij begint met dweilen</string>
+    <string name="robot_corner_title">Intensief hoeken dweilen</string>
+    <string name="robot_corner_text">Dweilt hoeken en randen grondiger</string>
+    <string name="robot_water_custom">Aangepast</string>
+    <string name="robot_custom_amount">Eigen hoeveelheid %1$d van %2$d</string>
+    <string name="robot_less_water">Minder water</string>
+    <string name="robot_more_water">Meer water</string>
+    <string name="robot_cleaning_count">Aantal reinigingen</string>
+    <string name="robot_once">1 keer</string>
+    <string name="robot_twice">2 keer</string>
+
+    <!-- Robot screen: dock sheet -->
+    <string name="robot_dock_control">Bediening dockingstation</string>
+    <string name="robot_dock_settings">Instellingen dockingstation</string>
+    <string name="robot_clean_water_tank">Schoonwatertank</string>
+    <string name="robot_unknown">Onbekend</string>
+    <string name="robot_empty_refill">Leeg — bijvullen</string>
+    <string name="robot_ok">OK</string>
+    <string name="robot_dirty_water_tank">Vuilwatertank</string>
+    <string name="robot_full_empty_it">Vol — legen</string>
+    <string name="robot_latch_open">Vergrendeling open</string>
+    <string name="robot_dust_bag">Stofzak</string>
+    <string name="robot_missing">Ontbreekt</string>
+    <string name="robot_duct_blocked">Kanaal verstopt</string>
+    <string name="robot_mop_dryer">Mopdroger</string>
+    <string name="robot_drying_left">Drogen — nog %1$dm</string>
+    <string name="robot_drying">Drogen</string>
+    <string name="robot_dock_empty_action">Legen</string>
+    <string name="robot_dock_wash_action">Dweil wassen</string>
+    <string name="robot_stop_dry">Drogen stoppen</string>
+    <string name="robot_dry">Drogen</string>
+    <string name="robot_mop_wash_frequency">Frequentie mop wassen</string>
+    <string name="robot_washing_mode">Wasmodus</string>
+    <string name="robot_auto_empty_mode">Modus automatisch legen</string>
+
+    <!-- Robot screen: rooms and cleaning order -->
+    <string name="robot_select_rooms">Kamers kiezen</string>
+    <string name="robot_load_map_first">Laad eerst de kaart om je kamers te vinden.</string>
+    <string name="robot_tap_rooms_hint">Tik op kamers om ze te kiezen — ze worden gereinigd in de volgorde waarin je ze kiest.</string>
+    <string name="robot_rooms_selected_hint">%1$d gekozen — tik om de volgorde te wijzigen of te verwijderen.</string>
+    <string name="robot_clean_selected_rooms">Gekozen kamers reinigen</string>
+    <string name="robot_default_order">Standaard reinigingsvolgorde</string>
+    <string name="robot_default_order_text">Reinigen zonder kamers te kiezen gaat ze in deze volgorde langs. Kamers die je kiest, worden nog steeds gereinigd in de volgorde waarin je erop tikt.</string>
+    <string name="robot_move_up">%1$s omhoog</string>
+    <string name="robot_move_down">%1$s omlaag</string>
+    <string name="robot_room_generic">kamer</string>
+    <string name="robot_save_order">Volgorde opslaan</string>
+    <string name="robot_remove_order">Standaardvolgorde verwijderen</string>
+
+    <!-- Robot screen: maps sheet -->
+    <string name="robot_maps_intro">De kaarten die op je robot zijn opgeslagen. De robot bewaart één back-up van elke kaart: maak een back-up zolang de kaart klopt, en zet hem terug als de kaart misgaat. Het dockingstation verplaatst naar een plek buiten de kaart? Verwijder de kaart en laat de robot je huis opnieuw in kaart brengen.</string>
+    <string name="robot_map_saving_off">Kaart opslaan staat uit</string>
+    <string name="robot_map_saving_off_text">Deze robot bewaart nog geen kaart, dus er zijn geen kamers, zones of verdiepingen. Zet kaart opslaan aan zodat hij er een bewaart.</string>
+    <string name="robot_turn_on_map_saving">Kaart opslaan aanzetten</string>
+    <string name="robot_multi_level">Kaarten voor meerdere verdiepingen</string>
+    <string name="robot_multi_level_text">Bewaar tot één kaart per verdieping. Als je dit uitzet, blijft één kaart over en worden de andere verwijderd.</string>
+    <string name="robot_smart_floor">Verdieping automatisch herkennen</string>
+    <string name="robot_smart_floor_text">Uit: je kiest de kaart voordat een andere verdieping wordt gereinigd.</string>
+    <string name="robot_new_map_unsaved">Nieuwe kaart niet opgeslagen</string>
+    <string name="robot_new_map_unsaved_text">De robot heeft een nieuwe kaart gemaakt. Stop de karteringsrit als hij je huis heeft afgedekt, en sla de kaart dan op zodat hij bewaard en in kamers verdeeld wordt.</string>
+    <string name="robot_save_new_map">Nieuwe kaart opslaan</string>
+    <string name="robot_checking_maps">Robot controleren op opgeslagen kaarten…</string>
+    <string name="robot_no_saved_maps">Geen opgeslagen kaarten op de robot.</string>
+    <string name="robot_no_saved_maps_text">De robot verlaat het dockingstation en rijdt door je huis om een nieuwe kaart te maken. Stop hem zodra hij alles heeft afgedekt, en sla de kaart dan hier op. Zet de deuren open van elke kamer die je op de kaart wilt.</string>
+    <string name="robot_map_the_home">Huis in kaart brengen</string>
+    <string name="robot_recheck">Opnieuw controleren</string>
+    <string name="robot_currently_loaded">Nu geladen</string>
+    <string name="robot_backup_from">Back-up van %1$s</string>
+    <string name="robot_no_backup">Nog geen back-up</string>
+    <string name="robot_rename_named">%1$s hernoemen</string>
+    <string name="robot_delete_named">%1$s verwijderen</string>
+    <string name="robot_load">Laden</string>
+    <string name="robot_preview_map">Kaart</string>
+    <string name="robot_preview_backup">Back-up</string>
+    <string name="robot_back_up_now">Nu back-up maken</string>
+    <string name="robot_restore_backup">Back-up terugzetten</string>
+    <string name="robot_map_another_floor">Andere verdieping in kaart brengen</string>
+    <string name="robot_couldnt_load">Kon niet laden</string>
+
+    <!-- Robot screen: map dialogs -->
+    <string name="robot_rename_map">Kaart hernoemen</string>
+    <string name="robot_map_name">Naam van de kaart</string>
+    <string name="robot_rename">Hernoemen</string>
+    <string name="robot_keep_title">Welke kaart bewaren?</string>
+    <string name="robot_keep_text">Met één verdieping blijft er één kaart over. De robot verwijdert de andere met hun kamers en zones. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="robot_keep_confirm">Deze kaart bewaren</string>
+    <string name="robot_backup_title">Back-up maken van "%1$s"?</string>
+    <string name="robot_backup_text">De robot slaat deze kaart op zoals hij nu is, met kamers, zones, muren en tapijten. Hij bewaart één back-up per kaart.</string>
+    <string name="robot_backup_text_replace">De robot slaat deze kaart op zoals hij nu is, met kamers, zones, muren en tapijten. Hij bewaart één back-up per kaart, dus dit vervangt de back-up van %1$s.</string>
+    <string name="robot_back_up">Back-up maken</string>
+    <string name="robot_restore_title">"%1$s" terugzetten?</string>
+    <string name="robot_restore_text">De kaart gaat terug naar de back-up van %1$s. Alles wat sindsdien is gewijzigd, gaat verloren: kamers, kamernamen, verboden zones, muren, tapijten en drempels. Controleer daarna je routines.</string>
+    <string name="robot_earlier">eerder</string>
+    <string name="robot_restore">Terugzetten</string>
+    <string name="robot_delete_title">"%1$s" verwijderen?</string>
+    <string name="robot_delete_text">De robot vergeet deze kaart en alles erop: kamers, kamernamen, vloertypes, verboden zones, muren, tapijten en drempels. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="robot_delete_map">Kaart verwijderen</string>
+
+    <!-- Obstacles on the map -->
+    <string name="robot_obstacle">Obstakel</string>
+    <string name="robot_obstacle_not_sent">De robot heeft hem niet gestuurd</string>
+    <string name="robot_obstacle_confidence">%1$d% zekerheid</string>
+    <string name="robot_obstacle_ignored">Genegeerd</string>
+    <string name="robot_obstacle_no_photo">De robot heeft geen foto van dit obstakel bewaard.</string>
+    <string name="robot_obstacle_photo">Foto van het obstakel</string>
+    <string name="robot_obstacle_photo_failed">Kon de foto niet laden: %1$s</string>
+
+    <!-- Camera live view -->
+    <string name="camera_go_back">Terug</string>
+    <string name="camera_unsupported">Kijken op afstand is op dit platform nog niet beschikbaar.</string>
+    <string name="camera_live">LIVE</string>
+    <string name="camera_talk_needs_mic">Spreken via de robot heeft de microfoon nodig.</string>
+    <string name="camera_talk_unavailable">Spreken via de robot is op dit apparaat nog niet beschikbaar.</string>
+    <string name="camera_looking_for_pet">Zoekt het huisdier</string>
+    <string name="camera_returning_to_dock">Terug naar Dock</string>
+    <string name="camera_cruise_started">Patrouille gestart</string>
+    <string name="camera_back_to_map">Terug naar de kaart</string>
+    <string name="camera_retry">Opnieuw proberen</string>
+    <string name="camera_change_pin">Pincode wijzigen</string>
+    <string name="camera_pin_intro_typed">Kijken op afstand is beveiligd met een camerapincode die op de robot staat. Voer je bestaande pincode in, of kies een nieuwe en zet die op de robot.</string>
+    <string name="camera_pin_intro_pattern">Kijken op afstand is beveiligd met een camerapincode die op de robot staat. Teken je bestaande patroon, of teken een nieuw patroon en zet dat op de robot.</string>
+    <string name="camera_pin">Camerapincode</string>
+    <string name="camera_draw_pattern_hint">Teken een patroon van minstens 4 punten</string>
+    <string name="camera_pattern_captured">Patroon vastgelegd</string>
+    <string name="camera_start">Kijken op afstand starten</string>
+    <string name="camera_set_pin">Instellen als nieuwe pincode op de robot</string>
+    <string name="camera_draw_instead">Liever een patroon tekenen</string>
+    <string name="camera_type_instead">Liever een pincode typen</string>
+    <string name="camera_pause">Pauzeren</string>
+    <string name="camera_end">Beëindigen</string>
+    <string name="camera_dock">Dock</string>
+    <string name="camera_pin_go">Pin &amp; Go</string>
+    <string name="camera_cruise">Patrouille</string>
+    <string name="camera_find_pet">Zoek het huisdier</string>
+    <string name="camera_drive_forward">Vooruit rijden</string>
+    <string name="camera_turn_left">Linksaf draaien</string>
+    <string name="camera_turn_right">Rechtsaf draaien</string>
+    <string name="camera_stop_talking">Stoppen met spreken</string>
+    <string name="camera_talk">Spreken via de robot</string>
+    <string name="camera_cruise_text">Tik op de kaart om de punten te kiezen waar hij op volgorde langs rijdt.</string>
+    <string name="camera_start_cruise">Patrouille starten</string>
+    <string name="camera_clear">Wissen</string>
+
+    <!-- Zone cleaning -->
+    <string name="zone_title_routine">Zones voor routine</string>
+    <string name="zone_title_add_area">Gebied toevoegen</string>
+    <string name="zone_title">Zones reinigen</string>
+    <string name="zone_back">Terug</string>
+    <string name="zone_draw_mode">Tekenmodus</string>
+    <string name="zone_pan_mode">Verschuifmodus</string>
+    <string name="zone_clear">Zones wissen</string>
+    <string name="zone_area_added">Gebied aan de reiniging toegevoegd</string>
+    <string name="zone_use">Gebruiken</string>
+    <string name="zone_clean">Reinigen</string>
+    <string name="zone_start">Starten</string>
+    <string name="zone_map_not_loaded">Kaart niet geladen</string>
+    <string name="zone_map_not_loaded_text">Ga terug en wacht tot de kaart geladen is</string>
+    <string name="zone_started">Zones reinigen gestart!</string>
+    <string name="zone_hint_pan">Knijp om te zoomen · Dubbeltik om te herstellen · Schakel naar tekenmodus om zones toe te voegen</string>
+    <string name="zone_hint_draw">Sleep op de kaart om een zone te tekenen · Schakel naar verschuifmodus om te navigeren</string>
+
+    <!-- Counts -->
+    <plurals name="robot_rooms_selected">
+        <item quantity="one">%1$d kamer</item>
+        <item quantity="other">%1$d kamers</item>
+    </plurals>
+    <plurals name="zone_count">
+        <item quantity="one">%1$d zone — tik op Starten om te beginnen</item>
+        <item quantity="other">%1$d zones — tik op Starten om te beginnen</item>
+    </plurals>
+</resources>
