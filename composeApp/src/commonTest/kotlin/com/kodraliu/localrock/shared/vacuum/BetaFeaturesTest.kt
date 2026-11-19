@@ -41,7 +41,8 @@ class BetaFeaturesTest {
         assertEquals(
             listOf(
                 "carpet_boost", "dust_collection_switch", "fill_light", "follow_ground_material", "have_pets",
-                "identify_furniture", "identify_ground_material", "offline_map", "priority_carpet", "sway_arm_door_sill",
+                "identify_furniture", "identify_ground_material", "obstacle_photos", "offline_map", "priority_carpet",
+                "sway_arm_door_sill",
             ),
             supportedBetaFeatures(null).map { it.id }.sorted(),
         )
