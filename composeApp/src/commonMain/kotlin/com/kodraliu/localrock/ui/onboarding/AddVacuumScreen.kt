@@ -75,6 +75,64 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.onboarding_admin_password
+import com.kodraliu.localrock.resources.onboarding_after_join
+import com.kodraliu.localrock.resources.onboarding_back
+import com.kodraliu.localrock.resources.onboarding_camera_as_server
+import com.kodraliu.localrock.resources.onboarding_camera_as_server_hint
+import com.kodraliu.localrock.resources.onboarding_camera_domain
+import com.kodraliu.localrock.resources.onboarding_camera_domain_hint
+import com.kodraliu.localrock.resources.onboarding_complete
+import com.kodraliu.localrock.resources.onboarding_conflict
+import com.kodraliu.localrock.resources.onboarding_device_connected
+import com.kodraliu.localrock.resources.onboarding_device_key_ready
+import com.kodraliu.localrock.resources.onboarding_device_not_connected
+import com.kodraliu.localrock.resources.onboarding_device_unsupported
+import com.kodraliu.localrock.resources.onboarding_err_no_server_url
+import com.kodraliu.localrock.resources.onboarding_err_no_session
+import com.kodraliu.localrock.resources.onboarding_err_select_first
+import com.kodraliu.localrock.resources.onboarding_home_wifi
+import com.kodraliu.localrock.resources.onboarding_home_wifi_hint
+import com.kodraliu.localrock.resources.onboarding_intro
+import com.kodraliu.localrock.resources.onboarding_load_vacuums
+import com.kodraliu.localrock.resources.onboarding_loading_vacuums
+import com.kodraliu.localrock.resources.onboarding_log_enter_details
+import com.kodraliu.localrock.resources.onboarding_log_ready
+import com.kodraliu.localrock.resources.onboarding_network_details
+import com.kodraliu.localrock.resources.onboarding_no_devices
+import com.kodraliu.localrock.resources.onboarding_no_key
+import com.kodraliu.localrock.resources.onboarding_pairing_failed
+import com.kodraliu.localrock.resources.onboarding_pairing_robot
+import com.kodraliu.localrock.resources.onboarding_pairing_status
+import com.kodraliu.localrock.resources.onboarding_robot_connected
+import com.kodraliu.localrock.resources.onboarding_select_vacuum
+import com.kodraliu.localrock.resources.onboarding_server_status
+import com.kodraliu.localrock.resources.onboarding_server_vacuum
+import com.kodraliu.localrock.resources.onboarding_server_vacuum_text
+import com.kodraliu.localrock.resources.onboarding_setup_logs
+import com.kodraliu.localrock.resources.onboarding_start_pairing
+import com.kodraliu.localrock.resources.onboarding_step_awaiting_ack
+import com.kodraliu.localrock.resources.onboarding_step_awaiting_hello
+import com.kodraliu.localrock.resources.onboarding_step_done
+import com.kodraliu.localrock.resources.onboarding_step_idle
+import com.kodraliu.localrock.resources.onboarding_step_joining_wifi
+import com.kodraliu.localrock.resources.onboarding_step_sending_hello
+import com.kodraliu.localrock.resources.onboarding_step_sending_wifi
+import com.kodraliu.localrock.resources.onboarding_timeout_has_key
+import com.kodraliu.localrock.resources.onboarding_timeout_none
+import com.kodraliu.localrock.resources.onboarding_timeout_reached
+import com.kodraliu.localrock.resources.onboarding_timezone
+import com.kodraliu.localrock.resources.onboarding_timezone_info
+import com.kodraliu.localrock.resources.onboarding_title
+import com.kodraliu.localrock.resources.onboarding_unknown_error
+import com.kodraliu.localrock.resources.onboarding_vacuum_to_onboard
+import com.kodraliu.localrock.resources.onboarding_wifi_password
+import com.kodraliu.localrock.resources.onboarding_wifi_sent
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import com.kodraliu.localrock.resources.onboarding_hide_password
+import com.kodraliu.localrock.resources.onboarding_show_password
 
 private class AddVacuumModel(
     private val container: AppContainer,
@@ -121,8 +179,7 @@ private class AddVacuumModel(
                     _selectedDuid.value = list.firstOrNull()?.duid
                 }
                 if (list.isEmpty()) {
-                    _error.value = "No vacuums are available for onboarding yet. " +
-                        "Finish the cloud import / fetch-data step on the server first."
+                    _error.value = getString(Res.string.onboarding_no_devices)
                 }
             } catch (e: Throwable) {
                 _error.value = describe(e)
@@ -149,8 +206,8 @@ private class AddVacuumModel(
             _serverStatus.value = null
             try {
                 val baseUrl = container.appSettings.serverBaseUrl.value
-                    ?: error("Server URL not set")
-                if (duid == null) error("Load and select a vacuum to onboard first")
+                    ?: error(getString(Res.string.onboarding_err_no_server_url))
+                if (duid == null) error(getString(Res.string.onboarding_err_select_first))
 
                 container.appSettings.setAdminPassword(adminPassword)
                 // 1. Register a server-side onboarding session so the server recovers the
@@ -158,7 +215,7 @@ private class AddVacuumModel(
                 adminApi.login(adminPassword)
                 val session = adminApi.startSession(duid)
                 val sessionId = session.sessionId
-                    ?: error("Server did not return a session id")
+                    ?: error(getString(Res.string.onboarding_err_no_session))
 
                 // 2. Push Wi-Fi credentials + server URL to the vacuum over the local UDP handshake.
                 onboarder.run(
@@ -173,18 +230,14 @@ private class AddVacuumModel(
                 )
 
                 // 3. Poll the session until the vacuum reports in.
-                _serverStatus.value = "Wi-Fi sent. Waiting for the vacuum to reach the server…"
+                _serverStatus.value = getString(Res.string.onboarding_wifi_sent)
                 when (val outcome = pollSession(sessionId)) {
                     PairOutcome.Complete -> _result.value =
-                        "Vacuum connected and its public key was recovered. " +
-                            "It should now appear in your device list."
+                        getString(Res.string.onboarding_complete)
                     is PairOutcome.ConnectedNoKey -> _error.value =
-                        "The vacuum reached the server, but its public key was never recovered, so " +
-                            "it will appear in the list with no data. Factory-reset the vacuum and " +
-                            "run onboarding again, keeping it next to the dock." + outcome.guidance.asSuffix()
+                        getString(Res.string.onboarding_no_key) + outcome.guidance.asSuffix()
                     is PairOutcome.Conflict -> _error.value =
-                        "The server reported an identity conflict — this vacuum is already registered " +
-                            "under different credentials. Remove it on the server, then retry." +
+                        getString(Res.string.onboarding_conflict) +
                             outcome.guidance.asSuffix()
                     is PairOutcome.TimedOut -> _result.value = timedOutText(outcome)
                 }
@@ -228,20 +281,13 @@ private class AddVacuumModel(
      * pairing takes two or three rounds: one or two until the server has the public key, then one
      * more for the vacuum to connect.
      */
-    private fun timedOutText(outcome: PairOutcome.TimedOut): String = when {
-        outcome.hasPublicKey ->
-            "The server has the vacuum's public key, but the vacuum is not connected yet. " +
-                "Run Add vacuum once more to finish."
-        outcome.samples > 0 ->
-            "The vacuum reached the server, which does not have its public key yet. " +
-                "That usually takes two or three rounds: run Add vacuum again."
-        else ->
-            "Wi-Fi was sent, but the vacuum hasn't reported to the server within the wait window. " +
-                "Keep it powered near the dock, it can take a few minutes. If it never shows up, check that " +
-                "the vacuum can reach the server from its network. Some older models also reject the " +
-                "server's certificate without any error and need one from another authority " +
-                "(see the server's tested vacuums list)."
-    } + outcome.guidance.asSuffix()
+    private suspend fun timedOutText(outcome: PairOutcome.TimedOut): String = getString(
+        when {
+            outcome.hasPublicKey -> Res.string.onboarding_timeout_has_key
+            outcome.samples > 0 -> Res.string.onboarding_timeout_reached
+            else -> Res.string.onboarding_timeout_none
+        },
+    ) + outcome.guidance.asSuffix()
 
     private companion object {
         const val POLL_INTERVAL_MS = 5_000L
@@ -263,7 +309,8 @@ private sealed interface PairOutcome {
 
 private fun String?.asSuffix(): String = this?.takeIf { it.isNotBlank() }?.let { " $it" } ?: ""
 
-private fun describe(e: Throwable): String = "${e::class.simpleName}: ${e.message ?: "Unknown error"}"
+private suspend fun describe(e: Throwable): String =
+    "${e::class.simpleName}: ${e.message ?: getString(Res.string.onboarding_unknown_error)}"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -296,10 +343,10 @@ fun AddVacuumScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Vacuum") },
+                title = { Text(stringResource(Res.string.onboarding_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.onboarding_back))
                     }
                 },
             )
@@ -317,7 +364,7 @@ fun AddVacuumScreen(onBack: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Text(
-                    "Put the robot in pairing mode, then connect it to your home Wi-Fi.",
+                    stringResource(Res.string.onboarding_intro),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -363,7 +410,7 @@ fun AddVacuumScreen(onBack: () -> Unit) {
 
                 error?.let { message ->
                     SetupMessageCard(
-                        title = "Pairing failed",
+                        title = stringResource(Res.string.onboarding_pairing_failed),
                         message = message,
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
@@ -372,7 +419,7 @@ fun AddVacuumScreen(onBack: () -> Unit) {
 
                 result?.let { message ->
                     SetupMessageCard(
-                        title = "Robot connected",
+                        title = stringResource(Res.string.onboarding_robot_connected),
                         message = message,
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -382,8 +429,7 @@ fun AddVacuumScreen(onBack: () -> Unit) {
                 SetupLogsCard(step = step, running = running, error = error, result = result)
 
                 Text(
-                    "After the robot joins your network, it will appear in the device list. " +
-                        "This can take around 30 seconds.",
+                    stringResource(Res.string.onboarding_after_join),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 4.dp),
@@ -424,7 +470,7 @@ private fun NetworkDetailsCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text("Network details", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(Res.string.onboarding_network_details), style = MaterialTheme.typography.titleLarge)
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
             OutlinedTextField(
@@ -433,9 +479,9 @@ private fun NetworkDetailsCard(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !running,
                 singleLine = true,
-                label = { Text("Home Wi-Fi network") },
+                label = { Text(stringResource(Res.string.onboarding_home_wifi)) },
                 placeholder = { Text("HomeNetwork_5G") },
-                supportingText = { Text("Use the network your robot should join.") },
+                supportingText = { Text(stringResource(Res.string.onboarding_home_wifi_hint)) },
             )
 
             OutlinedTextField(
@@ -444,14 +490,14 @@ private fun NetworkDetailsCard(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !running,
                 singleLine = true,
-                label = { Text("Wi-Fi password") },
+                label = { Text(stringResource(Res.string.onboarding_wifi_password)) },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
                     FilledTonalIconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                            contentDescription = stringResource(if (passwordVisible) Res.string.onboarding_hide_password else Res.string.onboarding_show_password),
                         )
                     }
                 },
@@ -466,12 +512,11 @@ private fun NetworkDetailsCard(
                 enabled = !running,
                 singleLine = true,
                 isError = cameraDomainError != null,
-                label = { Text("Camera domain (optional)") },
+                label = { Text(stringResource(Res.string.onboarding_camera_domain)) },
                 placeholder = { Text("rr.example.com") },
                 supportingText = {
                     Text(
-                        cameraDomainError ?: "For remote viewing: a hostname of at most 14 characters that reaches " +
-                            "your server on 443. Leave empty to send the country code.",
+                        cameraDomainError ?: stringResource(Res.string.onboarding_camera_domain_hint),
                     )
                 },
             )
@@ -489,10 +534,9 @@ private fun NetworkDetailsCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("Also use as the robot's server name", style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(Res.string.onboarding_camera_as_server), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            "Needed for remote viewing on a Saros 20 or Qrevo MaxV. The robot then reaches the " +
-                                "server as api-${cameraDomain.trim().trimEnd('/')}, so that name must reach it too.",
+                            stringResource(Res.string.onboarding_camera_as_server_hint, cameraDomain.trim().trimEnd('/')),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -517,7 +561,7 @@ private fun NetworkDetailsCard(
                     Spacer(Modifier.width(10.dp))
                 }
                 Text(
-                    text = if (running) "Pairing robot…" else "Start pairing",
+                    text = stringResource(if (running) Res.string.onboarding_pairing_robot else Res.string.onboarding_start_pairing),
                     style = MaterialTheme.typography.labelLarge,
                 )
             }
@@ -542,7 +586,7 @@ private fun TimezonePicker(selected: String, onSelect: (String) -> Unit, enabled
                 readOnly = true,
                 enabled = enabled,
                 singleLine = true,
-                label = { Text("Timezone") },
+                label = { Text(stringResource(Res.string.onboarding_timezone)) },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
                     .menuAnchor(MenuAnchorType.PrimaryNotEditable)
@@ -558,7 +602,7 @@ private fun TimezonePicker(selected: String, onSelect: (String) -> Unit, enabled
             }
         }
         Text(
-            "Country: ${countryDomainFromIana(selected)} • POSIX: ${posixTzFromIana(selected)}",
+            stringResource(Res.string.onboarding_timezone_info, countryDomainFromIana(selected), posixTzFromIana(selected)),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -573,7 +617,7 @@ private fun SetupProgressCard(step: VacuumOnboarder.Step, running: Boolean, serv
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Pairing status", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(Res.string.onboarding_pairing_status), style = MaterialTheme.typography.titleMedium)
             Text(
                 text = stepLabel(step),
                 style = MaterialTheme.typography.bodyLarge,
@@ -581,7 +625,7 @@ private fun SetupProgressCard(step: VacuumOnboarder.Step, running: Boolean, serv
             )
             serverStatus?.let {
                 Text(
-                    text = "Server: $it",
+                    text = stringResource(Res.string.onboarding_server_status, it),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -614,11 +658,10 @@ private fun ServerVacuumCard(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text("Server & vacuum", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(Res.string.onboarding_server_vacuum), style = MaterialTheme.typography.titleLarge)
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Text(
-                "Sign in to your server's admin panel and pick the vacuum to onboard. " +
-                    "It must already be imported on the server (cloud fetch-data step).",
+                stringResource(Res.string.onboarding_server_vacuum_text),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -629,14 +672,14 @@ private fun ServerVacuumCard(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = enabled && !loadingDevices,
                 singleLine = true,
-                label = { Text("Admin password") },
+                label = { Text(stringResource(Res.string.onboarding_admin_password)) },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
                     FilledTonalIconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                            contentDescription = stringResource(if (passwordVisible) Res.string.onboarding_hide_password else Res.string.onboarding_show_password),
                         )
                     }
                 },
@@ -656,7 +699,7 @@ private fun ServerVacuumCard(
                     )
                     Spacer(Modifier.width(10.dp))
                 }
-                Text(if (loadingDevices) "Loading vacuums…" else "Load vacuums")
+                Text(stringResource(if (loadingDevices) Res.string.onboarding_loading_vacuums else Res.string.onboarding_load_vacuums))
             }
 
             if (devices.isNotEmpty()) {
@@ -666,12 +709,12 @@ private fun ServerVacuumCard(
                     onExpandedChange = { if (enabled) expanded = !expanded },
                 ) {
                     OutlinedTextField(
-                        value = selected?.displayName ?: "Select a vacuum",
+                        value = selected?.displayName ?: stringResource(Res.string.onboarding_select_vacuum),
                         onValueChange = {},
                         readOnly = true,
                         enabled = enabled,
                         singleLine = true,
-                        label = { Text("Vacuum to onboard") },
+                        label = { Text(stringResource(Res.string.onboarding_vacuum_to_onboard)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                         modifier = Modifier
                             .menuAnchor(MenuAnchorType.PrimaryNotEditable)
@@ -684,9 +727,9 @@ private fun ServerVacuumCard(
                                     Column {
                                         Text(device.displayName)
                                         val hint = buildString {
-                                            append(if (device.connected) "connected" else "not connected")
-                                            if (device.onboarding?.hasPublicKey == true) append(" • key ready")
-                                            if (device.onboarding?.unsupported == true) append(" • unsupported")
+                                            append(stringResource(if (device.connected) Res.string.onboarding_device_connected else Res.string.onboarding_device_not_connected))
+                                            if (device.onboarding?.hasPublicKey == true) append(" • " + stringResource(Res.string.onboarding_device_key_ready))
+                                            if (device.onboarding?.unsupported == true) append(" • " + stringResource(Res.string.onboarding_device_unsupported))
                                         }
                                         Text(
                                             hint,
@@ -723,12 +766,12 @@ private fun SetupMessageCard(title: String, message: String, containerColor: Col
 @Composable
 private fun SetupLogsCard(step: VacuumOnboarder.Step, running: Boolean, error: String?, result: String?) {
     val logs = buildList {
-        add("[setup] Ready to begin robot provisioning.")
+        add("[setup] " + stringResource(Res.string.onboarding_log_ready))
         if (running) add("[setup] ${stepLabel(step)}")
         when {
             error != null -> add("[error] $error")
             result != null -> add("[success] $result")
-            !running -> add("[setup] Enter Wi-Fi details and start pairing.")
+            !running -> add("[setup] " + stringResource(Res.string.onboarding_log_enter_details))
         }
     }
 
@@ -743,7 +786,7 @@ private fun SetupLogsCard(step: VacuumOnboarder.Step, running: Boolean, error: S
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Default.Terminal, contentDescription = null)
-                Text("Setup logs", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(Res.string.onboarding_setup_logs), style = MaterialTheme.typography.titleMedium)
             }
             Surface(
                 modifier = Modifier.fillMaxWidth().height(172.dp),
@@ -779,12 +822,15 @@ private fun logColor(line: String): Color = when {
     else -> MaterialTheme.colorScheme.onSurfaceVariant
 }
 
-private fun stepLabel(step: VacuumOnboarder.Step): String = when (step) {
-    VacuumOnboarder.Step.Idle -> "Waiting to start"
-    VacuumOnboarder.Step.JoiningWifi -> "Connecting to the robot Wi-Fi…"
-    VacuumOnboarder.Step.SendingHello -> "Starting pairing session…"
-    VacuumOnboarder.Step.AwaitingHello -> "Waiting for the robot to respond…"
-    VacuumOnboarder.Step.SendingWifiConfig -> "Sending Wi-Fi credentials…"
-    VacuumOnboarder.Step.AwaitingAck -> "Waiting for the robot to join your network…"
-    VacuumOnboarder.Step.Done -> "Pairing completed"
-}
+@Composable
+private fun stepLabel(step: VacuumOnboarder.Step): String = stringResource(
+    when (step) {
+        VacuumOnboarder.Step.Idle -> Res.string.onboarding_step_idle
+        VacuumOnboarder.Step.JoiningWifi -> Res.string.onboarding_step_joining_wifi
+        VacuumOnboarder.Step.SendingHello -> Res.string.onboarding_step_sending_hello
+        VacuumOnboarder.Step.AwaitingHello -> Res.string.onboarding_step_awaiting_hello
+        VacuumOnboarder.Step.SendingWifiConfig -> Res.string.onboarding_step_sending_wifi
+        VacuumOnboarder.Step.AwaitingAck -> Res.string.onboarding_step_awaiting_ack
+        VacuumOnboarder.Step.Done -> Res.string.onboarding_step_done
+    },
+)

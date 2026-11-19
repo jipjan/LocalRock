@@ -38,6 +38,39 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.whatsnew_120_editor_body
+import com.kodraliu.localrock.resources.whatsnew_120_editor_title
+import com.kodraliu.localrock.resources.whatsnew_120_fixes_body
+import com.kodraliu.localrock.resources.whatsnew_120_maps_body
+import com.kodraliu.localrock.resources.whatsnew_120_maps_title
+import com.kodraliu.localrock.resources.whatsnew_120_multi_level_body
+import com.kodraliu.localrock.resources.whatsnew_120_multi_level_title
+import com.kodraliu.localrock.resources.whatsnew_130_alerts_body
+import com.kodraliu.localrock.resources.whatsnew_130_alerts_title
+import com.kodraliu.localrock.resources.whatsnew_130_fixes_body
+import com.kodraliu.localrock.resources.whatsnew_130_order_body
+import com.kodraliu.localrock.resources.whatsnew_130_order_title
+import com.kodraliu.localrock.resources.whatsnew_130_per_room_body
+import com.kodraliu.localrock.resources.whatsnew_130_per_room_title
+import com.kodraliu.localrock.resources.whatsnew_130_smartplan_body
+import com.kodraliu.localrock.resources.whatsnew_130_smartplan_title
+import com.kodraliu.localrock.resources.whatsnew_140_beta_body
+import com.kodraliu.localrock.resources.whatsnew_140_beta_title
+import com.kodraliu.localrock.resources.whatsnew_140_fixes_body
+import com.kodraliu.localrock.resources.whatsnew_140_room_types_body
+import com.kodraliu.localrock.resources.whatsnew_140_room_types_title
+import com.kodraliu.localrock.resources.whatsnew_140_routines_body
+import com.kodraliu.localrock.resources.whatsnew_140_routines_title
+import com.kodraliu.localrock.resources.whatsnew_140_schedules_body
+import com.kodraliu.localrock.resources.whatsnew_140_schedules_title
+import com.kodraliu.localrock.resources.whatsnew_140_zone_body
+import com.kodraliu.localrock.resources.whatsnew_140_zone_title
+import com.kodraliu.localrock.resources.whatsnew_fixes
+import com.kodraliu.localrock.resources.whatsnew_got_it
+import com.kodraliu.localrock.resources.whatsnew_title
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 
 /*
  * In-app release notes. They ship inside the app, so nothing is fetched to show them. Add an
@@ -45,7 +78,7 @@ import androidx.compose.ui.unit.dp
  * shows nothing after the update.
  */
 
-data class WhatsNewItem(val icon: ImageVector, val title: String, val body: String)
+data class WhatsNewItem(val icon: ImageVector, val title: StringResource, val body: StringResource)
 
 data class WhatsNewRelease(val version: String, val items: List<WhatsNewItem>)
 
@@ -54,111 +87,31 @@ val WHATS_NEW: List<WhatsNewRelease> = listOf(
     WhatsNewRelease(
         version = "1.4.0",
         items = listOf(
-            WhatsNewItem(
-                Icons.Default.PlayArrow,
-                "Routines",
-                "More > Routines lists the routines your server keeps, the ones made in the " +
-                    "Roborock app, and runs one with a tap.",
-            ),
-            WhatsNewItem(
-                Icons.Default.PinDrop,
-                "Zone clean and Pin & Go",
-                "Both now send the spot you drew or tapped in the robot's own coordinates, so " +
-                    "the robot goes where you meant.",
-            ),
-            WhatsNewItem(
-                Icons.Default.Home,
-                "Room types",
-                "Pick a type such as Kitchen or Bedroom for a room, or give it a name of your own.",
-            ),
-            WhatsNewItem(
-                Icons.Default.Schedule,
-                "Schedules",
-                "Set a schedule to any minute, shown in your phone's clock style. If the robot " +
-                    "refuses a schedule, the app now says so.",
-            ),
-            WhatsNewItem(
-                Icons.Default.Science,
-                "Beta features",
-                "On newer robots, Settings > Beta features switches options such as FlexiArm and " +
-                    "gap deep clean. Only options your robot reports are shown.",
-            ),
-            WhatsNewItem(
-                Icons.Default.Build,
-                "Fixes",
-                "A zoomed map now reaches the edge of the screen and keeps its zoom while the " +
-                    "robot cleans. After a floor switch the right map appears once the robot " +
-                    "has loaded it. Rooms can be renamed on robots with an empty room table, " +
-                    "dock settings follow what each dock supports, the built-in water tank can " +
-                    "be emptied through the dock, and the back button returns to the settings " +
-                    "list. The sign-in screen is available in German.",
-            ),
+            WhatsNewItem(Icons.Default.PlayArrow, Res.string.whatsnew_140_routines_title, Res.string.whatsnew_140_routines_body),
+            WhatsNewItem(Icons.Default.PinDrop, Res.string.whatsnew_140_zone_title, Res.string.whatsnew_140_zone_body),
+            WhatsNewItem(Icons.Default.Home, Res.string.whatsnew_140_room_types_title, Res.string.whatsnew_140_room_types_body),
+            WhatsNewItem(Icons.Default.Schedule, Res.string.whatsnew_140_schedules_title, Res.string.whatsnew_140_schedules_body),
+            WhatsNewItem(Icons.Default.Science, Res.string.whatsnew_140_beta_title, Res.string.whatsnew_140_beta_body),
+            WhatsNewItem(Icons.Default.Build, Res.string.whatsnew_fixes, Res.string.whatsnew_140_fixes_body),
         ),
     ),
     WhatsNewRelease(
         version = "1.3.0",
         items = listOf(
-            WhatsNewItem(
-                Icons.Default.Tune,
-                "Settings per room",
-                "Choose Per room in the cleaning mode to give every room its own suction, water " +
-                    "and route, for example mopping the kitchen and only vacuuming the bedroom.",
-            ),
-            WhatsNewItem(
-                Icons.Default.Reorder,
-                "Cleaning order",
-                "Rooms you pick are cleaned in the order you tap them. More > Rooms > Default " +
-                    "cleaning order sets the order for a clean without picked rooms.",
-            ),
-            WhatsNewItem(
-                Icons.Default.AutoAwesome,
-                "SmartPlan",
-                "On robots that have it, SmartPlan lets the robot choose suction, water and " +
-                    "route for each room.",
-            ),
-            WhatsNewItem(
-                Icons.Default.Notifications,
-                "Robot alerts",
-                "Settings > Notifications can tell you when a robot gets stuck, finishes " +
-                    "cleaning, or its dock needs attention.",
-            ),
-            WhatsNewItem(
-                Icons.Default.Build,
-                "Fixes",
-                "The app connects faster when it starts and after the screen was off, and no " +
-                    "longer shows a robot as online when it is not. Map editing and map " +
-                    "switching work on older robots, and a robot that never used the official " +
-                    "app can save its first map.",
-            ),
+            WhatsNewItem(Icons.Default.Tune, Res.string.whatsnew_130_per_room_title, Res.string.whatsnew_130_per_room_body),
+            WhatsNewItem(Icons.Default.Reorder, Res.string.whatsnew_130_order_title, Res.string.whatsnew_130_order_body),
+            WhatsNewItem(Icons.Default.AutoAwesome, Res.string.whatsnew_130_smartplan_title, Res.string.whatsnew_130_smartplan_body),
+            WhatsNewItem(Icons.Default.Notifications, Res.string.whatsnew_130_alerts_title, Res.string.whatsnew_130_alerts_body),
+            WhatsNewItem(Icons.Default.Build, Res.string.whatsnew_fixes, Res.string.whatsnew_130_fixes_body),
         ),
     ),
     WhatsNewRelease(
         version = "1.2.0",
         items = listOf(
-            WhatsNewItem(
-                Icons.Default.Edit,
-                "Map editor",
-                "Tap the pencil on the map to draw no-go zones, invisible walls, carpets and " +
-                    "thresholds, split and merge rooms, and set floor types.",
-            ),
-            WhatsNewItem(
-                Icons.Default.Map,
-                "Manage your maps",
-                "More > Maps renames and deletes maps, and sends the robot out to map the home " +
-                    "again, for example after moving the dock.",
-            ),
-            WhatsNewItem(
-                Icons.Default.Layers,
-                "Multi-level homes",
-                "Keep a map for each floor, switch between them with the picker on the map, or " +
-                    "let the robot recognise the floor by itself.",
-            ),
-            WhatsNewItem(
-                Icons.Default.Build,
-                "Fixes",
-                "Mapping runs show as Mapping, round carpets keep their shape, and the cleaned " +
-                    "area no longer flickers while the map changes.",
-            ),
+            WhatsNewItem(Icons.Default.Edit, Res.string.whatsnew_120_editor_title, Res.string.whatsnew_120_editor_body),
+            WhatsNewItem(Icons.Default.Map, Res.string.whatsnew_120_maps_title, Res.string.whatsnew_120_maps_body),
+            WhatsNewItem(Icons.Default.Layers, Res.string.whatsnew_120_multi_level_title, Res.string.whatsnew_120_multi_level_body),
+            WhatsNewItem(Icons.Default.Build, Res.string.whatsnew_fixes, Res.string.whatsnew_120_fixes_body),
         ),
     ),
 )
@@ -189,7 +142,7 @@ fun WhatsNewSheet(release: WhatsNewRelease, onDismiss: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("What's new", style = MaterialTheme.typography.headlineSmall)
+                Text(stringResource(Res.string.whatsnew_title), style = MaterialTheme.typography.headlineSmall)
                 Text(
                     "LocalRock ${release.version}",
                     style = MaterialTheme.typography.bodyMedium,
@@ -209,16 +162,16 @@ fun WhatsNewSheet(release: WhatsNewRelease, onDismiss: () -> Unit) {
                         }
                     }
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(item.title, style = MaterialTheme.typography.titleSmall)
+                        Text(stringResource(item.title), style = MaterialTheme.typography.titleSmall)
                         Text(
-                            item.body,
+                            stringResource(item.body),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
             }
-            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text("Got it") }
+            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.whatsnew_got_it)) }
         }
     }
 }

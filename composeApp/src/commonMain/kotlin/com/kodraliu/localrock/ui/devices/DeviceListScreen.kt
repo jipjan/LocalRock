@@ -76,6 +76,33 @@ import com.kodraliu.localrock.shared.model.Device
 import com.kodraliu.localrock.shared.onboarding.vacuumPairingSupported
 import com.kodraliu.localrock.ui.AppColors
 import com.kodraliu.localrock.ui.icons.RobotVacuum
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.common_cancel
+import com.kodraliu.localrock.resources.common_try_again
+import com.kodraliu.localrock.resources.devices_add_vacuum
+import com.kodraliu.localrock.resources.devices_cant_reach_server
+import com.kodraliu.localrock.resources.devices_checking
+import com.kodraliu.localrock.resources.devices_clean
+import com.kodraliu.localrock.resources.devices_drying_mop
+import com.kodraliu.localrock.resources.devices_empty_text
+import com.kodraliu.localrock.resources.devices_minutes
+import com.kodraliu.localrock.resources.devices_more
+import com.kodraliu.localrock.resources.devices_no_local_key
+import com.kodraliu.localrock.resources.devices_no_robots
+import com.kodraliu.localrock.resources.devices_offline
+import com.kodraliu.localrock.resources.devices_online
+import com.kodraliu.localrock.resources.devices_pause
+import com.kodraliu.localrock.resources.devices_paused_at_dock
+import com.kodraliu.localrock.resources.devices_resume
+import com.kodraliu.localrock.resources.devices_retry
+import com.kodraliu.localrock.resources.devices_return_to_dock
+import com.kodraliu.localrock.resources.devices_settings
+import com.kodraliu.localrock.resources.devices_setup_incomplete
+import com.kodraliu.localrock.resources.devices_sign_out
+import com.kodraliu.localrock.resources.devices_sign_out_text
+import com.kodraliu.localrock.resources.devices_sign_out_title
+import com.kodraliu.localrock.resources.devices_title
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,19 +132,19 @@ fun DeviceListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("My vacuums") },
+                title = { Text(stringResource(Res.string.devices_title)) },
                 actions = {
                     IconButton(onClick = onSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(Icons.Default.Settings, contentDescription = stringResource(Res.string.devices_settings))
                     }
                     // Refresh moved to pull-to-refresh, so the bar keeps only two actions.
                     Box {
                         IconButton(onClick = { showOverflow = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More")
+                            Icon(Icons.Default.MoreVert, contentDescription = stringResource(Res.string.devices_more))
                         }
                         DropdownMenu(expanded = showOverflow, onDismissRequest = { showOverflow = false }) {
                             DropdownMenuItem(
-                                text = { Text("Sign out") },
+                                text = { Text(stringResource(Res.string.devices_sign_out)) },
                                 leadingIcon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
                                 onClick = {
                                     showOverflow = false
@@ -134,7 +161,7 @@ fun DeviceListScreen(
                 ExtendedFloatingActionButton(
                     onClick = onAddVacuum,
                     icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                    text = { Text("Add vacuum") },
+                    text = { Text(stringResource(Res.string.devices_add_vacuum)) },
                 )
             }
         },
@@ -202,15 +229,15 @@ fun DeviceListScreen(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Sign out?") },
-            text = { Text("You'll need to log in again with an email code to control your vacuums.") },
+            title = { Text(stringResource(Res.string.devices_sign_out_title)) },
+            text = { Text(stringResource(Res.string.devices_sign_out_text)) },
             confirmButton = {
                 TextButton(onClick = { showLogoutDialog = false; viewModel.logout() }) {
-                    Text("Sign out", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(Res.string.devices_sign_out), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showLogoutDialog = false }) { Text(stringResource(Res.string.common_cancel)) }
             },
         )
     }
@@ -237,11 +264,11 @@ private fun EmptyState(
                 else MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                if (error != null) "Can't reach your server" else "No robots yet",
+                stringResource(if (error != null) Res.string.devices_cant_reach_server else Res.string.devices_no_robots),
                 style = MaterialTheme.typography.titleMedium,
             )
             Text(
-                error ?: "Add your first vacuum, or pull down to check the server again.",
+                error ?: stringResource(Res.string.devices_empty_text),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -251,13 +278,13 @@ private fun EmptyState(
                 Button(onClick = onRetry) {
                     Icon(Icons.Default.Refresh, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Try again")
+                    Text(stringResource(Res.string.common_try_again))
                 }
             } else if (canPair) {
                 Button(onClick = onAddVacuum) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Add vacuum")
+                    Text(stringResource(Res.string.devices_add_vacuum))
                 }
             }
         }
@@ -282,7 +309,7 @@ private fun ErrorCard(message: String, onRetry: () -> Unit) {
                 color = MaterialTheme.colorScheme.onErrorContainer,
                 style = MaterialTheme.typography.bodySmall,
             )
-            TextButton(onClick = onRetry) { Text("Retry") }
+            TextButton(onClick = onRetry) { Text(stringResource(Res.string.devices_retry)) }
         }
     }
 }
@@ -310,11 +337,11 @@ private fun DeviceCard(
         else -> MaterialTheme.colorScheme.outline
     }
     val statusText = when {
-        notPaired -> "Setup incomplete"
-        reachability == Reachability.CHECKING -> "Checking…"
-        online -> "Online"
-        else -> "Offline"
-    }
+        notPaired -> Res.string.devices_setup_incomplete
+        reachability == Reachability.CHECKING -> Res.string.devices_checking
+        online -> Res.string.devices_online
+        else -> Res.string.devices_offline
+    }.let { stringResource(it) }
 
     Surface(
         onClick = onClick,
@@ -374,7 +401,7 @@ private fun DeviceCard(
                 }
                 if (notPaired) {
                     Text(
-                        "This robot has no local key yet. Re-run pairing on your server to control it.",
+                        stringResource(Res.string.devices_no_local_key),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -409,8 +436,8 @@ private fun LiveRobotPanel(status: VacuumStatus, onAction: (AppContainer.QuickAc
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 when {
-                    status.taskPausedAtDock -> "Paused at the dock"
-                    status.dryStatus == 1 && !cleaning -> "Drying mop"
+                    status.taskPausedAtDock -> stringResource(Res.string.devices_paused_at_dock)
+                    status.dryStatus == 1 && !cleaning -> stringResource(Res.string.devices_drying_mop)
                     else -> VacuumStateCodes.describe(state)
                 },
                 style = MaterialTheme.typography.titleMedium,
@@ -419,7 +446,7 @@ private fun LiveRobotPanel(status: VacuumStatus, onAction: (AppContainer.QuickAc
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            minutes?.let { Text("$it min", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            minutes?.let { Text(stringResource(Res.string.devices_minutes, it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             status.battery?.let { Text("$it%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         status.dockErrorStatus?.takeIf { it != 0 }?.let { code ->
@@ -443,10 +470,10 @@ private fun LiveRobotPanel(status: VacuumStatus, onAction: (AppContainer.QuickAc
             ) {
                 Icon(if (cleaning) Icons.Default.Pause else Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(6.dp))
-                Text(if (cleaning) "Pause" else if (paused) "Resume" else "Clean")
+                Text(stringResource(if (cleaning) Res.string.devices_pause else if (paused) Res.string.devices_resume else Res.string.devices_clean))
             }
             FilledTonalIconButton(onClick = { onAction(AppContainer.QuickAction.DOCK) }) {
-                Icon(Icons.Default.Home, contentDescription = "Return to dock")
+                Icon(Icons.Default.Home, contentDescription = stringResource(Res.string.devices_return_to_dock))
             }
         }
     }
