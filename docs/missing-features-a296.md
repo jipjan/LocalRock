@@ -21,6 +21,7 @@ NewFeatureStrBit table). See `robot-commands-a296.md` for the commands of everyt
 | 100 | CollectDustCountShow | History → "Bin emptied" total (`get_clean_summary` → `dust_collection_count`) |
 | 71 | MapEraser | Map editor → Eraser (`app_set_beautify_blocks`, map block 47) |
 | 122 | FloorPlanMap | The map draws each room from its outline (map block 55), as the official app does; Settings → Room outlines on the map turns it off |
+| 48 | VideoPatrol (python-roborock `VIDEO_PATROL`) | Live view → Cruise (`app_start_patrol`) |
 | 108 | CleanEfficiency | History → m²/min per clean, with obstacles avoided, mop washes and bin emptied from the record |
 
 ### Handled on another page (not listed as missing)
@@ -39,7 +40,7 @@ SupportGetParticularStatus, 98 SyncServerName, 99 ShouldShowArmOverLoad, 101 sup
 ### Still missing (listed on the Beta page)
 | Bit | Plugin name | What it is | Commands (plugin) | Effort |
 |---|---|---|---|---|
-| 48, 59, 68, 74, 95, 103, 123, 126, 127 | (not in the plugin's table) | unknown | – | – |
+| 59, 68, 74, 95, 103, 123, 126, 127 | (unnamed) | Not in the a296 plugin's table nor in python-roborock's `NewFeatureStrBit` (main, checked 2026-11-19), and the official app shows nothing for them. Nothing to build until one of them gets a name. | – | – |
 
 ## Official app compared page by page
 
