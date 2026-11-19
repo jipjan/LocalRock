@@ -1,5 +1,7 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.ui.text.oneDecimal
+import com.kodraliu.localrock.ui.text.decimalSeparator
 import com.kodraliu.localrock.resources.timeline_pref_coverage_less_collision
 import com.kodraliu.localrock.resources.timeline_pref_coverage_high
 import com.kodraliu.localrock.resources.timeline_pref_path_switch
@@ -1224,6 +1226,7 @@ private fun NumberStepper2(label: String, value: Int, range: IntRange, step: Int
 
 @Composable
 private fun HistoryOverviewCard(lastClean: CleanRecord?, summary: CleanSummary?, onClick: () -> Unit) {
+    val separator = decimalSeparator()
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -1245,7 +1248,7 @@ private fun HistoryOverviewCard(lastClean: CleanRecord?, summary: CleanSummary?,
                     modifier = Modifier.weight(1f),
                 )
                 HistoryTile(
-                    value = lastClean?.let { oneDecimal(it.areaMm2 / 1_000_000f) } ?: "–",
+                    value = lastClean?.let { oneDecimal(it.areaMm2 / 1_000_000f, separator) } ?: "–",
                     unit = "m²",
                     label = stringResource(Res.string.settings_last_clean_covered),
                     modifier = Modifier.weight(1f),
@@ -1884,6 +1887,7 @@ private fun RoomSettingsCard(settings: CleanRunSettings) {
 
 @Composable
 private fun CleanRecordRow(record: CleanRecord) {
+    val separator = decimalSeparator()
     val areaM2 = record.areaMm2 / 1_000_000f
     val durationMin = record.durationSeconds / 60L
     val dateStr = formatCleanRecordTime(record.beginEpoch)
@@ -1919,7 +1923,7 @@ private fun CleanRecordRow(record: CleanRecord) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(
                     buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(oneDecimal(areaM2)) }
+                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(oneDecimal(areaM2, separator)) }
                         append(" m²")
                     },
                     style = MaterialTheme.typography.bodySmall,
@@ -1936,7 +1940,7 @@ private fun CleanRecordRow(record: CleanRecord) {
                 record.efficiencyM2PerMinute?.let { e ->
                     Text(
                         buildAnnotatedString {
-                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(oneDecimal(e)) }
+                            withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(oneDecimal(e, separator)) }
                             append(" m²/min")
                         },
                         style = MaterialTheme.typography.bodySmall,
@@ -3059,10 +3063,6 @@ private fun PinGoScreen(
 }
 
 
-private fun oneDecimal(value: Float): String {
-    val scaled = (value * 10f).roundToInt()
-    return "${scaled / 10}.${(scaled % 10).absoluteValue}"
-}
 
 private fun cleanPreferenceText(p: CleanPreference): StringResource = when (p) {
     CleanPreference.HOME_PERCEPTION -> Res.string.timeline_pref_home_perception

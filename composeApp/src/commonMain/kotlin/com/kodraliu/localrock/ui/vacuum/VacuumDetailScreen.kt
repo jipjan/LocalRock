@@ -1,5 +1,7 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.ui.text.areaTenths
+import com.kodraliu.localrock.ui.text.decimalSeparator
 import com.kodraliu.localrock.resources.robot_action_dock
 import com.kodraliu.localrock.resources.robot_action_history
 import com.kodraliu.localrock.resources.robot_action_maps
@@ -1603,9 +1605,9 @@ private fun StatusBar(
     onToggleExpanded: () -> Unit = {},
 ) {
     // clean_area is reported in mm²; show m² with one decimal.
+    val separator = decimalSeparator()
     val area = lastCleanArea?.let { mm2 ->
-        val tenths = mm2 / 100_000
-        "${tenths / 10}.${tenths % 10} m²"
+        "${areaTenths(mm2, separator)} m²"
     }
     val time = status.cleanTime?.takeIf { it > 0 }?.let { s ->
         val m = s / 60

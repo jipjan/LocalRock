@@ -79,4 +79,7 @@
     <string name="routine_editor_need_name">Geef de routine een naam</string>
     <string name="routine_editor_need_step">Voeg minstens één stap toe</string>
     <string name="routine_editor_need_target">Elke stap heeft kamers of zones nodig</string>
+
+    <!-- Numbers: the decimal separator for areas and rates ("12.5" / "12,5") -->
+    <string name="number_decimal_separator">,</string>
 </resources>

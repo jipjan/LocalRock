@@ -81,4 +81,7 @@
     <string name="routine_editor_need_name">Gib der Routine einen Namen</string>
     <string name="routine_editor_need_step">Füge mindestens einen Schritt hinzu</string>
     <string name="routine_editor_need_target">Jeder Schritt braucht seine Räume oder Zonen</string>
+
+    <!-- Numbers: the decimal separator for areas and rates ("12.5" / "12,5") -->
+    <string name="number_decimal_separator">,</string>
 </resources>
