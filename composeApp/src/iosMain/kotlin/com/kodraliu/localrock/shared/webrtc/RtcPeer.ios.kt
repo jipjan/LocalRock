@@ -29,11 +29,17 @@ interface RtcNativePeerListener {
 
 /** A single peer connection, implemented in Swift. Non-suspend so Swift can implement it. */
 interface RtcNativePeer {
-    /** Adds recv-only transceivers, creates the offer, and sets it as the local description. */
+    /** Adds the transceivers (audio two-way, video receive-only), creates the offer and sets it locally. */
     fun createOffer(onSuccess: (String) -> Unit, onError: (String) -> Unit)
     fun setRemoteAnswer(sdp: String)
     fun addRemoteCandidate(sdpMid: String?, sdpMLineIndex: Int, candidate: String)
     fun close()
+
+    /**
+     * Talk-back: sends the microphone over the offer's two-way audio, or stops sending it. Returns
+     * false when the peer has no audio sender (no offer made yet).
+     */
+    fun setMicrophone(on: Boolean): Boolean
 
     /** The `RTCMTLVideoView` (a `UIView`) that renders the remote track, or null before it arrives. */
     fun renderView(): UIView?
@@ -90,6 +96,8 @@ internal class IosRtcPeer(
     override fun addRemoteCandidate(candidate: RtcIceCandidate) {
         native.addRemoteCandidate(candidate.sdpMid, candidate.sdpMLineIndex, candidate.candidate)
     }
+
+    override fun setMicrophone(on: Boolean): Boolean = native.setMicrophone(on)
 
     override fun close() {
         if (_connectionState.value != RtcConnectionState.CLOSED) {

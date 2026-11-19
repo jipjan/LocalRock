@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import AVFoundation
 import WebRTC
 import ComposeApp
 
@@ -41,12 +42,18 @@ final class WebRtcNativeFactory: NSObject, RtcNativePeerFactory {
 final class WebRtcPeer: NSObject, RtcNativePeer, RTCPeerConnectionDelegate {
 
     private let listener: RtcNativePeerListener
+    private let factory: RTCPeerConnectionFactory
     private let peerConnection: RTCPeerConnection
+    // Talk-back: the audio transceiver is offered two-way (as the official app does) but sends nothing
+    // until setMicrophone(on: true) puts the microphone track on its sender.
+    private var audioTransceiver: RTCRtpTransceiver?
+    private var micTrack: RTCAudioTrack?
     private let videoView: RTCMTLVideoView
     private var remoteVideoTrack: RTCVideoTrack?
 
     init(factory: RTCPeerConnectionFactory, iceServers: [RtcNativeIceServer], listener: RtcNativePeerListener) {
         self.listener = listener
+        self.factory = factory
 
         let config = RTCConfiguration()
         config.sdpSemantics = .unifiedPlan
@@ -76,9 +83,10 @@ final class WebRtcPeer: NSObject, RtcNativePeer, RTCPeerConnectionDelegate {
     func createOffer(onSuccess: @escaping (String) -> Void, onError: @escaping (String) -> Void) {
         // Audio first, as the official app offers it: the Saros 20 (a296) never answers an offer
         // whose first m-line is video.
-        let recvAudio = RTCRtpTransceiverInit()
-        recvAudio.direction = .recvOnly
-        peerConnection.addTransceiver(of: .audio, init: recvAudio)
+        // Two-way audio with no track yet, so talk-back can start later without renegotiating.
+        let audio = RTCRtpTransceiverInit()
+        audio.direction = .sendRecv
+        audioTransceiver = peerConnection.addTransceiver(of: .audio, init: audio)
 
         let recvVideo = RTCRtpTransceiverInit()
         recvVideo.direction = .recvOnly
@@ -117,7 +125,28 @@ final class WebRtcPeer: NSObject, RtcNativePeer, RTCPeerConnectionDelegate {
         }
     }
 
+    func setMicrophone(on: Bool) -> Bool {
+        guard let sender = audioTransceiver?.sender else { return false }
+        if on {
+            WebRtcPeer.useSpeakerAndMicrophone()
+            let track = micTrack ?? {
+                let source = factory.audioSource(with: RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil))
+                let created = factory.audioTrack(with: source, trackId: "talkback")
+                micTrack = created
+                return created
+            }()
+            track.isEnabled = true
+            sender.track = track
+        } else {
+            micTrack?.isEnabled = false
+            sender.track = nil
+        }
+        return true
+    }
+
     func close() {
+        audioTransceiver?.sender.track = nil
+        micTrack = nil
         remoteVideoTrack?.remove(videoView)
         remoteVideoTrack = nil
         peerConnection.close()
@@ -169,6 +198,21 @@ final class WebRtcPeer: NSObject, RtcNativePeer, RTCPeerConnectionDelegate {
         case .failed: return "failed"
         case .closed: return "closed"
         default: return "new"
+        }
+    }
+
+    /** Lets WebRTC record while the robot's audio keeps playing through the loudspeaker. */
+    private static func useSpeakerAndMicrophone() {
+        let session = RTCAudioSession.sharedInstance()
+        session.lockForConfiguration()
+        defer { session.unlockForConfiguration() }
+        do {
+            try session.setCategory(.playAndRecord,
+                                    with: [.defaultToSpeaker, .allowBluetooth])
+            try session.setMode(.voiceChat)
+            try session.setActive(true)
+        } catch {
+            print("[LocalRock] audio session for talk-back failed: \(error.localizedDescription)")
         }
     }
 
