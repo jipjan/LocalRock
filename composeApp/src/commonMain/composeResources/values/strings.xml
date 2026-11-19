@@ -32,7 +32,7 @@
     <string name="routines_added">%1$s added</string>
     <string name="routines_saved">Routine saved</string>
     <string name="routines_deleted">Routine deleted</string>
-    <string name="routines_not_editable">This routine has steps LocalRock can\'t edit; it can still be run.</string>
+    <string name="routines_not_editable">This routine has steps LocalRock can't edit; it can still be run.</string>
     <string name="routine_rec_vacuum_then_mop">Vacuum, then mop</string>
     <string name="routine_rec_vacuum_then_mop_text">Vacuums and mops the whole home once, for better hygiene.</string>
     <string name="routine_rec_after_meal">After meals</string>

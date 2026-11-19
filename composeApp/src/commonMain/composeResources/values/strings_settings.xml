@@ -59,13 +59,13 @@
     <string name="settings_remote_control">Remote control</string>
     <string name="settings_remote_sub">Drive the robot by hand</string>
     <string name="settings_live_view">Live view</string>
-    <string name="settings_live_view_sub">See through the robot\'s camera</string>
+    <string name="settings_live_view_sub">See through the robot's camera</string>
     <string name="settings_model">Model</string>
     <string name="settings_firmware_version">Firmware version</string>
     <string name="settings_dnd_enable">Enable quiet hours</string>
     <string name="settings_dnd_anytime">Robot will clean anytime</string>
-    <string name="settings_dnd_note">Robot won\'t start cleaning between %1$s and %2$s.</string>
-    <string name="settings_dnd_multi_intro">The robot won\'t resume cleaning, speaks more quietly and dims its lights during these hours. Up to %1$d periods.</string>
+    <string name="settings_dnd_note">Robot won't start cleaning between %1$s and %2$s.</string>
+    <string name="settings_dnd_multi_intro">The robot won't resume cleaning, speaks more quietly and dims its lights during these hours. Up to %1$d periods.</string>
     <string name="settings_dnd_tap_close">Tap to close</string>
     <string name="settings_dnd_tap_change">Tap to change the times</string>
     <string name="settings_dnd_delete_period">Delete period</string>
@@ -101,7 +101,7 @@
     <string name="settings_guide_filter">Replace after about 150 hours of cleaning.\n\nOnce a week, tap the dust out of the filter over a bin. Rinse it only if it is a washable filter, and let it dry completely before putting it back.</string>
     <string name="settings_guide_sensor">Clean after about 30 hours of cleaning.\n\nWipe the cliff sensors underneath, the wall sensor, the charging contacts and the camera window with a soft dry cloth, then reset the counter.</string>
     <string name="settings_guide_maintenance_brush">Replace after about 300 hours.\n\nThis brush in the dock scrubs the mop wash tray. Rinse off hair and dirt when you clean the tray.</string>
-    <string name="settings_guide_strainer">Clean when needed; the robot counts mop washes since the last reset.\n\nTake out the strainer in the dock\'s wash tray, rinse it under the tap and put it back.</string>
+    <string name="settings_guide_strainer">Clean when needed; the robot counts mop washes since the last reset.\n\nTake out the strainer in the dock's wash tray, rinse it under the tap and put it back.</string>
     <string name="settings_guide_dust_bag">Replace when it is full; the dock warns you.\n\nThe robot counts how often the dock emptied it since the last reset, which gives an idea of how full it is.</string>
     <string name="settings_care_how">How to look after the %1$s</string>
     <string name="settings_reset">Reset</string>
@@ -139,7 +139,7 @@
     <string name="settings_internal_tank">Internal water tank</string>
     <string name="settings_internal_tank_sub">Empty through the dock</string>
     <string name="settings_empty_tank_title">Empty the water tank?</string>
-    <string name="settings_empty_tank_text">The dock pumps the water out of the robot\'s built-in tank. Make sure the robot is on the dock.</string>
+    <string name="settings_empty_tank_text">The dock pumps the water out of the robot's built-in tank. Make sure the robot is on the dock.</string>
     <string name="settings_empty">Empty</string>
     <string name="settings_emptying_tank">Emptying the water tank</string>
     <string name="settings_after_cleaning">After cleaning</string>
@@ -162,7 +162,7 @@
     <string name="settings_carpet_mode">Carpet mode</string>
     <string name="settings_beta_intro">Options your robot reports as supported. Once on, the robot uses them during its cleaning cycle.</string>
     <string name="settings_beta_checking">Checking your robot…</string>
-    <string name="settings_beta_none">Your robot doesn\'t report any beta features.</string>
+    <string name="settings_beta_none">Your robot doesn't report any beta features.</string>
     <string name="settings_robot_reply">Robot reply: %1$s</string>
     <string name="settings_also_advertised">Also advertised by your robot</string>
     <string name="settings_hide">Hide</string>
