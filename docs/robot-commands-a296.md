@@ -359,4 +359,10 @@ Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47
   - LocalRock now sends both the same way. The earlier pause-first approach caused the -10003 locks
     and left the clean waiting on the dock.
 - **`app_charge`** was once refused with -10003 "action locked" (17:00:22), but the robot docked anyway.
+- **Captured 2026-11-19 from the official app:**
+  - Pausing a running clean is `app_pause []`.
+  - "Hervatten" (resume) is `app_start [{"clean_mop":0}]`.
+  - "Obstakelfoto's" on, after its privacy notice: `set_camera_status [10663]`, then `[11687]`. Bit 1024
+    is obstacle photos.
+  - Pet Snaps can't be changed in the official app while a clean runs: it asks to end the clean first.
 

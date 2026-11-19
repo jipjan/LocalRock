@@ -98,7 +98,7 @@ private fun statusBitSwitch(
 /**
  * One bit of the camera's option bitmask (`get_camera_status` / `set_camera_status [n]`). Bits seen on an
  * a296 with the official app (2026-11-14): 2 fill light automatic (385 ↔ 387), 32 "I have pets" (387 →
- * 419), 4096 Pet Snaps (419 ↔ 4515). Bit 4 (0x4) is the remote-viewing authorization and cannot be set.
+ * 419), 4096 Pet Snaps (419 ↔ 4515), 1024 obstacle photos (10663 → 11687, 2026-11-19). Bit 4 (0x4) is the remote-viewing authorization and cannot be set.
  */
 private fun cameraBitSwitch(
     id: String,
@@ -372,6 +372,14 @@ val BetaFeatureDefs = listOf(
         title = "Fill light", description = "Lights up dark spots so obstacles are recognised better",
         bit = null, section = FeatureSection.OBSTACLE,
         choices = listOf(1 to "Automatic", 0 to "Off"),
+    ),
+    // Bit 10 (1024), captured 2026-11-19: the official app's "Obstakelfoto's" sent [10663] then [11687]
+    // after its privacy notice (the photos are kept in the robot's memory).
+    cameraBitSwitch(
+        id = "obstacle_photos", bitIndex = 10,
+        title = "Obstacle photos",
+        description = "Keeps photos of obstacles the camera recognised, in the robot's memory; tap an obstacle on the map to see it",
+        bit = null, section = FeatureSection.OBSTACLE,
     ),
     cameraBitSwitch(
         id = "have_pets", bitIndex = 5,
