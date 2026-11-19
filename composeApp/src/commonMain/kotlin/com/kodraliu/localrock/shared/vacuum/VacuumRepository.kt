@@ -1707,25 +1707,13 @@ class VacuumRepository(
      * read stopped, as the official app does. A clean with another start time starts the list again.
      */
     suspend fun refreshLiveCleanEvents() = liveCleanMutex.withLock {
-        repeat(20) {
-            val result = session.getRtCleanDetail(liveCleanCursor).requireOk("get_rt_clean_detail").result
-            val obj = (if (result is JsonArray) result.firstOrNull() else result) as? JsonObject ?: return@withLock
-            val begin = (obj["begin"] as? JsonPrimitive)?.longOrNull
-            if (begin != liveCleanBegin) {
-                liveCleanBegin = begin
-                if (liveCleanCursor != 0) {
-                    // Another clean: read it from its first event.
-                    liveCleanCursor = 0
-                    _liveCleanEvents.value = emptyList()
-                    return@repeat
-                }
-                _liveCleanEvents.value = emptyList()
-            }
-            val page = parseCleanEventPage(result) ?: return@withLock
-            if (page.events.isNotEmpty()) _liveCleanEvents.update { it + page.events }
-            liveCleanCursor += page.rawCount
-            if (!page.more || page.rawCount == 0) return@withLock
+        val update = readLiveCleanPages(_liveCleanEvents.value, liveCleanCursor, liveCleanBegin) { from ->
+            session.getRtCleanDetail(from).requireOk("get_rt_clean_detail").result
         }
+        liveCleanBegin = update.begin
+        liveCleanCursor = update.cursor
+        // Published once, complete: page by page the current room jumped through every room of the clean.
+        if (update.events != _liveCleanEvents.value) _liveCleanEvents.value = update.events
     }
 
     /** Every event of a past clean, page by page as the robot hands them out (at most 20 pages). */

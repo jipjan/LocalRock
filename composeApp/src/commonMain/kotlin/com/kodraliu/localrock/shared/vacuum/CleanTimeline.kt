@@ -283,3 +283,42 @@ fun currentCleanRoom(events: List<CleanEvent>): Int? {
     return room
 }
 
+/** The live event list after a refresh: its events, where to read next, and which clean they belong to. */
+data class LiveCleanPages(val events: List<CleanEvent>, val cursor: Int, val begin: Long?)
+
+/**
+ * Reads what is new in the running clean's event list (`get_rt_clean_detail` from [cursor]) and returns
+ * the whole list. A different `begin` is another clean: it is read again from its first event. The a296
+ * answers `{}` when nothing came after [cursor] (seen around mop washes, 2026-11-19); that is no news,
+ * not another clean; taking it as one threw the list away and re-read it on every refresh.
+ */
+suspend fun readLiveCleanPages(
+    events: List<CleanEvent>,
+    cursor: Int,
+    begin: Long?,
+    fetch: suspend (from: Int) -> JsonElement?,
+): LiveCleanPages {
+    var list = events
+    var from = cursor
+    var current = begin
+    for (page in 0 until 20) {
+        val result = fetch(from)
+        val obj = (if (result is JsonArray) result.firstOrNull() else result) as? JsonObject ?: break
+        if (obj["begin"] == null && obj["events"] == null) break
+        val pageBegin = (obj["begin"] as? JsonPrimitive)?.longOrNull
+        if (pageBegin != current) {
+            current = pageBegin
+            list = emptyList()
+            if (from != 0) {
+                from = 0
+                continue
+            }
+        }
+        val parsed = parseCleanEventPage(result) ?: break
+        list = list + parsed.events
+        from += parsed.rawCount
+        if (!parsed.more || parsed.rawCount == 0) break
+    }
+    return LiveCleanPages(list, from, current)
+}
+

@@ -141,4 +141,34 @@ class CleanTimelineResumeTest {
             cleanPreferences(listOf((1L shl 28) or (2L shl 24), 0, 2, 0)),
         )
     }
+
+    @Test
+    fun anEmptyLiveAnswerIsNoNewsNotAnotherClean() = kotlinx.coroutines.test.runTest {
+        // a296, 2026-11-19 09:38: get_rt_clean_detail from 73 answered {} while the mop was washed.
+        val known = listOf(ev(1795080000, 42, """{"2":1}"""), ev(1795080100, 42, """{"2":3}"""))
+        val requested = mutableListOf<Int>()
+        val after = readLiveCleanPages(known, cursor = 73, begin = 1795079990) { from ->
+            requested += from
+            Json.parseToJsonElement("{}")
+        }
+        assertEquals(LiveCleanPages(known, 73, 1795079990), after)
+        assertEquals(listOf(73), requested)
+    }
+
+    @Test
+    fun anotherCleanIsReadAgainFromItsFirstEvent() = kotlinx.coroutines.test.runTest {
+        val old = listOf(ev(1795080000, 42, """{"2":1}"""))
+        val requested = mutableListOf<Int>()
+        val after = readLiveCleanPages(old, cursor = 10, begin = 100) { from ->
+            requested += from
+            Json.parseToJsonElement(
+                if (from == 0) """{"begin":200,"from":0,"num":1,"more":0,"events":[{"t":200,"i":42,"e":"{\"2\":4}"}]}"""
+                else """{"begin":200,"from":10,"num":0,"more":0,"events":[]}""",
+            )
+        }
+        assertEquals(listOf(10, 0), requested)
+        assertEquals(200L, after.begin)
+        assertEquals(1, after.cursor)
+        assertEquals(listOf(4), after.events.map { currentCleanRoom(listOf(it)) })
+    }
 }
