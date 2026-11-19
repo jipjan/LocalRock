@@ -131,6 +131,8 @@ import com.kodraliu.localrock.shared.vacuum.camera.CameraLiveSession
 import com.kodraliu.localrock.shared.webrtc.RtcVideoView
 import com.kodraliu.localrock.shared.webrtc.liveViewSupported
 import com.kodraliu.localrock.ui.LocalAppContainer
+import com.kodraliu.localrock.shared.text.localizedText
+import com.kodraliu.localrock.ui.text.text
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -214,7 +216,7 @@ fun CameraLiveViewScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(color = Color.White)
                         Spacer(Modifier.height(16.dp))
-                        Text(s.stage, color = Color.White, style = MaterialTheme.typography.bodyMedium)
+                        Text(s.stage.text(), color = Color.White, style = MaterialTheme.typography.bodyMedium)
                     }
                 }
 
@@ -254,7 +256,7 @@ fun CameraLiveViewScreen(
                                         talkStarted = TimeSource.Monotonic.markNow()
                                         if (!ok) talkError = talkUnavailable
                                     }
-                                    .onFailure { talkError = it.message }
+                                    .onFailure { talkError = it.localizedText() }
                             }
                         }
                     }
@@ -332,7 +334,7 @@ fun CameraLiveViewScreen(
                         Icon(Icons.Default.VideocamOff, null, Modifier.size(48.dp), tint = Color.White)
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            s.message,
+                            s.text.text(),
                             color = Color.White,
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodyMedium,

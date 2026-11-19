@@ -7,6 +7,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.uiText
 
 /*
  * Per-room cleaning settings, "Customize" in the official app. Copied from a capture of the
@@ -41,9 +43,9 @@ fun roomCleanModesFor(segments: List<Int>, stored: List<RoomCleanMode>): List<Ro
 
 /** `[{"fan_power", "mop_mode", "segment", "water_box_mode"}, ...]`, keys in the captured order. */
 internal fun customizeCleanModeData(modes: List<RoomCleanMode>): JsonArray {
-    if (modes.isEmpty()) throw MapEditException("There are no rooms to save settings for")
+    if (modes.isEmpty()) throw MapEditException(uiText(Res.string.repo_no_rooms_for_settings, "There are no rooms to save settings for"))
     if (modes.any { it.fanPower == VacuumFanPower.OFF && it.waterBoxMode == WaterBoxMode.OFF }) {
-        throw MapEditException("Every room needs suction or water")
+        throw MapEditException(uiText(Res.string.repo_room_needs_suction_or_water, "Every room needs suction or water"))
     }
     return JsonArray(modes.map { m ->
         JsonObject(mapOf(

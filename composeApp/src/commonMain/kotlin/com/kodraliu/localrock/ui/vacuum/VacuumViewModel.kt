@@ -65,6 +65,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import com.kodraliu.localrock.resources.room_name_bracket
+import com.kodraliu.localrock.resources.room_name_empty
+import com.kodraliu.localrock.resources.room_name_too_long
+import com.kodraliu.localrock.shared.text.localizedText
+import com.kodraliu.localrock.shared.text.resolve
+import com.kodraliu.localrock.shared.text.uiText
 
 class VacuumViewModel(
     duid: String,
@@ -201,7 +207,7 @@ class VacuumViewModel(
                 if (code != 0) {
                     container.messages.showBanner(
                         key = errorBannerKey,
-                        text = "$deviceName: ${VacuumErrorCodes.describe(code)}",
+                        text = "$deviceName: ${VacuumErrorCodes.text(code).resolve()}",
                         severity = MessageSeverity.ERROR,
                     )
                 } else {
@@ -262,7 +268,7 @@ class VacuumViewModel(
      */
     suspend fun setRoomType(segment: Int, type: RoomType) {
         repository.checkRoomTable(segment)
-        val room = container.deviceRepository.createRoom(type.label)
+        val room = container.deviceRepository.createRoom(type.text.resolve())
         repository.assignRoom(segment, room.id, type.tag)
         container.deviceRepository.refresh()
         repository.setHomeRooms(container.deviceRepository.home.value?.rooms ?: emptyList())
@@ -532,9 +538,9 @@ const val MAX_ROOM_NAME_LENGTH = 23
  */
 fun validateRoomName(name: String): String {
     val clean = name.trim()
-    if (clean.isEmpty()) throw MapEditException("Enter a room name")
-    if (clean.length > MAX_ROOM_NAME_LENGTH) throw MapEditException("Room names can be at most $MAX_ROOM_NAME_LENGTH characters")
-    if (clean.startsWith("{") || clean.startsWith("[")) throw MapEditException("Room names can't start with { or [")
+    if (clean.isEmpty()) throw MapEditException(uiText(Res.string.room_name_empty, "Enter a room name"))
+    if (clean.length > MAX_ROOM_NAME_LENGTH) throw MapEditException(uiText(Res.string.room_name_too_long, "Room names can be at most $MAX_ROOM_NAME_LENGTH characters", MAX_ROOM_NAME_LENGTH))
+    if (clean.startsWith("{") || clean.startsWith("[")) throw MapEditException(uiText(Res.string.room_name_bracket, "Room names can't start with { or ["))
     return clean
 }
 
@@ -542,7 +548,7 @@ private suspend fun describe(e: Throwable): String {
     val parts = mutableListOf<String>()
     var current: Throwable? = e
     while (current != null) {
-        val msg = current.message
+        val msg = current.localizedText()
         parts += when {
             current is TimeoutCancellationException -> getString(Res.string.robot_no_answer)
             msg.isNullOrBlank() -> current::class.simpleName ?: "Throwable"

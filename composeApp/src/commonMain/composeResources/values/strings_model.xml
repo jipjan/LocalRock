@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Texts made in the model layer (shared/), read through UiText; see shared/text/UiText.kt -->
+
+    <!-- Robot states (VacuumStateCodes) -->
+    <string name="state_starting">Starting</string>
+    <string name="state_charger_disconnected">Charger disconnected</string>
+    <string name="state_idle">Idle</string>
+    <string name="state_remote_control">Remote control</string>
+    <string name="state_cleaning">Cleaning</string>
+    <string name="state_returning_home">Returning home</string>
+    <string name="state_manual_mode">Manual mode</string>
+    <string name="state_charging">Charging</string>
+    <string name="state_charging_error">Charging error</string>
+    <string name="state_paused">Paused</string>
+    <string name="state_spot_cleaning">Spot cleaning</string>
+    <string name="state_error">Error</string>
+    <string name="state_shutting_down">Shutting down</string>
+    <string name="state_updating">Updating</string>
+    <string name="state_docking">Docking</string>
+    <string name="state_going_to_target">Going to target</string>
+    <string name="state_zoned_cleaning">Zoned cleaning</string>
+    <string name="state_room_cleaning">Room cleaning</string>
+    <string name="state_mapping">Mapping</string>
+    <string name="state_washing_mop">Washing mop</string>
+    <string name="state_going_to_wash_mop">Going to wash mop</string>
+    <string name="state_drying_mop">Drying mop</string>
+    <string name="state_returning_to_dock">Returning to dock</string>
+    <string name="state_emptying_the_bin">Emptying the bin</string>
+    <string name="state_cupid_mode">Cupid mode</string>
+    <string name="state_patrolling">Patrolling</string>
+    <string name="state_reinstalling_mop_mounts">Reinstalling mop mounts</string>
+    <string name="state_detaching_mop_mounts">Detaching mop mounts</string>
+    <string name="state_exhibition_mode">Exhibition mode</string>
+    <string name="state_dancing">Dancing</string>
+    <string name="state_emergency_stop">Emergency stop</string>
+    <string name="state_resetting_the_arm">Resetting the arm</string>
+    <string name="state_program_mode">Program mode</string>
+    <string name="state_changing_mop">Changing mop</string>
+    <string name="state_fully_charged">Fully charged</string>
+    <string name="state_unknown">State %1$d</string>
+
+    <!-- Robot errors (VacuumErrorCodes) -->
+    <string name="robot_error_laser_sensor_fault">Laser sensor fault</string>
+    <string name="robot_error_collision_sensor_fault">Collision sensor fault</string>
+    <string name="robot_error_wheel_floating">Wheel floating</string>
+    <string name="robot_error_cliff_sensor_fault">Cliff sensor fault</string>
+    <string name="robot_error_main_brush_blocked">Main brush blocked</string>
+    <string name="robot_error_side_brush_blocked">Side brush blocked</string>
+    <string name="robot_error_wheel_blocked">Wheel blocked</string>
+    <string name="robot_error_robot_stuck">Robot stuck</string>
+    <string name="robot_error_dustbin_missing">Dustbin missing</string>
+    <string name="robot_error_filter_blocked">Filter blocked</string>
+    <string name="robot_error_magnetic_field_detected">Magnetic field detected</string>
+    <string name="robot_error_low_battery">Low battery</string>
+    <string name="robot_error_charging_problem">Charging problem</string>
+    <string name="robot_error_battery_failure">Battery failure</string>
+    <string name="robot_error_wall_sensor_fault">Wall sensor fault</string>
+    <string name="robot_error_uneven_surface">Uneven surface</string>
+    <string name="robot_error_side_brush_failure">Side brush failure</string>
+    <string name="robot_error_suction_fan_failure">Suction fan failure</string>
+    <string name="robot_error_unpowered_dock">Unpowered dock</string>
+    <string name="robot_error_laser_pressure_sensor_problem">Laser pressure sensor problem</string>
+    <string name="robot_error_charge_sensor_problem">Charge sensor problem</string>
+    <string name="robot_error_dock_problem">Dock problem</string>
+    <string name="robot_error_no_go_zone_or_invisible">No-go zone or invisible wall detected</string>
+    <string name="robot_error_mop_pad_dirty">Mop pad dirty</string>
+    <string name="robot_error_mop_wash_tank_empty">Mop wash tank empty</string>
+    <string name="robot_error_dirty_water_tank_full">Dirty water tank full</string>
+    <string name="robot_error_mop_pad_not_installed">Mop pad not installed</string>
+    <string name="robot_error_battery_overheating">Battery overheating</string>
+    <string name="robot_error_mop_pad_blocked">Mop pad blocked</string>
+    <string name="robot_error_dustbin_not_installed">Dustbin not installed</string>
+    <string name="robot_error_code">Error code %1$d</string>
+
+    <!-- Dock errors (DockErrorCodes) -->
+    <string name="dock_error_dock_dust_duct_blocked">Dock dust duct blocked</string>
+    <string name="dock_error_clean_water_tank_empty">Clean water tank empty</string>
+    <string name="dock_error_dirty_water_tank_full">Dirty water tank full</string>
+    <string name="dock_error_dirty_water_tank_latch_open">Dirty water tank latch open</string>
+    <string name="dock_error_dock_dust_bag_missing">Dock dust bag missing</string>
+    <string name="dock_error_dock_cleaning_tray_full_or">Dock cleaning tray full or blocked</string>
+    <string name="dock_error_code">Dock error %1$d</string>
+
+    <!-- A past clean's timeline (CleanTimeline) -->
+    <string name="timeline_started_full_clean">Started full clean</string>
+    <string name="timeline_started_clean">Started clean</string>
+    <string name="timeline_from_the_app">from the app</string>
+    <string name="timeline_room_number">room %1$s</string>
+    <string name="timeline_resumed_cleaning_room">Resumed cleaning %1$s</string>
+    <string name="timeline_recleaning_blocked_areas">Re-cleaning areas blocked by people or pets</string>
+    <string name="timeline_cleaning_room">Cleaning %1$s</string>
+    <string name="timeline_mop_wash">Mop wash</string>
+    <string name="timeline_resumed">Resumed</string>
+    <string name="timeline_mop_wash_failed">Mop wash failed (%1$d)</string>
+    <string name="timeline_switched_to_vacuum_only">Switched to vacuum only</string>
+    <string name="timeline_auto_empty">Auto-empty</string>
+    <string name="timeline_settings_changed_by_hand">Settings changed by hand</string>
+    <string name="timeline_water_flow_changed">Water flow changed</string>
+    <string name="timeline_clean_finished">Clean finished</string>
+    <string name="timeline_paused">Paused</string>
+
+    <!-- How a room or clean was cleaned (CleanRunSettings) -->
+    <string name="run_vacuum_and_mop">Vacuum and mop</string>
+    <string name="run_mop_only">Mop only</string>
+    <string name="run_vacuum_only">Vacuum only</string>
+    <string name="run_suction_quiet">Quiet</string>
+    <string name="run_suction_standard">Standard</string>
+    <string name="run_suction_strong">Strong</string>
+    <string name="run_suction_code">Suction %1$d</string>
+    <string name="run_water_code">Water %1$d</string>
+    <string name="run_route_standard">Standard</string>
+    <string name="run_route_code">Route %1$d</string>
+
+    <!-- Water flow marks -->
+    <string name="water_extra_high">Extra high</string>
+    <string name="water_high">High</string>
+    <string name="water_medium">Medium</string>
+    <string name="water_low">Low</string>
+
+    <!-- Modes shared by dock settings and the timeline -->
+    <string name="mode_smart">Smart</string>
+    <string name="mode_light">Light</string>
+    <string name="mode_balanced">Balanced</string>
+    <string name="mode_high">High</string>
+    <string name="mode_deep">Deep</string>
+    <string name="mode_strong">Strong</string>
+    <string name="mode_max">Max</string>
+    <string name="mode_unavailable">Unavailable</string>
+    <string name="mode_unknown">Unknown (%1$d)</string>
+    <string name="mode_soak">Soak</string>
+    <string name="mode_super_deep">Super Deep</string>
+    <string name="mode_off">Off</string>
+
+    <!-- Dock options -->
+    <string name="dock_temp_room">Room temperature</string>
+    <string name="dock_temp_warm">Warm water</string>
+    <string name="dock_temp_hot">Hot water</string>
+    <string name="dock_other_code">Other (%1$d)</string>
+    <string name="dock_wash_by_room">By room</string>
+    <string name="dock_wash_after_each_room">After each room</string>
+
+    <!-- Durations -->
+    <string name="duration_hours">%1$d h</string>
+    <string name="duration_minutes">%1$d min</string>
+    <string name="duration_seconds">%1$d s</string>
+    <string name="duration_sec">%1$d sec</string>
+
+    <!-- Carpet modes -->
+    <string name="carpet_avoid">Avoid carpet</string>
+    <string name="carpet_boost">Carpet boost</string>
+
+    <!-- Cleaning history records (CleanRecord) -->
+    <string name="record_type_full">Full</string>
+    <string name="record_type_zones">Zones</string>
+    <string name="record_type_rooms">Rooms</string>
+    <string name="record_type_quick_mapping">Quick mapping</string>
+    <string name="record_type_cruise">Cruise</string>
+    <string name="record_type_find_the_pet">Find the pet</string>
+    <plurals name="record_obstacles_avoided">
+        <item quantity="one">%1$d obstacle avoided</item>
+        <item quantity="other">%1$d obstacles avoided</item>
+    </plurals>
+    <plurals name="record_mop_washes">
+        <item quantity="one">%1$d mop wash</item>
+        <item quantity="other">%1$d mop washes</item>
+    </plurals>
+    <string name="record_bin_emptied">bin emptied</string>
+    <string name="record_passes">%1$d passes</string>
+
+    <!-- Maintenance summary (ConsumableStatus) -->
+    <string name="consumable_main_brush">Main brush</string>
+    <string name="consumable_replace_main_brush">Replace the main brush</string>
+    <string name="consumable_side_brush">Side brush</string>
+    <string name="consumable_replace_side_brush">Replace the side brush</string>
+    <string name="consumable_filter">Filter</string>
+    <string name="consumable_replace_filter">Replace the filter</string>
+    <string name="consumable_sensors">Sensors</string>
+    <string name="consumable_clean_sensors">Clean the sensors</string>
+    <string name="consumable_percent_left">%1$s: %2$d% left</string>
+    <string name="consumable_normal">Normal</string>
+
+    <!-- Room types (RoomType) -->
+    <string name="room_type_living_room">Living room</string>
+    <string name="room_type_kitchen">Kitchen</string>
+    <string name="room_type_dining_room">Dining room</string>
+    <string name="room_type_bedroom">Bedroom</string>
+    <string name="room_type_master_bedroom">Master bedroom</string>
+    <string name="room_type_guest_bedroom">Guest bedroom</string>
+    <string name="room_type_bathroom">Bathroom</string>
+    <string name="room_type_study">Study</string>
+    <string name="room_type_corridor">Corridor</string>
+    <string name="room_type_hall">Hall</string>
+    <string name="room_type_balcony">Balcony</string>
+
+    <!-- Robot features and their choices (BetaFeatures) -->
+    <string name="feature_right_brush_stretch_title">FlexiArm side brush</string>
+    <string name="feature_right_brush_stretch_desc">Extends the side brush to reach into corners and along edges</string>
+    <string name="feature_corner_mop_stretch_title">FlexiArm mop</string>
+    <string name="feature_corner_mop_stretch_desc">Extends the mop to clean corners</string>
+    <string name="feature_gap_deep_clean_title">Gap deep clean</string>
+    <string name="feature_gap_deep_clean_desc">Cleans narrow gaps along walls and furniture</string>
+    <string name="feature_pet_supplies_deep_clean_title">Pet supplies deep clean</string>
+    <string name="feature_pet_supplies_deep_clean_desc">Extra cleaning around pet bowls and beds</string>
+    <string name="feature_dirty_object_detect_title">Dirty object detection</string>
+    <string name="feature_dirty_object_detect_desc">Spots dirty objects such as pet waste while cleaning</string>
+    <string name="feature_avoid_collision_title">Collision avoidance</string>
+    <string name="feature_avoid_collision_desc">Steers around obstacles instead of bumping them</string>
+    <string name="feature_collision_mode_title">Collision mode</string>
+    <string name="feature_collision_mode_desc">How closely the robot cleans around obstacles</string>
+    <string name="feature_choice_large_coverage">Large coverage</string>
+    <string name="feature_choice_less_collision">Less collision</string>
+    <string name="feature_water_leak_check_title">Water leak detection</string>
+    <string name="feature_water_leak_check_desc">Stops and alerts if the robot detects a water leak</string>
+    <string name="feature_voice_control_led_title">Voice control light</string>
+    <string name="feature_voice_control_led_desc">Light on the robot that shows when it is listening</string>
+    <string name="feature_carpet_deep_clean_title">Carpet deep clean</string>
+    <string name="feature_carpet_deep_clean_desc">Deeper cleaning passes over carpets</string>
+    <string name="feature_clean_fluid_delivery_title">Cleaning fluid dosing</string>
+    <string name="feature_clean_fluid_delivery_desc">How much cleaning fluid the dock adds to the mop water</string>
+    <string name="feature_choice_none">None</string>
+    <string name="feature_choice_standard">Standard</string>
+    <string name="feature_choice_high_volume">High volume</string>
+    <string name="feature_dust_collection_switch_title">Auto-empty frequency</string>
+    <string name="feature_dust_collection_switch_desc">When the dock empties the robot's dust bin</string>
+    <string name="feature_choice_off">Off</string>
+    <string name="feature_choice_balanced">Balanced</string>
+    <string name="feature_choice_high">High</string>
+    <string name="feature_identify_furniture_title">Furniture recognition</string>
+    <string name="feature_identify_furniture_desc">Recognizes furniture on the map</string>
+    <string name="feature_identify_ground_material_title">Floor type recognition</string>
+    <string name="feature_identify_ground_material_desc">Recognizes carpet and hard floor</string>
+    <string name="feature_follow_ground_material_title">Clean by floor type</string>
+    <string name="feature_follow_ground_material_desc">Adjusts cleaning to the floor type it detects</string>
+    <string name="feature_dirty_replenish_title">Re-mop dirty spots</string>
+    <string name="feature_dirty_replenish_desc">Washes the mop and mops again where the floor is still dirty</string>
+    <string name="feature_clean_direction_title">Cleaning direction</string>
+    <string name="feature_clean_direction_desc">The pattern the robot follows across a room</string>
+    <string name="feature_choice_smart">Smart</string>
+    <string name="feature_choice_along_the_floor">Along the floor</string>
+    <string name="feature_choice_crosswise">Crosswise</string>
+    <string name="feature_low_area_access_title">Cleaning under low furniture</string>
+    <string name="feature_low_area_access_desc">How low a gap the robot drives into</string>
+    <string name="feature_choice_safe_clearance">Safe clearance</string>
+    <string name="feature_choice_extreme_clearance">Extreme clearance</string>
+    <string name="feature_lds_lifting_title">Lower the LiDAR</string>
+    <string name="feature_lds_lifting_desc">Lowers the laser tower to reach under furniture</string>
+    <string name="feature_sway_arm_door_sill_title">Arm for high sills and carpets</string>
+    <string name="feature_sway_arm_door_sill_desc">Uses the arm to climb high door sills and carpets</string>
+    <string name="feature_remove_mop_title">Detach mops automatically</string>
+    <string name="feature_remove_mop_desc">Leaves the mops in the dock when only vacuuming</string>
+    <string name="feature_dynamic_obstacle_replenish_title">Re-clean blocked areas</string>
+    <string name="feature_dynamic_obstacle_replenish_desc">Returns to spots that people or pets were blocking</string>
+    <string name="feature_omission_reminder_title">Missed-area reminder</string>
+    <string name="feature_omission_reminder_desc">Points out areas the robot could not clean</string>
+    <string name="feature_priority_carpet_title">Carpets first</string>
+    <string name="feature_priority_carpet_desc">Detaches the mops, vacuums carpets first and then cleans the rest</string>
+    <string name="feature_cross_carpet_title">Cross carpets</string>
+    <string name="feature_cross_carpet_desc">Drives over carpets without cleaning them</string>
+    <string name="feature_long_haired_carpet_title">Adaptive lift</string>
+    <string name="feature_long_haired_carpet_desc">Tilts up for high-pile carpets while Carpets first is on</string>
+    <string name="feature_carpet_wire_title">Avoid cords at carpet edges</string>
+    <string name="feature_carpet_wire_desc">Better cord detection along carpet edges</string>
+    <string name="feature_carpet_boost_title">Carpet boost</string>
+    <string name="feature_carpet_boost_desc">Maximum suction on carpets</string>
+    <string name="feature_identify_room_title">Room recognition</string>
+    <string name="feature_identify_room_desc">Recognizes room types from what the camera sees</string>
+    <string name="feature_smart_wash_title">Smart mop washing</string>
+    <string name="feature_smart_wash_desc">Adapts water, time and temperature to how dirty the mop is</string>
+    <string name="feature_offline_map_title">Offline map</string>
+    <string name="feature_offline_map_desc">Keeps showing where the robot was before it lost power</string>
+    <string name="feature_fill_light_title">Fill light</string>
+    <string name="feature_fill_light_desc">Lights up dark spots so obstacles are recognised better</string>
+    <string name="feature_choice_automatic">Automatic</string>
+    <string name="feature_obstacle_photos_title">Obstacle photos</string>
+    <string name="feature_obstacle_photos_desc">Keeps photos of obstacles the camera recognised, in the robot's memory; tap an obstacle on the map to see it</string>
+    <string name="feature_have_pets_title">I have pets</string>
+    <string name="feature_have_pets_desc">Watches out for pet waste and cleans pet areas with more care</string>
+    <string name="feature_pet_snaps_title">Pet Snaps</string>
+    <string name="feature_pet_snaps_desc">Takes photos of your pets while cleaning</string>
+    <string name="feature_voice_assistant_title">Voice assistant</string>
+    <string name="feature_voice_assistant_desc">The robot listens for spoken commands; it processes your voice to do so</string>
+    <string name="feature_product_experience_title">Share usage data</string>
+    <string name="feature_product_experience_desc">Lets the robot send usage data to Roborock to improve the product</string>
+    <string name="feature_voice_experience_title">Share voice data</string>
+    <string name="feature_voice_experience_desc">Lets the robot send voice recordings to Roborock to improve recognition</string>
+
+    <!-- Obstacle types on the map (MapObstacles) -->
+    <string name="obstacle_cable">Cable</string>
+    <string name="obstacle_pet_waste">Pet waste</string>
+    <string name="obstacle_shoes">Shoes</string>
+    <string name="obstacle_poop">Poop</string>
+    <string name="obstacle_pedestal">Pedestal</string>
+    <string name="obstacle_extension_cord">Extension cord</string>
+    <string name="obstacle_weighing_scale">Weighing scale</string>
+    <string name="obstacle_clothes">Clothes</string>
+    <string name="obstacle_dustpan">Dustpan</string>
+    <string name="obstacle_furniture_crossbar">Furniture with a crossbar</string>
+    <string name="obstacle_pet">Pet</string>
+    <string name="obstacle_fabric_paper_ball">Fabric or paper ball</string>
+
+    <!-- Robot refusals -->
+    <string name="robot_refused_method">The robot refused %1$s</string>
+
+    <!-- Map edit blockers and validation (MapEditCommands) -->
+    <string name="mapedit_block_no_mop_zones">This map has no-mop zones. LocalRock can't write them back yet, so saving here could delete them.</string>
+    <string name="mapedit_block_mop_only_areas">This map has mop-only areas. LocalRock can't write them back yet, so saving here could delete them.</string>
+    <string name="mapedit_block_map_index">The robot hasn't said which of its maps is loaded, so map edits can't be saved yet.</string>
+    <string name="mapedit_coordinate_outside">Coordinate %1$d mm is outside the map</string>
+    <string name="mapedit_too_many_restrictions">Too many restrictions: %1$d of %2$d points used</string>
+    <string name="mapedit_draw_line_across">Draw the line across the doorway or window</string>
+    <string name="mapedit_split_refused">The robot couldn't split the room along that line. Draw the line all the way across the room, past the wall on both sides, so it cuts the room in two.</string>
+    <string name="mapedit_map_name_empty">Give the map a name</string>
+    <string name="mapedit_map_name_ascii">Map names can only use plain letters, digits and punctuation for now (no æ, ø, å or emoji)</string>
+
+    <!-- Robot commands that failed or are blocked (VacuumRepository) -->
+    <string name="repo_the_cleaning_order_cant_be_saved">The cleaning order can't be saved in demo mode</string>
+    <string name="repo_the_robot_is_busy_dock_it">The robot is busy. Dock it or let it finish first.</string>
+    <string name="repo_the_robot_accepted_the_cleaning_order">The robot accepted the cleaning order, but does not report it back.</string>
+    <string name="repo_room_settings_cant_be_saved_in">Room settings can't be saved in demo mode</string>
+    <string name="repo_the_map_has_not_loaded_yet">The map has not loaded yet</string>
+    <string name="repo_couldnt_read_the_robots_saved_maps">Couldn't read the robot's saved maps, so nothing was saved. Try again.</string>
+    <string name="repo_the_robot_loaded_another_map_while">The robot loaded another map while you were editing. Nothing was saved; close the editor and open it again.</string>
+    <string name="repo_that_room_is_not_on_the">That room is not on the current map</string>
+    <string name="repo_pick_two_different_rooms_on_the">Pick two different rooms on the current map</string>
+    <string name="repo_only_wood_floors_have_a_direction">Only wood floors have a direction</string>
+    <string name="repo_the_robot_did_not_return_its">The robot did not return its room table. Nothing was changed.</string>
+    <string name="repo_couldnt_read_the_robots_saved_maps_2">Couldn't read the robot's saved maps. Nothing was changed.</string>
+    <string name="repo_couldnt_read_saved_maps_not_started">Couldn't read the robot's saved maps. Nothing was started.</string>
+    <string name="repo_that_map_is_no_longer_on">That map is no longer on the robot</string>
+    <string name="repo_this_map_has_no_backup_on">This map has no backup on the robot yet</string>
+    <string name="repo_load_this_map_first_then_restore">Load this map first, then restore its backup</string>
+    <string name="repo_the_robot_didnt_report_its_map">The robot didn't report its map settings. Nothing was changed.</string>
+    <string name="repo_pick_the_map_to_keep">Pick the map to keep</string>
+    <string name="repo_there_is_no_new_map_to">There is no new map to save</string>
+    <string name="repo_the_robot_sent_a_map_this">The robot sent a map this app can't read</string>
+    <string name="repo_the_robots_current_task_is_unavailable">The robot's current task is unavailable</string>
+    <string name="repo_there_is_no_supported_cleaning_task">There is no supported cleaning task to resume</string>
+    <string name="repo_the_robots_suction_is_unknown">The robot's suction is unknown</string>
+    <string name="repo_the_robots_water_flow_is_unknown">The robot's water flow is unknown</string>
+    <string name="repo_the_robots_route_is_unknown">The robot's route is unknown</string>
+    <string name="repo_the_robot_cant_change_this_while">The robot can't change this while it is cleaning. Finish or stop the current clean first.</string>
+    <string name="repo_the_robot_accepted_the_change_but">The robot accepted the change but still reports the old setting.</string>
+    <string name="repo_the_robots_mop_washing_frequency_is">The robot's mop washing frequency is unavailable</string>
+    <string name="repo_the_robot_accepted_the_quiet_hours">The robot accepted the quiet hours, but reports different ones back.</string>
+    <string name="repo_couldnt_read_the_robots_quiet_hours">Couldn't read the robot's quiet hours, so nothing was changed.</string>
+    <string name="repo_routine_step_not_registered">The robot did not register the routine step</string>
+    <string name="repo_voice_pack_install_failed">The robot could not install the voice pack (error %1$s).</string>
+    <string name="repo_voice_pack_not_switched">The robot did not switch to %1$s; it may still be installing it.</string>
+    <string name="repo_map_limit_one">The robot still has a saved map. Delete it first to map the home again.</string>
+    <string name="repo_map_limit">The robot already holds %1$d maps, its limit. Delete one first.</string>
+    <string name="repo_map_editing_demo">Map editing is not available in demo mode</string>
+    <string name="repo_busy_before_editing">The robot is busy. Dock it or let it finish before editing the map.</string>
+    <string name="repo_map_format_unsupported">Map editing is not supported for this robot's map format yet</string>
+    <string name="repo_managing_maps_demo">Managing maps is not available in demo mode</string>
+    <string name="repo_room_modes_not_confirmed">The robot accepted the room settings, but does not report them back. Open the cleaning mode again to check.</string>
+    <string name="repo_map_not_kept">Map saving is now on, but the robot did not keep the map it had built. Let it clean or map the home once more, then save the map.</string>
+    <string name="repo_not_confirmed">The robot accepted the change, but the map does not show it yet. Refresh the map in a moment to check.</string>
+    <string name="repo_no_rooms_for_settings">There are no rooms to save settings for</string>
+    <string name="repo_room_needs_suction_or_water">Every room needs suction or water</string>
+
+    <!-- Room name validation -->
+    <string name="room_name_empty">Enter a room name</string>
+    <string name="room_name_too_long">Room names can be at most %1$d characters</string>
+    <string name="room_name_bracket">Room names can't start with { or [</string>
+
+    <!-- Camera live view: stages and errors (CameraLiveSession) -->
+    <string name="camera_stage_preparing">Preparing…</string>
+    <string name="camera_stage_setting_pin">Setting PIN on robot…</string>
+    <string name="camera_stage_checking_pin">Checking PIN…</string>
+    <string name="camera_stage_claiming">Claiming camera…</string>
+    <string name="camera_stage_starting">Starting camera…</string>
+    <string name="camera_stage_negotiating">Negotiating…</string>
+    <string name="camera_pin_disabled">This robot reports the camera PIN feature is disabled (-1007). Enable remote viewing for this vacuum once in the manufacturer's own app, then try again here.</string>
+    <string name="camera_pin_refused">Robot refused to set the PIN: %1$s</string>
+    <string name="camera_talk_refused">The robot refused talk-back: %1$s</string>
+    <string name="camera_pin_check_failed">PIN check failed: %1$s</string>
+    <string name="camera_wrong_pin">Wrong camera PIN</string>
+    <string name="camera_remote_viewing_off">Remote viewing is not enabled on this robot (-10012, camera_status=%1$s). Turn it on once in the official Roborock app (Remote viewing: set the pattern, then press the robot's power button when asked). On some older models this only works while the robot uses Roborock's cloud.</string>
+    <string name="camera_turn_failed">The robot couldn't get a video relay from the server (-10014). The server needs camera (TURN) support, and the robot must be paired so it can find it: on a Saros 20 or Qrevo MaxV, pair with a camera domain and "Also use as the robot's server name" turned on. See the server's camera documentation.</string>
+    <string name="camera_preview_refused">Robot refused camera preview: %1$s</string>
+    <string name="camera_no_answer">Robot did not answer — does this model have a camera?</string>
+    <string name="camera_video_failed">Video connection failed</string>
+    <string name="camera_video_lost">Video connection lost</string>
+    <string name="camera_unknown_error">Unknown error</string>
+    <string name="camera_domain_scheme">Camera domain is a hostname only, without https://</string>
+    <string name="camera_domain_port_path">Camera domain is a hostname only, without port or path</string>
+    <string name="camera_domain_invalid">Camera domain '%1$s' is not a valid hostname</string>
+    <string name="camera_domain_too_long">Camera domain '%1$s' is %2$d characters; the robot keeps at most 14</string>
+
+    <!-- Routine step titles (stepTitle) -->
+    <string name="step_full_clean">Full clean</string>
+    <string name="step_rooms">Rooms</string>
+    <string name="step_room_number">Room %1$d</string>
+    <plurals name="step_zones">
+        <item quantity="one">%1$d zone</item>
+        <item quantity="other">%1$d zones</item>
+    </plurals>
+
+    <!-- Notifications (RobotEvents) -->
+    <string name="notify_area_in_time">%1$s in %2$s</string>
+    <string name="notify_cleaning_finished">Cleaning finished</string>
+    <string name="notify_cleaning_finished_detail">Cleaning finished: %1$s</string>
+    <string name="notify_working">Working</string>
+    <string name="notify_battery">Battery %1$d%</string>
+    <string name="notify_progress_title">%1$s: %2$s</string>
+    <string name="notify_progress_title_room">%1$s: %2$s in %3$s</string>
+    <string name="notify_area">%1$d.%2$d m²</string>
+
+    <!-- Connection banners (AppContainer) -->
+    <string name="banner_session_expired">Session expired — sign out and sign in again to reconnect.</string>
+    <string name="banner_back_online">Back online</string>
+    <string name="banner_offline">Offline — reconnecting…</string>
+
+    <!-- Server and demo-mode refusals (DeviceApi, DeviceRepository) -->
+    <string name="device_routines_unavailable">Routines unavailable</string>
+    <string name="device_routine_run_failed">The server could not run the routine</string>
+    <string name="device_routine_not_returned">The server did not return the new routine</string>
+    <string name="device_routine_save_failed">The server could not save the routine</string>
+    <string name="device_routine_rename_failed">The server could not rename the routine</string>
+    <string name="device_routine_delete_failed">The server could not delete the routine</string>
+    <string name="device_firmware_check_unavailable">Firmware check unavailable</string>
+    <string name="device_demo_rooms">Rooms can't be renamed in demo mode</string>
+    <string name="device_demo_routines_save">Routines can't be saved in demo mode</string>
+    <string name="device_demo_routines_delete">Routines can't be deleted in demo mode</string>
+    <string name="device_demo_routines_run">Routines can't be run in demo mode</string>
+</resources>

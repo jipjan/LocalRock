@@ -19,6 +19,11 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.HasUiText
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.rawText
+import com.kodraliu.localrock.shared.text.uiText
 
 /*
  * Map editing commands (legacy V1 robots).
@@ -38,16 +43,23 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /** The robot answered a command with an error object. */
 class RobotCommandException(val method: String, val error: JsonObject) :
-    RuntimeException(robotErrorText(method, error))
-
-private fun robotErrorText(method: String, error: JsonObject): String {
-    val message = runCatching { error["message"]?.jsonPrimitive?.contentOrNull }.getOrNull()
-    val code = runCatching { error["code"]?.jsonPrimitive?.contentOrNull }.getOrNull()
-    return "The robot refused $method" + (message?.let { ": $it" } ?: "") + (code?.let { " (code $it)" } ?: "")
+    RuntimeException(robotErrorText(method, error).english), HasUiText {
+    override val text: UiText get() = robotErrorText(method, error)
 }
 
-/** Invalid edit caught before anything is sent to the robot. */
-class MapEditException(message: String) : RuntimeException(message)
+private fun robotErrorText(method: String, error: JsonObject): UiText {
+    val message = runCatching { error["message"]?.jsonPrimitive?.contentOrNull }.getOrNull()
+    val code = runCatching { error["code"]?.jsonPrimitive?.contentOrNull }.getOrNull()
+    // The robot's own words and codes stay as they are; only the frame around them is translated.
+    val refused = uiText(Res.string.robot_refused_method, "The robot refused $method", method)
+    val detail = (message?.let { ": $it" } ?: "") + (code?.let { " (code $it)" } ?: "")
+    return if (detail.isEmpty()) refused else UiText.Joined(listOf(refused, rawText(detail)), "")
+}
+
+/** Invalid edit caught before anything is sent to the robot; [text] says what to change. */
+class MapEditException(override val text: UiText) : RuntimeException(text.english), HasUiText {
+    constructor(message: String) : this(rawText(message))
+}
 
 fun V1Response.requireOk(method: String): V1Response {
     error?.let { throw RobotCommandException(method, it) }
@@ -83,11 +95,18 @@ fun saveMapIndex(floorMaps: List<FloorMap>, loadedMapFlag: Int? = null): Int? =
  * Thresholds and carpets are unaffected: the official app's save_map never carries them, they
  * have their own commands.
  */
-fun restrictionSaveBlocker(map: ParsedMap, mapIndex: Int?): String? = mapIndexBlocker(mapIndex) ?: when {
-    map.noMopZones.isNotEmpty() ->
-        "This map has no-mop zones. LocalRock can't write them back yet, so saving here could delete them."
-    MOP_ONLY_AREAS_BLOCK in map.unmodeledRestrictionBlocks ->
-        "This map has mop-only areas. LocalRock can't write them back yet, so saving here could delete them."
+fun restrictionSaveBlocker(map: ParsedMap, mapIndex: Int?): String? = restrictionSaveBlockerText(map, mapIndex)?.english
+
+/** [restrictionSaveBlocker] for the UI, in the app's language. */
+fun restrictionSaveBlockerText(map: ParsedMap, mapIndex: Int?): UiText? = mapIndexBlockerText(mapIndex) ?: when {
+    map.noMopZones.isNotEmpty() -> uiText(
+        Res.string.mapedit_block_no_mop_zones,
+        "This map has no-mop zones. LocalRock can't write them back yet, so saving here could delete them.",
+    )
+    MOP_ONLY_AREAS_BLOCK in map.unmodeledRestrictionBlocks -> uiText(
+        Res.string.mapedit_block_mop_only_areas,
+        "This map has mop-only areas. LocalRock can't write them back yet, so saving here could delete them.",
+    )
     else -> null
 }
 
@@ -98,13 +117,20 @@ private const val MOP_ONLY_AREAS_BLOCK = 23
  * carpets and thresholds). The map being edited is only certain when the robot holds exactly one map.
  * That map need not be map 0: a robot that once had a second floor can keep its only map as map 1.
  */
-fun mapIndexBlocker(mapIndex: Int?): String? =
-    if (mapIndex == null) "The robot hasn't said which of its maps is loaded, so map edits can't be saved yet." else null
+fun mapIndexBlocker(mapIndex: Int?): String? = mapIndexBlockerText(mapIndex)?.english
+
+/** [mapIndexBlocker] for the UI, in the app's language. */
+fun mapIndexBlockerText(mapIndex: Int?): UiText? =
+    if (mapIndex == null) {
+        uiText(Res.string.mapedit_block_map_index, "The robot hasn't said which of its maps is loaded, so map edits can't be saved yet.")
+    } else {
+        null
+    }
 
 fun restrictionVertexCount(walls: Int, zones: Int): Int = walls * 2 + zones * 4
 
 private fun coord(v: Int): JsonPrimitive {
-    if (v !in 0..MAX_MAP_COORD_MM) throw MapEditException("Coordinate $v mm is outside the map")
+    if (v !in 0..MAX_MAP_COORD_MM) throw MapEditException(uiText(Res.string.mapedit_coordinate_outside, "Coordinate $v mm is outside the map", v))
     return JsonPrimitive(v)
 }
 
@@ -182,7 +208,13 @@ internal fun encodeSaveMapParams(noGoZones: List<MapZone>, walls: List<VirtualWa
 internal fun saveMapData(noGoZones: List<MapZone>, walls: List<VirtualWall>, mapIndex: Int): JsonArray {
     val vertices = restrictionVertexCount(walls.size, noGoZones.size)
     if (vertices > MAX_RESTRICTION_VERTICES) {
-        throw MapEditException("Too many restrictions: $vertices of $MAX_RESTRICTION_VERTICES points used")
+        throw MapEditException(
+            uiText(
+                Res.string.mapedit_too_many_restrictions,
+                "Too many restrictions: $vertices of $MAX_RESTRICTION_VERTICES points used",
+                vertices, MAX_RESTRICTION_VERTICES,
+            ),
+        )
     }
     val entries = buildList {
         walls.forEach { w ->
@@ -287,7 +319,7 @@ suspend fun VacuumSession.saveMap(noGoZones: List<MapZone>, walls: List<VirtualW
  * (captured 2026-09-29). Carpets without flags are new ones and get the rectangle value.
  */
 internal fun encodeCarpetAreaParams(carpets: List<MapZone>, mapIndex: Int, withFlags: Boolean): JsonObject {
-    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    mapIndexBlockerText(mapIndex)?.let { throw MapEditException(it) }
     return JsonObject(buildMap {
         if (withFlags) put("flags", JsonArray(carpets.map { JsonPrimitive(it.flags ?: NEW_RECT_CARPET_FLAGS) }))
         put("map_index", JsonPrimitive(mapIndex))
@@ -305,7 +337,7 @@ internal const val CARPET_AREA_TYPE = 1
  * re-sent existing thresholds as type 2 with sides [0,0,0,0], so every entry is written that way.
  */
 internal fun encodeThresholdParams(thresholds: List<MapZone>, mapIndex: Int): JsonObject {
-    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    mapIndexBlockerText(mapIndex)?.let { throw MapEditException(it) }
     return JsonObject(mapOf(
         "map_index" to JsonPrimitive(mapIndex),
         "sides_infos" to JsonArray(thresholds.map { JsonArray(List(4) { JsonPrimitive(0) }) }),
@@ -320,7 +352,7 @@ internal const val THRESHOLD_TYPE = 2
  * `{"map_index":0,"zones":[[x1,y1,…,x4,y4,0,0], …]}`; `"zones":[]` removes them all.
  */
 internal fun encodeCurtainParams(curtains: List<MapZone>, mapIndex: Int): JsonObject {
-    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    mapIndexBlockerText(mapIndex)?.let { throw MapEditException(it) }
     return JsonObject(mapOf(
         "map_index" to JsonPrimitive(mapIndex),
         "zones" to JsonArray(curtains.map { c ->
@@ -343,7 +375,7 @@ internal const val CURTAIN_WIDTH_MM = 100
  * Erase marks ([LOW_SPACE_ERASED]) are sent back as they are, so an area the user erased stays erased.
  */
 internal fun encodeLowSpaceParams(zones: List<MapZone>, mapIndex: Int): JsonObject {
-    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    mapIndexBlockerText(mapIndex)?.let { throw MapEditException(it) }
     return JsonObject(mapOf(
         "map_index" to JsonPrimitive(mapIndex),
         "zone_data" to JsonArray(zones.filter { it.lowSpaceKind != LOW_SPACE_DETECTED }.map { z ->
@@ -358,7 +390,7 @@ internal fun encodeLowSpaceParams(zones: List<MapZone>, mapIndex: Int): JsonObje
  * their type; one left out is removed.
  */
 internal fun encodeEraserParams(zones: List<MapZone>, mapIndex: Int): JsonObject {
-    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    mapIndexBlockerText(mapIndex)?.let { throw MapEditException(it) }
     return JsonObject(mapOf(
         "map_index" to JsonPrimitive(mapIndex),
         "data" to JsonArray(zones.map { z -> JsonArray(listOf(JsonPrimitive(z.extra.getOrNull(0) ?: ERASER_USER)) + quad(z)) }),
@@ -370,7 +402,7 @@ internal fun encodeEraserParams(zones: List<MapZone>, mapIndex: Int): JsonObject
  * `[1, -1, x1,…,y4, type, subtype, 1]`, a removed one as `[0, id]`.
  */
 internal fun encodeFurnitureChanges(added: List<MapZone>, removedIds: List<Int>, mapIndex: Int): JsonObject {
-    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    mapIndexBlockerText(mapIndex)?.let { throw MapEditException(it) }
     val adds = added.map { f ->
         JsonArray(listOf(JsonPrimitive(1), JsonPrimitive(-1)) + quad(f) + listOf(
             JsonPrimitive(requireNotNull(f.furnitureType) { "Furniture without a type" }),
@@ -414,7 +446,7 @@ suspend fun VacuumSession.setLowSpaceZones(zones: List<MapZone>, mapIndex: Int):
  * (map block 19); the official app sent just the newly deleted ones, and earlier deletions stayed.
  */
 internal fun encodeIgnoreCarpetParams(zones: List<MapZone>, mapIndex: Int): JsonObject {
-    mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+    mapIndexBlockerText(mapIndex)?.let { throw MapEditException(it) }
     return JsonObject(mapOf(
         "map_index" to JsonPrimitive(mapIndex),
         "need_retry" to JsonPrimitive(1),
@@ -458,7 +490,7 @@ fun thresholdStrip(a: Pair<Int, Int>, b: Pair<Int, Int>, widthMm: Int = THRESHOL
     val dx = (b.first - a.first).toDouble()
     val dy = (b.second - a.second).toDouble()
     val len = kotlin.math.sqrt(dx * dx + dy * dy)
-    if (len == 0.0) throw MapEditException("Draw the line across the doorway or window")
+    if (len == 0.0) throw MapEditException(uiText(Res.string.mapedit_draw_line_across, "Draw the line across the doorway or window"))
     val half = widthMm / 2.0
     val nx = -dy / len * half
     val ny = dx / len * half
@@ -491,7 +523,7 @@ internal const val SPLIT_REFUSED_MESSAGE =
 
 /** A refused split in words that say what to change; any other error is left as it was. */
 internal fun splitFailure(e: RobotCommandException): Exception =
-    if (e.code() == SPLIT_FAILED_CODE) MapEditException(SPLIT_REFUSED_MESSAGE) else e
+    if (e.code() == SPLIT_FAILED_CODE) MapEditException(uiText(Res.string.mapedit_split_refused, SPLIT_REFUSED_MESSAGE)) else e
 
 /**
  * The two ways to send a split line, in the order to try them. In the capture the robot refused a
@@ -539,15 +571,21 @@ suspend fun VacuumSession.nameSegment(table: List<SegmentEntry>): V1Response =
  * Only plain ASCII names for now: the captured `length` was 4 for "Test", which can't tell a
  * character count from a byte count, and the two differ for names like "Kælder".
  */
-fun mapNameBlocker(name: String): String? = when {
-    name.isBlank() -> "Give the map a name"
-    name.any { it.code !in 0x20..0x7E } -> "Map names can only use plain letters, digits and punctuation for now (no æ, ø, å or emoji)"
+fun mapNameBlocker(name: String): String? = mapNameBlockerText(name)?.english
+
+/** [mapNameBlocker] for the UI, in the app's language. */
+fun mapNameBlockerText(name: String): UiText? = when {
+    name.isBlank() -> uiText(Res.string.mapedit_map_name_empty, "Give the map a name")
+    name.any { it.code !in 0x20..0x7E } -> uiText(
+        Res.string.mapedit_map_name_ascii,
+        "Map names can only use plain letters, digits and punctuation for now (no æ, ø, å or emoji)",
+    )
     else -> null
 }
 
 /** `[{"length": 4, "multi_map": 0, "name": "Test"}]` */
 internal fun encodeNameMultiMapParams(mapFlag: Int, name: String): List<JsonObject> {
-    mapNameBlocker(name)?.let { throw MapEditException(it) }
+    mapNameBlockerText(name)?.let { throw MapEditException(it) }
     return listOf(JsonObject(mapOf(
         "length" to JsonPrimitive(name.length),
         "multi_map" to JsonPrimitive(mapFlag),

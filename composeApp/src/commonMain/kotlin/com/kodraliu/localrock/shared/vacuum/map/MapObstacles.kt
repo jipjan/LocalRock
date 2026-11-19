@@ -1,5 +1,9 @@
 package com.kodraliu.localrock.shared.vacuum.map
 
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.uiText
+
 /**
  * An obstacle the robot recognised, from legacy map blocks 13-16 (robot millimetres).
  *
@@ -16,7 +20,10 @@ data class MapObstacle(
     val ignored: Boolean,
 ) {
     /** A readable name for [type], or null for a type no parser has a name for. */
-    val typeName: String? get() = type?.let { OBSTACLE_TYPE_NAMES[it] }
+    val typeName: String? get() = typeText?.english
+
+    /** [typeName] for the UI, in the app's language. */
+    val typeText: UiText? get() = type?.let { OBSTACLE_TYPE_NAMES[it] }
 }
 
 /**
@@ -62,21 +69,21 @@ private fun u16le(b: ByteArray, off: Int): Int =
  * The robot sends only a number; these names are the ones vacuum-map-parser-roborock
  * (KNOWN_OBSTACLE_TYPES) uses. Types missing here have no known name.
  */
-private val OBSTACLE_TYPE_NAMES = mapOf(
-    0 to "Cable",
-    1 to "Pet waste",
-    2 to "Shoes",
-    3 to "Poop",
-    4 to "Pedestal",
-    5 to "Extension cord",
-    9 to "Weighing scale",
-    10 to "Clothes",
-    25 to "Dustpan",
-    26 to "Furniture with a crossbar",
-    27 to "Furniture with a crossbar",
-    34 to "Clothes",
-    48 to "Cable",
-    49 to "Pet",
-    50 to "Pet",
-    51 to "Fabric or paper ball",
+private val OBSTACLE_TYPE_NAMES: Map<Int, UiText> = mapOf(
+    0 to uiText(Res.string.obstacle_cable, "Cable"),
+    1 to uiText(Res.string.obstacle_pet_waste, "Pet waste"),
+    2 to uiText(Res.string.obstacle_shoes, "Shoes"),
+    3 to uiText(Res.string.obstacle_poop, "Poop"),
+    4 to uiText(Res.string.obstacle_pedestal, "Pedestal"),
+    5 to uiText(Res.string.obstacle_extension_cord, "Extension cord"),
+    9 to uiText(Res.string.obstacle_weighing_scale, "Weighing scale"),
+    10 to uiText(Res.string.obstacle_clothes, "Clothes"),
+    25 to uiText(Res.string.obstacle_dustpan, "Dustpan"),
+    26 to uiText(Res.string.obstacle_furniture_crossbar, "Furniture with a crossbar"),
+    27 to uiText(Res.string.obstacle_furniture_crossbar, "Furniture with a crossbar"),
+    34 to uiText(Res.string.obstacle_clothes, "Clothes"),
+    48 to uiText(Res.string.obstacle_cable, "Cable"),
+    49 to uiText(Res.string.obstacle_pet, "Pet"),
+    50 to uiText(Res.string.obstacle_pet, "Pet"),
+    51 to uiText(Res.string.obstacle_fabric_paper_ball, "Fabric or paper ball"),
 )

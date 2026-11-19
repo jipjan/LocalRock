@@ -4,6 +4,12 @@ import com.kodraliu.localrock.shared.vacuum.DockErrorCodes
 import com.kodraliu.localrock.shared.vacuum.VacuumErrorCodes
 import com.kodraliu.localrock.shared.vacuum.VacuumStateCodes
 import com.kodraliu.localrock.shared.vacuum.VacuumStatus
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.joinedText
+import com.kodraliu.localrock.shared.text.rawText
+import com.kodraliu.localrock.shared.text.resolve
+import com.kodraliu.localrock.shared.text.uiText
 
 /** Something about a robot that is worth interrupting someone for. */
 sealed interface RobotEvent {
@@ -117,15 +123,34 @@ data class RobotNotification(
     val alert: Boolean,
 )
 
-fun RobotEvent.toNotification(duid: String, deviceName: String): RobotNotification = when (this) {
-    is RobotEvent.Error -> RobotNotification(duid, deviceName, VacuumErrorCodes.describe(code), alert = true)
-    is RobotEvent.DockAlert -> RobotNotification(duid, deviceName, DockErrorCodes.describe(code), alert = true)
-    is RobotEvent.CleanFinished -> RobotNotification(duid, deviceName, finishedText(areaMm2, seconds), alert = false)
+fun RobotEvent.toNotification(duid: String, deviceName: String): RobotNotification =
+    RobotNotification(duid, deviceName, notificationBody().english, alert = this !is RobotEvent.CleanFinished)
+
+/** [toNotification] in the app's language. */
+suspend fun RobotEvent.localizedNotification(duid: String, deviceName: String): RobotNotification =
+    RobotNotification(duid, deviceName, notificationBody().resolve(), alert = this !is RobotEvent.CleanFinished)
+
+/** What a notification about this event says. */
+fun RobotEvent.notificationBody(): UiText = when (this) {
+    is RobotEvent.Error -> VacuumErrorCodes.text(code)
+    is RobotEvent.DockAlert -> DockErrorCodes.text(code)
+    is RobotEvent.CleanFinished -> finishedText(areaMm2, seconds)
 }
 
-private fun finishedText(areaMm2: Long?, seconds: Long?): String {
-    val parts = listOfNotNull(formatArea(areaMm2), formatMinutes(seconds))
-    return if (parts.isEmpty()) "Cleaning finished" else "Cleaning finished: " + parts.joinToString(" in ")
+private fun finishedText(areaMm2: Long?, seconds: Long?): UiText {
+    val area = formatArea(areaMm2)
+    val time = formatMinutes(seconds)
+    val parts = listOfNotNull(area, time)
+    val detail = when {
+        area != null && time != null ->
+            uiText(Res.string.notify_area_in_time, "${area.english} in ${time.english}", area, time)
+        else -> parts.singleOrNull()
+    }
+    return if (detail == null) {
+        uiText(Res.string.notify_cleaning_finished, "Cleaning finished")
+    } else {
+        uiText(Res.string.notify_cleaning_finished_detail, "Cleaning finished: ${detail.english}", detail)
+    }
 }
 
 /** A running clean job, for a display that stays up and is updated as the job goes on. */
@@ -141,33 +166,45 @@ data class RobotProgress(
 
 /** [room] is where the robot is now, when that is known; it is only shown while it is cleaning. */
 fun progressOf(duid: String, deviceName: String, status: VacuumStatus, room: String?): RobotProgress {
+    val (title, detail) = progressText(deviceName, status, room)
+    return RobotProgress(duid, title.english, detail.english, status.cleanPercent?.coerceIn(0, 100))
+}
+
+/** [progressOf] in the app's language. */
+suspend fun localizedProgressOf(duid: String, deviceName: String, status: VacuumStatus, room: String?): RobotProgress {
+    val (title, detail) = progressText(deviceName, status, room)
+    return RobotProgress(duid, title.resolve(), detail.resolve(), status.cleanPercent?.coerceIn(0, 100))
+}
+
+/** The title and detail lines of [progressOf]. */
+private fun progressText(deviceName: String, status: VacuumStatus, room: String?): Pair<UiText, UiText> {
     val error = status.errorCode ?: 0
     val activity = when {
-        error != 0 -> VacuumErrorCodes.describe(error)
-        else -> status.state?.let { VacuumStateCodes.describe(it) } ?: "Working"
+        error != 0 -> VacuumErrorCodes.text(error)
+        else -> status.state?.let { VacuumStateCodes.text(it) } ?: uiText(Res.string.notify_working, "Working")
     }
     val where = room?.takeIf { error == 0 && status.state in CLEANING_STATES }
     val percent = status.cleanPercent?.coerceIn(0, 100)
-    val detail = listOfNotNull(
-        percent?.let { "$it%" },
+    val detail = joinedText(listOf(
+        percent?.let { rawText("$it%") },
         formatArea(status.cleanArea),
         formatMinutes(status.cleanTime),
-        status.battery?.let { "Battery $it%" },
-    ).joinToString(" · ")
-    return RobotProgress(
-        duid = duid,
-        title = "$deviceName: $activity" + (where?.let { " in $it" } ?: ""),
-        detail = detail,
-        percent = percent,
-    )
+        status.battery?.let { uiText(Res.string.notify_battery, "Battery $it%", it) },
+    )) ?: rawText("")
+    val title = if (where == null) {
+        uiText(Res.string.notify_progress_title, "$deviceName: ${activity.english}", deviceName, activity)
+    } else {
+        uiText(Res.string.notify_progress_title_room, "$deviceName: ${activity.english} in $where", deviceName, activity, where)
+    }
+    return title to detail
 }
 
 /** mm² to "12.5 m²"; null when there is nothing to show yet. */
-private fun formatArea(areaMm2: Long?): String? {
+private fun formatArea(areaMm2: Long?): UiText? {
     if (areaMm2 == null || areaMm2 <= 0) return null
     val tenths = (areaMm2 + 50_000) / 100_000
-    return "${tenths / 10}.${tenths % 10} m²"
+    return uiText(Res.string.notify_area, "${tenths / 10}.${tenths % 10} m²", tenths / 10, tenths % 10)
 }
 
-private fun formatMinutes(seconds: Long?): String? =
-    if (seconds == null || seconds <= 0) null else "${(seconds + 30) / 60} min"
+private fun formatMinutes(seconds: Long?): UiText? =
+    if (seconds == null || seconds <= 0) null else ((seconds + 30) / 60).let { uiText(Res.string.duration_minutes, "$it min", it) }

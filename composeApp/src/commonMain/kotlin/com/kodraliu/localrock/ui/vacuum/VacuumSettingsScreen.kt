@@ -220,7 +220,6 @@ import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Search
-import com.kodraliu.localrock.shared.vacuum.summary
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Bedtime
@@ -365,13 +364,9 @@ import com.kodraliu.localrock.shared.vacuum.DRY_START_OFF
 import com.kodraliu.localrock.shared.vacuum.DRY_START_SCHEDULED
 import com.kodraliu.localrock.shared.vacuum.DockSettings
 import com.kodraliu.localrock.shared.vacuum.ValleySettings
-import com.kodraliu.localrock.shared.vacuum.dryTimeLabel
-import com.kodraliu.localrock.shared.vacuum.labelFor
 import com.kodraliu.localrock.shared.vacuum.RobotSettings
 import com.kodraliu.localrock.shared.vacuum.VolumeRange
 import com.kodraliu.localrock.shared.vacuum.volumeFromSlider
-import com.kodraliu.localrock.shared.vacuum.volumeLabel
-import com.kodraliu.localrock.shared.vacuum.washFrequencyLabel
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
 import com.kodraliu.localrock.ui.AppColors
 import com.kodraliu.localrock.ui.adaptive.CenteredContent
@@ -379,6 +374,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
+import com.kodraliu.localrock.shared.vacuum.dryTimeText
+import com.kodraliu.localrock.shared.vacuum.summaryText
+import com.kodraliu.localrock.shared.vacuum.textFor
+import com.kodraliu.localrock.shared.vacuum.volumeText
+import com.kodraliu.localrock.shared.vacuum.washFrequencyText
+import com.kodraliu.localrock.ui.text.text
 
 // ── Navigation ────────────────────────────────────────────────────────────────
 
@@ -496,7 +497,7 @@ fun VacuumSettingsScreen(
             ),
             lastClean = cleanHistory.filter { !it.isPatrol }.maxByOrNull { it.beginEpoch },
             summary = cleanSummary,
-            maintenanceSummary = consumables?.summary(),
+            maintenanceSummary = consumables?.summaryText()?.text(),
             onSchedule = onSchedule,
             modelName = viewModel.modelName,
             firmwareVersion = viewModel.firmwareVersion,
@@ -536,7 +537,7 @@ fun VacuumSettingsScreen(
         )
         SettingsRoute.Carpet -> CarpetScreen(
             carpetMode = robotSettings.carpetMode,
-            modes = viewModel.carpetModes,
+            modes = viewModel.carpetModes.map { (code, label) -> code to label.text() },
             features = betaFeatures.inSection(FeatureSection.CARPET),
             onCarpetModeChange = { mode -> viewModel.report { it.setCarpetMode(mode) } },
             onToggle = { id, on -> viewModel.report { it.setBetaFeature(id, on) } },
@@ -718,7 +719,7 @@ private fun settingsSearchIndex(
     return pages.map { (title, open) -> SettingsSearchEntry(title, settings, open) } +
         features.filter { it.answered }.map { f ->
             val section = f.def.section
-            SettingsSearchEntry(f.def.title, "${sectionName[section] ?: settings} · ${f.def.description}") { openSection(section) }
+            SettingsSearchEntry(f.def.title.text(), "${sectionName[section] ?: settings} · ${f.def.description.text()}") { openSection(section) }
         }
 }
 
@@ -1811,7 +1812,7 @@ internal fun TimelineRow(entry: CleanTimelineEntry, first: Boolean, last: Boolea
         }
         Column(Modifier.weight(1f).padding(start = 8.dp, top = 10.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
-                entry.title,
+                entry.titleText.text(),
                 style = if (entry.milestone) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
             )
             if (entry.milestone && entry.settings != null) {
@@ -1820,7 +1821,7 @@ internal fun TimelineRow(entry: CleanTimelineEntry, first: Boolean, last: Boolea
                 // The official app's start card: its cleaning preferences as bullets, the mode last.
                 Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                     Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        val lines = entry.preferences.map { stringResource(cleanPreferenceText(it)) } + listOfNotNull(entry.detail)
+                        val lines = entry.preferences.map { stringResource(cleanPreferenceText(it)) } + listOfNotNull(entry.detailText?.text())
                         lines.forEach { text ->
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text("•", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1830,13 +1831,13 @@ internal fun TimelineRow(entry: CleanTimelineEntry, first: Boolean, last: Boolea
                     }
                 }
             } else if (entry.milestone) {
-                entry.detail?.let {
+                entry.detailText?.text()?.let {
                     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                         Text(it, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp))
                     }
                 }
             } else {
-                entry.detail?.let {
+                entry.detailText?.text()?.let {
                     Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Text(formatClockTime(entry.epoch), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1855,11 +1856,14 @@ private fun RoomSettingsCard(settings: CleanRunSettings) {
     val tint = MaterialTheme.colorScheme.onSurfaceVariant
     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            settings.mode?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
+            settings.modeText?.let { Text(it.text(), style = MaterialTheme.typography.bodyLarge) }
+            val suction = settings.suctionText?.text()
+            val water = settings.waterText?.text()
+            val route = settings.routeText?.text()
             val parts = buildList<Pair<ImageVector?, String>> {
-                settings.suctionLabel?.let { add((if (settings.suction == 1) Icons.Default.Bedtime else Icons.Default.Air) to it) }
-                settings.waterLabel?.let { add(Icons.Default.WaterDrop to it) }
-                settings.routeLabel?.let { add(Icons.Default.Route to it) }
+                suction?.let { add((if (settings.suction == 1) Icons.Default.Bedtime else Icons.Default.Air) to it) }
+                water?.let { add(Icons.Default.WaterDrop to it) }
+                route?.let { add(Icons.Default.Route to it) }
                 settings.passes?.takeIf { it > 0 }?.let { add(null to "×$it") }
             }
             if (parts.isNotEmpty()) {
@@ -1908,7 +1912,7 @@ private fun CleanRecordRow(record: CleanRecord) {
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                listOfNotNull(dateStr, record.typeLabel).joinToString(" · "),
+                listOfNotNull(dateStr, record.typeText?.text()).joinToString(" · "),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
             )
@@ -1940,7 +1944,7 @@ private fun CleanRecordRow(record: CleanRecord) {
                     )
                 }
             }
-            record.detailLine?.let {
+            record.detailText?.text()?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -2003,7 +2007,7 @@ private fun DockSettingsScreen(
                         icon = Icons.Default.WaterDrop,
                         iconTint = AppColors.Water,
                         title = stringResource(Res.string.settings_mop_wash_frequency),
-                        subtitle = washFrequencyLabel(smartWash),
+                        subtitle = washFrequencyText(smartWash).text(),
                         enabled = washFrequencyEnabled,
                         onClick = { dialogTarget = "wash_freq" },
                     )
@@ -2014,7 +2018,7 @@ private fun DockSettingsScreen(
                         icon = Icons.Default.WaterDrop,
                         iconTint = AppColors.AccentCyan,
                         title = stringResource(Res.string.settings_washing_mode),
-                        subtitle = dockCapabilities.washModeLabel(dockSettings.washMode, dockType),
+                        subtitle = dockCapabilities.washModeText(dockSettings.washMode, dockType).text(),
                         enabled = washModeEnabled,
                         onClick = { dialogTarget = "wash_mode" },
                     )
@@ -2026,7 +2030,7 @@ private fun DockSettingsScreen(
                             icon = Icons.Default.Thermostat,
                             iconTint = AppColors.Warn,
                             title = stringResource(Res.string.settings_wash_water_temperature),
-                            subtitle = DockOptions.washWaterTemperature.labelFor(temperature),
+                            subtitle = DockOptions.washWaterTemperature.textFor(temperature).text(),
                             enabled = !busy,
                             onClick = { dialogTarget = "wash_temp" },
                         )
@@ -2064,7 +2068,7 @@ private fun DockSettingsScreen(
                                 icon = Icons.Default.Schedule,
                                 iconTint = AppColors.AccentCyan,
                                 title = stringResource(Res.string.settings_drying_time),
-                                subtitle = dryTimeLabel(seconds),
+                                subtitle = dryTimeText(seconds).text(),
                                 enabled = !busy,
                                 onClick = { dialogTarget = "dry_time" },
                             )
@@ -2077,7 +2081,7 @@ private fun DockSettingsScreen(
                         icon = Icons.Default.Delete,
                         iconTint = AppColors.Good,
                         title = stringResource(Res.string.settings_auto_empty_mode),
-                        subtitle = dockCapabilities.autoEmptyModeLabel(dockSettings.autoEmptyMode),
+                        subtitle = dockCapabilities.autoEmptyModeText(dockSettings.autoEmptyMode).text(),
                         enabled = autoEmptyEnabled,
                         onClick = { dialogTarget = "auto_empty" },
                     )
@@ -2129,7 +2133,7 @@ private fun DockSettingsScreen(
     when (dialogTarget) {
         "wash_freq" -> SimplePickerDialog(
             title = stringResource(Res.string.settings_mop_wash_frequency),
-            options = washFrequencyOptions.map { it.label },
+            options = washFrequencyOptions.map { it.text.text() },
             selected = washFrequencyIndex,
             onSelect = {
                 val option = washFrequencyOptions[it]
@@ -2141,7 +2145,7 @@ private fun DockSettingsScreen(
         )
         "wash_mode" -> SimplePickerDialog(
             title = stringResource(Res.string.settings_washing_mode),
-            options = washModes.map { it.second },
+            options = washModes.map { it.second.text() },
             selected = washModeIndex,
             onSelect = { onWashModeChange(washModes[it].first); dialogTarget = null },
             enabled = washModeEnabled,
@@ -2149,7 +2153,7 @@ private fun DockSettingsScreen(
         )
         "wash_temp" -> SimplePickerDialog(
             title = stringResource(Res.string.settings_wash_water_temperature),
-            options = DockOptions.washWaterTemperature.map { it.label },
+            options = DockOptions.washWaterTemperature.map { it.text.text() },
             selected = DockOptions.washWaterTemperature.indexOfFirst { it.code == dockSettings.washWaterTemperature },
             onSelect = { onWashWaterTemperatureChange(DockOptions.washWaterTemperature[it].code); dialogTarget = null },
             enabled = !busy,
@@ -2174,7 +2178,7 @@ private fun DockSettingsScreen(
         )
         "dry_time" -> SimplePickerDialog(
             title = stringResource(Res.string.settings_drying_time),
-            options = DockOptions.dryTime.map { it.label },
+            options = DockOptions.dryTime.map { it.text.text() },
             selected = DockOptions.dryTime.indexOfFirst { it.code == dockSettings.dryTimeSeconds },
             onSelect = { onDryTimeChange(DockOptions.dryTime[it].code); dialogTarget = null },
             enabled = !busy,
@@ -2182,7 +2186,7 @@ private fun DockSettingsScreen(
         )
         "auto_empty" -> SimplePickerDialog(
             title = stringResource(Res.string.settings_auto_empty_mode),
-            options = autoEmptyModes.map { it.second },
+            options = autoEmptyModes.map { it.second.text() },
             selected = autoEmptyModes.indexOfFirst { it.first == dockSettings.autoEmptyMode },
             onSelect = { onAutoEmptyModeChange(autoEmptyModes[it].first); dialogTarget = null },
             enabled = autoEmptyEnabled,
@@ -2439,7 +2443,7 @@ private fun VolumeSliderRow(volume: Int, onVolumeChange: (Int) -> Job) {
                 }
             }
             Text(stringResource(Res.string.settings_volume), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Text(volumeLabel(shown), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(volumeText(shown).text(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Row(
             // Lined up with the title, past the 44dp icon and the 16dp gap.
@@ -2494,8 +2498,8 @@ private fun FeatureToggleRow(f: BetaFeatureState, onToggle: (String, Int) -> Uni
         SettingRowSwitch(
             icon = icon,
             iconTint = AppColors.AccentCyan,
-            title = f.def.title,
-            subtitle = f.def.description,
+            title = f.def.title.text(),
+            subtitle = f.def.description.text(),
             checked = f.enabled,
             onCheckedChange = { onToggle(f.def.id, if (it) 1 else 0) },
         )
@@ -2506,14 +2510,14 @@ private fun FeatureToggleRow(f: BetaFeatureState, onToggle: (String, Int) -> Uni
     SettingRowClickable(
         icon = icon,
         iconTint = AppColors.AccentCyan,
-        title = f.def.title,
-        subtitle = f.choiceLabel ?: f.def.description,
+        title = f.def.title.text(),
+        subtitle = (f.choiceText ?: f.def.description).text(),
         onClick = { picking = true },
     )
     if (picking) {
         SimplePickerDialog(
-            title = f.def.title,
-            options = choices.map { it.second },
+            title = f.def.title.text(),
+            options = choices.map { it.second.text() },
             selected = choices.indexOfFirst { it.first == f.value },
             onSelect = { onToggle(f.def.id, choices[it].first); picking = false },
             onDismiss = { picking = false },

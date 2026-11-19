@@ -118,8 +118,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import com.kodraliu.localrock.shared.vacuum.MAX_RESTRICTION_VERTICES
-import com.kodraliu.localrock.shared.vacuum.mapIndexBlocker
-import com.kodraliu.localrock.shared.vacuum.restrictionSaveBlocker
 import com.kodraliu.localrock.shared.vacuum.restrictionsMatch
 import com.kodraliu.localrock.shared.vacuum.thresholdStrip
 import com.kodraliu.localrock.shared.vacuum.saveMapIndex
@@ -252,6 +250,11 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
+import com.kodraliu.localrock.shared.text.HasUiText
+import com.kodraliu.localrock.shared.text.localizedText
+import com.kodraliu.localrock.shared.vacuum.mapIndexBlockerText
+import com.kodraliu.localrock.shared.vacuum.restrictionSaveBlockerText
+import com.kodraliu.localrock.ui.text.text
 
 private val NO_GO_COLOR = Color(0xfff44336)
 private val NO_MOP_COLOR = Color(0xff2196f3)
@@ -417,7 +420,7 @@ fun MapEditScreen(
     }
 
     val pm = parsedMap
-    val blockedReason = repository.editBlockedReason(pm, status.state)
+    val blockedReason = repository.editBlockedReason(pm, status.state)?.text()
     val mapIndex = saveMapIndex(floorMaps, status.loadedMapFlag)
     // Carpets and thresholds only need the map index; no-go zones and walls also need save_map to
     // be safe on this map.
@@ -425,9 +428,9 @@ fun MapEditScreen(
     val indexBlocker = when {
         !floorMapsLoaded -> null
         floorMaps.isEmpty() -> stringResource(Res.string.mapedit_no_saved_map)
-        else -> mapIndexBlocker(mapIndex)
+        else -> mapIndexBlockerText(mapIndex)?.text()
     }
-    val saveBlocker = if (floorMapsLoaded) pm?.let { restrictionSaveBlocker(it, mapIndex) } else null
+    val saveBlocker = (if (floorMapsLoaded) pm?.let { restrictionSaveBlockerText(it, mapIndex) } else null)?.text()
     val restrictionsChanged = pm != null &&
         !restrictionsMatch(pm, zones.filter { it.kind == ZoneKind.NO_GO }, pm.noMopZones, walls)
     val vertices = restrictionVertexCount(walls.size, zones.restrictionZones().size)
@@ -446,7 +449,7 @@ fun MapEditScreen(
             try {
                 notice = Notice(block() ?: getString(successText), isError = false)
             } catch (e: Throwable) {
-                notice = Notice(e.message ?: getString(Res.string.mapedit_something_went_wrong), isError = true)
+                notice = Notice(e.localizedText() ?: getString(Res.string.mapedit_something_went_wrong), isError = true)
             } finally {
                 working = false
             }
@@ -1435,7 +1438,8 @@ private fun RoomSheet(
     val room = map.rooms.find { it.id == segment }
     val currentName = room?.name ?: stringResource(Res.string.mapedit_room_number, segment)
     var nameInput by remember(segment, currentName) { mutableStateOf(currentName) }
-    val nameError = runCatching { validateRoomName(nameInput) }.exceptionOrNull()?.message
+    val nameError = runCatching { validateRoomName(nameInput) }.exceptionOrNull()
+        ?.let { e -> (e as? HasUiText)?.text?.text() ?: e.message }
     val canAct = enabled && !working
 
     Column(
@@ -1461,10 +1465,12 @@ private fun RoomSheet(
         )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             RoomType.entries.forEach { type ->
+                val label = type.text.text()
                 FilterChip(
-                    selected = type.label.equals(currentName, ignoreCase = true),
+                    // A room typed before the app spoke this language keeps the English name.
+                    selected = label.equals(currentName, ignoreCase = true) || type.label.equals(currentName, ignoreCase = true),
                     onClick = { onRoomType(type) },
-                    label = { Text(type.label) },
+                    label = { Text(label) },
                     enabled = canAct,
                 )
             }

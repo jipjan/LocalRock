@@ -49,6 +49,10 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.UiTextException
+import com.kodraliu.localrock.shared.text.uiText
 
 
 class VacuumRepository(
@@ -326,7 +330,7 @@ class VacuumRepository(
             RoutineStepKind.ROOMS -> session.setScenesSegments(step.rooms).requireOk("set_scenes_segments")
             RoutineStepKind.ZONES -> session.setScenesZones(step.zones).requireOk("set_scenes_zones")
         }
-        val reg = parseSceneRegistration(reply.result) ?: error("The robot did not register the routine step")
+        val reg = parseSceneRegistration(reply.result) ?: throw UiTextException(uiText(Res.string.repo_routine_step_not_registered, "The robot did not register the routine step"))
         return step.registered(reg)
     }
 
@@ -373,13 +377,13 @@ class VacuumRepository(
     }
 
     suspend fun resumeCleaning(): V1Response {
-        val fresh = session.getStatus() ?: throw IllegalStateException("The robot's current task is unavailable")
+        val fresh = session.getStatus() ?: throw UiTextException(uiText(Res.string.repo_the_robots_current_task_is_unavailable, "The robot's current task is unavailable"))
         _status.update { it.merge(fresh) }
         return when (fresh.inCleaning) {
             1 -> session.appStart().requireOk("app_start")
             2 -> session.sendCommand("resume_zoned_clean").requireOk("resume_zoned_clean")
             3 -> session.sendCommand("resume_segment_clean").requireOk("resume_segment_clean")
-            else -> throw IllegalStateException("There is no supported cleaning task to resume")
+            else -> throw UiTextException(uiText(Res.string.repo_there_is_no_supported_cleaning_task, "There is no supported cleaning task to resume"))
         }
     }
 
@@ -471,13 +475,13 @@ class VacuumRepository(
      * robot is refused here. Confirmed by reading the sequence back.
      */
     suspend fun saveCleanSequence(order: List<Int>) {
-        if (demo) throw MapEditException("The cleaning order can't be saved in demo mode")
+        if (demo) throw MapEditException(uiText(Res.string.repo_the_cleaning_order_cant_be_saved, "The cleaning order can't be saved in demo mode"))
         if (_status.value.state in ACTIVE_STATES) {
-            throw MapEditException("The robot is busy. Dock it or let it finish first.")
+            throw MapEditException(uiText(Res.string.repo_the_robot_is_busy_dock_it, "The robot is busy. Dock it or let it finish first."))
         }
         session.setCleanSequence(order)
         if (parseCleanSequence(session.getCleanSequence().result) != order) {
-            throw MapEditException("The robot accepted the cleaning order, but does not report it back.")
+            throw MapEditException(uiText(Res.string.repo_the_robot_accepted_the_cleaning_order, "The robot accepted the cleaning order, but does not report it back."))
         }
         cleanSequenceRefused = false
     }
@@ -539,9 +543,9 @@ class VacuumRepository(
         val type = if (enabled) SEQ_TYPE_VACUUM_THEN_MOP else SEQ_TYPE_TOGETHER
         session.setCleanSequenceType(
             type = type,
-            fanPower = current.fanPower ?: throw IllegalStateException("The robot's suction is unknown"),
-            waterBoxMode = current.waterBoxCustomMode ?: throw IllegalStateException("The robot's water flow is unknown"),
-            mopMode = _mopMode.value ?: throw IllegalStateException("The robot's route is unknown"),
+            fanPower = current.fanPower ?: throw UiTextException(uiText(Res.string.repo_the_robots_suction_is_unknown, "The robot's suction is unknown")),
+            waterBoxMode = current.waterBoxCustomMode ?: throw UiTextException(uiText(Res.string.repo_the_robots_water_flow_is_unknown, "The robot's water flow is unknown")),
+            mopMode = _mopMode.value ?: throw UiTextException(uiText(Res.string.repo_the_robots_route_is_unknown, "The robot's route is unknown")),
             repeat = repeat,
         ).requireOk("app_set_clean_sequence_type")
         refreshStatus()
@@ -590,7 +594,9 @@ class VacuumRepository(
             _voicePack.update { it.copy(progress = p.progress, error = p.error) }
             if ((p.error ?: 0) != 0) {
                 _voicePack.update { it.copy(inProgress = null) }
-                throw IllegalStateException("The robot could not install the voice pack (error ${p.error}).")
+                throw UiTextException(
+                    uiText(Res.string.repo_voice_pack_install_failed, "The robot could not install the voice pack (error ${p.error}).", "${p.error}"),
+                )
             }
             if (p.inProgress == pack.id) sawProgress = true
             if (p.inProgress == pack.id) continue
@@ -603,7 +609,9 @@ class VacuumRepository(
         _voicePack.update { it.copy(inProgress = null) }
         fetchVoicePack()
         if (_voicePack.value.inUse != pack.id) {
-            throw IllegalStateException("The robot did not switch to ${pack.title}; it may still be installing it.")
+            throw UiTextException(
+                uiText(Res.string.repo_voice_pack_not_switched, "The robot did not switch to ${pack.title}; it may still be installing it.", pack.title),
+            )
         }
     }
 
@@ -630,13 +638,13 @@ class VacuumRepository(
      * robot idle only, so a busy robot is refused here. Confirmed by reading the settings back.
      */
     suspend fun saveRoomCleanModes(modes: List<RoomCleanMode>): Unit = mapEditMutex.withLock {
-        if (demo) throw MapEditException("Room settings can't be saved in demo mode")
+        if (demo) throw MapEditException(uiText(Res.string.repo_room_settings_cant_be_saved_in, "Room settings can't be saved in demo mode"))
         if (_status.value.state in ACTIVE_STATES) {
-            throw MapEditException("The robot is busy. Dock it or let it finish first.")
+            throw MapEditException(uiText(Res.string.repo_the_robot_is_busy_dock_it, "The robot is busy. Dock it or let it finish first."))
         }
         session.inEditSession { session.setCustomizeCleanMode(modes) }
         fetchRoomCleanModes()
-        if (!roomCleanModesStored(modes, _roomCleanModes.value)) throw MapEditException(ROOM_MODES_NOT_CONFIRMED)
+        if (!roomCleanModesStored(modes, _roomCleanModes.value)) throw MapEditException(uiText(Res.string.repo_room_modes_not_confirmed, ROOM_MODES_NOT_CONFIRMED))
     }
 
     suspend fun fetchConsumableStatus() {
@@ -713,11 +721,11 @@ class VacuumRepository(
     private val mapEditMutex = Mutex()
 
     /** Why the map can't be edited right now, or null when it can. */
-    fun editBlockedReason(map: ParsedMap? = _parsedMap.value, state: Int? = _status.value.state): String? = when {
-        demo -> "Map editing is not available in demo mode"
-        state in ACTIVE_STATES -> "The robot is busy. Dock it or let it finish before editing the map."
-        map == null -> "The map has not loaded yet"
-        map.format != MapFormat.LEGACY -> "Map editing is not supported for this robot's map format yet"
+    fun editBlockedReason(map: ParsedMap? = _parsedMap.value, state: Int? = _status.value.state): UiText? = when {
+        demo -> uiText(Res.string.repo_map_editing_demo, "Map editing is not available in demo mode")
+        state in ACTIVE_STATES -> uiText(Res.string.repo_busy_before_editing, "The robot is busy. Dock it or let it finish before editing the map.")
+        map == null -> uiText(Res.string.repo_the_map_has_not_loaded_yet, "The map has not loaded yet")
+        map.format != MapFormat.LEGACY -> uiText(Res.string.repo_map_format_unsupported, "Map editing is not supported for this robot's map format yet")
         else -> null
     }
 
@@ -729,7 +737,7 @@ class VacuumRepository(
     /** Current map, checked to be one this app can edit safely. */
     private fun editableMap(): ParsedMap {
         editBlockedReason()?.let { throw MapEditException(it) }
-        return _parsedMap.value ?: throw MapEditException("The map has not loaded yet")
+        return _parsedMap.value ?: throw MapEditException(uiText(Res.string.repo_the_map_has_not_loaded_yet, "The map has not loaded yet"))
     }
 
     /**
@@ -772,17 +780,17 @@ class VacuumRepository(
         val map = editableMap()
         runCatching { fetchFloorMaps() }
         if (!_floorMapsLoaded.value) {
-            throw MapEditException("Couldn't read the robot's saved maps, so nothing was saved. Try again.")
+            throw MapEditException(uiText(Res.string.repo_couldnt_read_the_robots_saved_maps, "Couldn't read the robot's saved maps, so nothing was saved. Try again."))
         }
         refreshStatus()
         val loaded = _status.value.loadedMapFlag
         val mapIndex = saveMapIndex(_floorMaps.value, loaded)
-        mapIndexBlocker(mapIndex)?.let { throw MapEditException(it) }
+        mapIndexBlockerText(mapIndex)?.let { throw MapEditException(it) }
         val index = mapIndex!!
         // With several maps, the shapes must come from the map that is loaded now: edits always apply
         // to the loaded one, and saving another floor's shapes there would overwrite it.
         if (_floorMaps.value.size > 1 && (floorFlag ?: parsedMapFloorFlag) != index) {
-            throw MapEditException("The robot loaded another map while you were editing. Nothing was saved; close the editor and open it again.")
+            throw MapEditException(uiText(Res.string.repo_the_robot_loaded_another_map_while, "The robot loaded another map while you were editing. Nothing was saved; close the editor and open it again."))
         }
         val restrictionsChanged = !restrictionsMatch(map, noGoZones, map.noMopZones, walls)
         // A carpet the robot detected comes back when it is only left out of set_carpet_area: it has to
@@ -803,7 +811,7 @@ class VacuumRepository(
         if (!restrictionsChanged && !carpetsChanged && ignoreZones.isEmpty() && !thresholdsChanged &&
             !curtainsChanged && !lowSpaceChanged && !furnitureChanged && !eraserChanged
         ) return@withLock
-        if (restrictionsChanged) restrictionSaveBlocker(map, mapIndex)?.let { throw MapEditException(it) }
+        if (restrictionsChanged) restrictionSaveBlockerText(map, mapIndex)?.let { throw MapEditException(it) }
         session.inEditSession {
             if (restrictionsChanged) session.saveMap(noGoZones, walls, index)
             if (ignoreZones.isNotEmpty()) session.setIgnoreCarpetZones(ignoreZones, index)
@@ -832,7 +840,7 @@ class VacuumRepository(
                 (!lowSpaceChanged || sameZones(lowSpaceZones!!, m.lowSpaceZones.orEmpty().filter { it.lowSpaceKind == LOW_SPACE_USER })) &&
                 (!furnitureChanged || (sameZones(furniture!!, m.furniture.orEmpty()) &&
                     furniture.mapNotNull { it.furnitureType }.sorted() == m.furniture.orEmpty().mapNotNull { it.furnitureType }.sorted()))
-        } ?: throw MapEditException(NOT_CONFIRMED)
+        } ?: throw MapEditException(notConfirmed)
     }
 
     /**
@@ -843,7 +851,7 @@ class VacuumRepository(
     suspend fun splitRoom(segment: Int, xA: Int, yA: Int, xB: Int, yB: Int): Unit = mapEditMutex.withLock {
         val map = editableMap()
         val before = map.rooms.map { it.id }.toSet()
-        if (segment !in before) throw MapEditException("That room is not on the current map")
+        if (segment !in before) throw MapEditException(uiText(Res.string.repo_that_room_is_not_on_the, "That room is not on the current map"))
         val attempts = splitLineAttempts(xA to yA, xB to yB)
         // The official app sent split_segment without start/end_edit_map.
         for ((i, line) in attempts.withIndex()) {
@@ -860,7 +868,7 @@ class VacuumRepository(
             }
         }
         awaitMap { m -> (m.rooms.map { it.id }.toSet() - before).isNotEmpty() }
-            ?: throw MapEditException(NOT_CONFIRMED)
+            ?: throw MapEditException(notConfirmed)
         runCatching { rooms() }
     }
 
@@ -869,12 +877,12 @@ class VacuumRepository(
         val map = editableMap()
         val before = map.rooms.map { it.id }.toSet()
         if (segmentA == segmentB || segmentA !in before || segmentB !in before) {
-            throw MapEditException("Pick two different rooms on the current map")
+            throw MapEditException(uiText(Res.string.repo_pick_two_different_rooms_on_the, "Pick two different rooms on the current map"))
         }
         // Captured without start/end_edit_map, like split.
         session.mergeSegment(segmentA, segmentB)
         awaitMap { m -> m.rooms.map { it.id }.toSet().let { segmentA !in it || segmentB !in it } }
-            ?: throw MapEditException(NOT_CONFIRMED)
+            ?: throw MapEditException(notConfirmed)
         runCatching { rooms() }
     }
 
@@ -885,9 +893,9 @@ class VacuumRepository(
     suspend fun setFloorMaterial(segment: Int, material: FloorMaterial, direction: Int?): Boolean =
         mapEditMutex.withLock {
             val map = editableMap()
-            if (map.rooms.none { it.id == segment }) throw MapEditException("That room is not on the current map")
+            if (map.rooms.none { it.id == segment }) throw MapEditException(uiText(Res.string.repo_that_room_is_not_on_the, "That room is not on the current map"))
             if (direction != null && material != FloorMaterial.WOOD) {
-                throw MapEditException("Only wood floors have a direction")
+                throw MapEditException(uiText(Res.string.repo_only_wood_floors_have_a_direction, "Only wood floors have a direction"))
             }
             session.inEditSession { session.setSegmentGroundMaterial(segment, material.id, direction) }
             if (map.segmentMaterials.isEmpty()) {
@@ -897,7 +905,7 @@ class VacuumRepository(
             awaitMap { m ->
                 m.segmentMaterials[segment] == material.id &&
                     (direction == null || m.segmentMaterialDirections[segment] == direction)
-            } ?: throw MapEditException(NOT_CONFIRMED)
+            } ?: throw MapEditException(notConfirmed)
             true
         }
 
@@ -909,10 +917,10 @@ class VacuumRepository(
 
     private suspend fun readSegmentTable(segment: Int): List<SegmentEntry> {
         val map = editableMap()
-        if (map.rooms.none { it.id == segment }) throw MapEditException("That room is not on the current map")
+        if (map.rooms.none { it.id == segment }) throw MapEditException(uiText(Res.string.repo_that_room_is_not_on_the, "That room is not on the current map"))
         rooms()
         return rawSegmentTable
-            ?: throw MapEditException("The robot did not return its room table. Nothing was changed.")
+            ?: throw MapEditException(uiText(Res.string.repo_the_robot_did_not_return_its, "The robot did not return its room table. Nothing was changed."))
     }
 
     /**
@@ -934,13 +942,13 @@ class VacuumRepository(
             confirmed = rawSegmentTable?.find { it.segment == finalSegment }?.roomId == roomId.toString()
             if (confirmed) break
         }
-        if (!confirmed) throw MapEditException(NOT_CONFIRMED)
+        if (!confirmed) throw MapEditException(notConfirmed)
     }
 
     /** Why the robot's saved maps can't be renamed, deleted or rebuilt right now, or null. */
-    fun mapManageBlockedReason(state: Int? = _status.value.state): String? = when {
-        demo -> "Managing maps is not available in demo mode"
-        state in ACTIVE_STATES -> "The robot is busy. Dock it or let it finish first."
+    fun mapManageBlockedReason(state: Int? = _status.value.state): UiText? = when {
+        demo -> uiText(Res.string.repo_managing_maps_demo, "Managing maps is not available in demo mode")
+        state in ACTIVE_STATES -> uiText(Res.string.repo_the_robot_is_busy_dock_it, "The robot is busy. Dock it or let it finish first.")
         else -> null
     }
 
@@ -948,20 +956,20 @@ class VacuumRepository(
     private suspend fun requireFloorMap(mapFlag: Int): FloorMap {
         mapManageBlockedReason()?.let { throw MapEditException(it) }
         runCatching { fetchFloorMaps() }
-        if (!_floorMapsLoaded.value) throw MapEditException("Couldn't read the robot's saved maps. Nothing was changed.")
+        if (!_floorMapsLoaded.value) throw MapEditException(uiText(Res.string.repo_couldnt_read_the_robots_saved_maps_2, "Couldn't read the robot's saved maps. Nothing was changed."))
         return _floorMaps.value.find { it.mapFlag == mapFlag }
-            ?: throw MapEditException("That map is no longer on the robot")
+            ?: throw MapEditException(uiText(Res.string.repo_that_map_is_no_longer_on, "That map is no longer on the robot"))
     }
 
     /** Rename a saved map. Confirmed by reading the map list back. */
     suspend fun renameFloorMap(mapFlag: Int, name: String): Unit = mapEditMutex.withLock {
         val clean = name.trim()
-        mapNameBlocker(clean)?.let { throw MapEditException(it) }
+        mapNameBlockerText(clean)?.let { throw MapEditException(it) }
         requireFloorMap(mapFlag)
         session.nameMultiMap(mapFlag, clean)
         fetchFloorMaps()
         val saved = _floorMaps.value.find { it.mapFlag == mapFlag }?.name
-        if (saved != clean) throw MapEditException(NOT_CONFIRMED)
+        if (saved != clean) throw MapEditException(notConfirmed)
     }
 
     /**
@@ -972,7 +980,7 @@ class VacuumRepository(
         requireFloorMap(mapFlag)
         session.deleteMap(mapFlag)
         fetchFloorMaps()
-        if (_floorMaps.value.any { it.mapFlag == mapFlag }) throw MapEditException(NOT_CONFIRMED)
+        if (_floorMaps.value.any { it.mapFlag == mapFlag }) throw MapEditException(notConfirmed)
         _parsedMap.value = null
         _mapBytes.value = null
         _rooms.value = emptyList()
@@ -988,7 +996,7 @@ class VacuumRepository(
         session.backupMap(mapFlag)
         fetchFloorMaps()
         val after = _floorMaps.value.find { it.mapFlag == mapFlag }?.backupAt
-        if (after == null || after == before) throw MapEditException(NOT_CONFIRMED)
+        if (after == null || after == before) throw MapEditException(notConfirmed)
     }
 
     /**
@@ -998,8 +1006,8 @@ class VacuumRepository(
      */
     suspend fun restoreFloorMapBackup(mapFlag: Int): Unit = mapEditMutex.withLock {
         val floor = requireFloorMap(mapFlag)
-        if (floor.backupAt == null) throw MapEditException("This map has no backup on the robot yet")
-        if (mapFlag != currentFloorFlag.value) throw MapEditException("Load this map first, then restore its backup")
+        if (floor.backupAt == null) throw MapEditException(uiText(Res.string.repo_this_map_has_no_backup_on, "This map has no backup on the robot yet"))
+        if (mapFlag != currentFloorFlag.value) throw MapEditException(uiText(Res.string.repo_load_this_map_first_then_restore, "Load this map first, then restore its backup"))
         session.restoreMapBackup(mapFlag)
         var restored = false
         for (attempt in 0 until STATUS_READBACK_ATTEMPTS) {
@@ -1009,7 +1017,7 @@ class VacuumRepository(
             restored = savedAt != null && savedAt != floor.savedAt
             if (restored) break
         }
-        if (!restored) throw MapEditException(NOT_CONFIRMED)
+        if (!restored) throw MapEditException(notConfirmed)
         runCatching { refreshStatus() }
         rawSegmentTable = null
         runCatching { fetchMap() }
@@ -1024,12 +1032,15 @@ class VacuumRepository(
     suspend fun startMapping(): Unit = mapEditMutex.withLock {
         mapManageBlockedReason()?.let { throw MapEditException(it) }
         runCatching { fetchFloorMaps() }
-        if (!_floorMapsLoaded.value) throw MapEditException("Couldn't read the robot's saved maps. Nothing was started.")
+        if (!_floorMapsLoaded.value) throw MapEditException(uiText(Res.string.repo_couldnt_read_saved_maps_not_started, "Couldn't read the robot's saved maps. Nothing was started."))
         val max = _maxFloorMaps.value ?: 1
         if (_floorMaps.value.size >= max) {
             throw MapEditException(
-                if (max <= 1) "The robot still has a saved map. Delete it first to map the home again."
-                else "The robot already holds $max maps, its limit. Delete one first."
+                if (max <= 1) {
+                    uiText(Res.string.repo_map_limit_one, "The robot still has a saved map. Delete it first to map the home again.")
+                } else {
+                    uiText(Res.string.repo_map_limit, "The robot already holds $max maps, its limit. Delete one first.", max)
+                },
             )
         }
         session.startBuildMap()
@@ -1043,7 +1054,7 @@ class VacuumRepository(
         mapManageBlockedReason()?.let { throw MapEditException(it) }
         runCatching { refreshStatus() }
         val lab = _status.value.labStatus
-            ?: throw MapEditException("The robot didn't report its map settings. Nothing was changed.")
+            ?: throw MapEditException(uiText(Res.string.repo_the_robot_didnt_report_its_map, "The robot didn't report its map settings. Nothing was changed."))
         if (enabled) {
             // 3, what the official app sent. From 0 (map saving off) the multi-level bit alone
             // was refused with -10005 (issue #17).
@@ -1052,13 +1063,13 @@ class VacuumRepository(
             session.setSwitchMapMode(SWITCH_MAP_MODE_MANUAL)
         } else {
             runCatching { fetchFloorMaps() }
-            if (!_floorMapsLoaded.value) throw MapEditException("Couldn't read the robot's saved maps. Nothing was changed.")
+            if (!_floorMapsLoaded.value) throw MapEditException(uiText(Res.string.repo_couldnt_read_the_robots_saved_maps_2, "Couldn't read the robot's saved maps. Nothing was changed."))
             val keep = keepMapFlag ?: _floorMaps.value.singleOrNull()?.mapFlag
-                ?: throw MapEditException("Pick the map to keep")
-            if (_floorMaps.value.none { it.mapFlag == keep }) throw MapEditException("That map is no longer on the robot")
+                ?: throw MapEditException(uiText(Res.string.repo_pick_the_map_to_keep, "Pick the map to keep"))
+            if (_floorMaps.value.none { it.mapFlag == keep }) throw MapEditException(uiText(Res.string.repo_that_map_is_no_longer_on, "That map is no longer on the robot"))
             session.setLabStatus(lab and LAB_STATUS_MULTI_LEVEL.inv(), reserveMap = keep)
         }
-        if (!awaitStatus { it.multiLevelEnabled == enabled }) throw MapEditException(NOT_CONFIRMED)
+        if (!awaitStatus { it.multiLevelEnabled == enabled }) throw MapEditException(notConfirmed)
         runCatching { fetchFloorMaps() }
         if (!enabled) {
             rawSegmentTable = null
@@ -1079,10 +1090,10 @@ class VacuumRepository(
     private suspend fun enableMapSavingLocked() {
         runCatching { refreshStatus() }
         val lab = _status.value.labStatus
-            ?: throw MapEditException("The robot didn't report its map settings. Nothing was changed.")
+            ?: throw MapEditException(uiText(Res.string.repo_the_robot_didnt_report_its_map, "The robot didn't report its map settings. Nothing was changed."))
         if (lab and LAB_STATUS_MAP_SAVING != 0) return
         session.setLabStatus(lab or LAB_STATUS_MAP_SAVING, reserveMap = null)
-        if (!awaitStatus { it.mapSavingEnabled == true }) throw MapEditException(NOT_CONFIRMED)
+        if (!awaitStatus { it.mapSavingEnabled == true }) throw MapEditException(notConfirmed)
     }
 
     /** Recognise the floor automatically, or pick the map by hand. Confirmed by status. */
@@ -1090,7 +1101,7 @@ class VacuumRepository(
         mapManageBlockedReason()?.let { throw MapEditException(it) }
         val mode = if (smart) SWITCH_MAP_MODE_SMART else SWITCH_MAP_MODE_MANUAL
         session.setSwitchMapMode(mode)
-        if (!awaitStatus { it.switchMapMode == mode }) throw MapEditException(NOT_CONFIRMED)
+        if (!awaitStatus { it.switchMapMode == mode }) throw MapEditException(notConfirmed)
     }
 
     /** Status caught up 1-2 s after the robot's "ok" in the capture, so poll briefly. */
@@ -1109,7 +1120,7 @@ class VacuumRepository(
      */
     suspend fun saveNewMap(): Unit = mapEditMutex.withLock {
         mapManageBlockedReason()?.let { throw MapEditException(it) }
-        if (!unsavedMapPresent.value) throw MapEditException("There is no new map to save")
+        if (!unsavedMapPresent.value) throw MapEditException(uiText(Res.string.repo_there_is_no_new_map_to, "There is no new map to save"))
         runCatching { fetchFloorMaps() }
         val before = _floorMaps.value.map { it.mapFlag }.toSet()
         // With map saving off the robot answers manual_segment_map with "The Lab Status is disable".
@@ -1120,7 +1131,7 @@ class VacuumRepository(
         if (stillUnsaved) session.saveNewMap()
         fetchFloorMaps()
         val added = _floorMaps.value.map { it.mapFlag }.toSet() - before
-        if (added.isEmpty()) throw MapEditException(if (stillUnsaved) NOT_CONFIRMED else MAP_NOT_KEPT)
+        if (added.isEmpty()) throw MapEditException(if (stillUnsaved) notConfirmed else uiText(Res.string.repo_map_not_kept, MAP_NOT_KEPT))
         runCatching { refreshStatus() }
         rawSegmentTable = null
         runCatching { fetchMap() }
@@ -1354,11 +1365,11 @@ class VacuumRepository(
         // to end the current task first (a296, restrict_low_area_access_status, 2026-11-16).
         val busy = (_status.value.inCleaning ?: 0) != 0 || _status.value.state in ACTIVE_STATES
         if (busy && last?.error?.get("code")?.jsonPrimitive?.intOrNull == -10007) {
-            throw IllegalStateException("The robot can't change this while it is cleaning. Finish or stop the current clean first.")
+            throw UiTextException(uiText(Res.string.repo_the_robot_cant_change_this_while, "The robot can't change this while it is cleaning. Finish or stop the current clean first."))
         }
         last?.requireOk(current.def.setMethod)
         if (updated != null && updated.value != value) {
-            throw IllegalStateException("The robot accepted the change but still reports the old setting.")
+            throw UiTextException(uiText(Res.string.repo_the_robot_accepted_the_change_but, "The robot accepted the change but still reports the old setting."))
         }
     }
 
@@ -1478,7 +1489,7 @@ class VacuumRepository(
     suspend fun setWashFrequency(mode: Int, intervalMinutes: Int?) {
         // Room/smart modes still carry an interval. Preserve the robot's current value.
         val current = parseSmartWashSettings(session.getSmartWashParams().requireOk("get_smart_wash_params").result)
-            ?: throw IllegalStateException("The robot's mop washing frequency is unavailable")
+            ?: throw UiTextException(uiText(Res.string.repo_the_robots_mop_washing_frequency_is, "The robot's mop washing frequency is unavailable"))
         _dockSettings.update { it.copy(smartWash = current) }
         val updated = current.withFrequency(mode, intervalMinutes)
         session.setSmartWashParams(updated).requireOk("set_smart_wash_params")
@@ -1549,7 +1560,7 @@ class VacuumRepository(
         // The robot keeps its periods sorted by start time (a296), so the order is not compared.
         fun key(list: List<DndPeriod>?) = list?.map { it.times to it.enabled }?.sortedBy { it.first[0] * 60 + it.first[1] }
         if (key(_dndPeriods.value) != key(periods)) {
-            throw IllegalStateException("The robot accepted the quiet hours, but reports different ones back.")
+            throw UiTextException(uiText(Res.string.repo_the_robot_accepted_the_quiet_hours, "The robot accepted the quiet hours, but reports different ones back."))
         }
     }
 
@@ -1585,7 +1596,7 @@ class VacuumRepository(
             // read fresh so a period added elsewhere is not lost.
             readDndPeriods()
             val current = _dndPeriods.value
-                ?: throw IllegalStateException("Couldn't read the robot's quiet hours, so nothing was changed.")
+                ?: throw UiTextException(uiText(Res.string.repo_couldnt_read_the_robots_quiet_hours, "Couldn't read the robot's quiet hours, so nothing was changed."))
             if (current.isNotEmpty()) {
                 val sorted = current.sortedBy { it.startHour * 60 + it.startMinute }
                 setDndPeriods(listOf(sorted[0].copy(startHour = startHour, startMinute = startMinute, endHour = endHour, endMinute = endMinute, enabled = true)) + sorted.drop(1))
@@ -1674,7 +1685,7 @@ class VacuumRepository(
         val resp = session.fetchSavedMap(createSecurityData(rriotKeyProvider()), mapFlag, backup)
         runCatching { parseB01Map(resp.data) }.getOrNull()
             ?: runCatching { parseLegacyMap(resp.data) }.getOrNull()
-            ?: throw MapEditException("The robot sent a map this app can't read")
+            ?: throw MapEditException(uiText(Res.string.repo_the_robot_sent_a_map_this, "The robot sent a map this app can't read"))
     }
 
     /** The map of a past clean (its path included); null when the robot no longer has it. */
@@ -1817,6 +1828,8 @@ class VacuumRepository(
         const val MAP_NOT_KEPT =
             "Map saving is now on, but the robot did not keep the map it had built. " +
                 "Let it clean or map the home once more, then save the map."
+
+        private val notConfirmed get() = uiText(Res.string.repo_not_confirmed, NOT_CONFIRMED)
 
         const val STALE_LINK_FAILURE_THRESHOLD = 3
 

@@ -5,6 +5,9 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.uiText
 
 /**
  * A robot setting that newer firmware advertises through a `newFeatureSet` bit and exposes as a
@@ -32,13 +35,13 @@ enum class FeatureSection { CARPET, FLOOR, OBSTACLE, PETS, DOCK, ROBOT, BETA }
  */
 data class BetaFeatureDef(
     val id: String,
-    val title: String,
-    val description: String,
+    val title: UiText,
+    val description: UiText,
     val bit: Int?,
     val getMethod: String,
     val setMethod: String,
     val section: FeatureSection = FeatureSection.BETA,
-    val choices: List<Pair<Int, String>>? = null,
+    val choices: List<Pair<Int, UiText>>? = null,
     val robotSetting: String? = null,
     val readField: String? = null,
     val readBit: Int? = null,
@@ -64,11 +67,11 @@ private const val SET_ROBOT_SETTING = "app_set_robot_setting"
 private fun robotSettingSwitch(
     id: String,
     name: String,
-    title: String,
-    description: String,
+    title: UiText,
+    description: UiText,
     bit: Int?,
     section: FeatureSection,
-    choices: List<Pair<Int, String>>? = null,
+    choices: List<Pair<Int, UiText>>? = null,
     shownWhenOn: String? = null,
 ) = BetaFeatureDef(
     id = id, title = title, description = description, bit = bit,
@@ -85,8 +88,8 @@ private fun statusBitSwitch(
     id: String,
     setMethod: String,
     statusBit: Int,
-    title: String,
-    description: String,
+    title: UiText,
+    description: UiText,
     bit: Int?,
     section: FeatureSection,
 ) = BetaFeatureDef(
@@ -103,11 +106,11 @@ private fun statusBitSwitch(
 private fun cameraBitSwitch(
     id: String,
     bitIndex: Int,
-    title: String,
-    description: String,
+    title: UiText,
+    description: UiText,
     bit: Int?,
     section: FeatureSection,
-    choices: List<Pair<Int, String>>? = null,
+    choices: List<Pair<Int, UiText>>? = null,
 ) = BetaFeatureDef(
     id = id, title = title, description = description, bit = bit,
     getMethod = "get_camera_status", setMethod = "set_camera_status", section = section,
@@ -123,8 +126,8 @@ fun bitmaskWithBit(raw: Int, def: BetaFeatureDef, value: Int): Int {
 val BetaFeatureDefs = listOf(
     BetaFeatureDef(
         id = "right_brush_stretch",
-        title = "FlexiArm side brush",
-        description = "Extends the side brush to reach into corners and along edges",
+        title = uiText(Res.string.feature_right_brush_stretch_title, "FlexiArm side brush"),
+        description = uiText(Res.string.feature_right_brush_stretch_desc, "Extends the side brush to reach into corners and along edges"),
         bit = 54,
         getMethod = "get_right_brush_stretch_status",
         setMethod = "set_right_brush_stretch_status",
@@ -132,8 +135,8 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "corner_mop_stretch",
-        title = "FlexiArm mop",
-        description = "Extends the mop to clean corners",
+        title = uiText(Res.string.feature_corner_mop_stretch_title, "FlexiArm mop"),
+        description = uiText(Res.string.feature_corner_mop_stretch_desc, "Extends the mop to clean corners"),
         bit = 40,
         getMethod = "get_stretch_tag_status",
         setMethod = "set_stretch_tag_status",
@@ -141,8 +144,8 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "gap_deep_clean",
-        title = "Gap deep clean",
-        description = "Cleans narrow gaps along walls and furniture",
+        title = uiText(Res.string.feature_gap_deep_clean_title, "Gap deep clean"),
+        description = uiText(Res.string.feature_gap_deep_clean_desc, "Cleans narrow gaps along walls and furniture"),
         bit = 63,
         getMethod = "get_gap_deep_clean_status",
         setMethod = "set_gap_deep_clean_status",
@@ -150,8 +153,8 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "pet_supplies_deep_clean",
-        title = "Pet supplies deep clean",
-        description = "Extra cleaning around pet bowls and beds",
+        title = uiText(Res.string.feature_pet_supplies_deep_clean_title, "Pet supplies deep clean"),
+        description = uiText(Res.string.feature_pet_supplies_deep_clean_desc, "Extra cleaning around pet bowls and beds"),
         bit = 43,
         getMethod = "get_pet_supplies_deep_clean_status",
         setMethod = "set_pet_supplies_deep_clean_status",
@@ -159,8 +162,8 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "dirty_object_detect",
-        title = "Dirty object detection",
-        description = "Spots dirty objects such as pet waste while cleaning",
+        title = uiText(Res.string.feature_dirty_object_detect_title, "Dirty object detection"),
+        description = uiText(Res.string.feature_dirty_object_detect_desc, "Spots dirty objects such as pet waste while cleaning"),
         bit = 56,
         getMethod = "get_dirty_object_detect_status",
         setMethod = "set_dirty_object_detect_status",
@@ -168,8 +171,8 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "avoid_collision",
-        title = "Collision avoidance",
-        description = "Steers around obstacles instead of bumping them",
+        title = uiText(Res.string.feature_avoid_collision_title, "Collision avoidance"),
+        description = uiText(Res.string.feature_avoid_collision_desc, "Steers around obstacles instead of bumping them"),
         bit = 36,
         getMethod = "get_collision_avoid_status",
         setMethod = "set_collision_avoid_status",
@@ -180,19 +183,19 @@ val BetaFeatureDefs = listOf(
     // switch would send "off" the robot does not have.
     BetaFeatureDef(
         id = "collision_mode",
-        title = "Collision mode",
-        description = "How closely the robot cleans around obstacles",
+        title = uiText(Res.string.feature_collision_mode_title, "Collision mode"),
+        description = uiText(Res.string.feature_collision_mode_desc, "How closely the robot cleans around obstacles"),
         bit = 36,
         getMethod = "get_collision_avoid_status",
         setMethod = "set_collision_avoid_status",
         section = FeatureSection.OBSTACLE,
-        choices = listOf(1 to "Large coverage", 2 to "Less collision"),
+        choices = listOf(1 to uiText(Res.string.feature_choice_large_coverage, "Large coverage"), 2 to uiText(Res.string.feature_choice_less_collision, "Less collision")),
         alsoRequiresBit = 118,
     ),
     BetaFeatureDef(
         id = "water_leak_check",
-        title = "Water leak detection",
-        description = "Stops and alerts if the robot detects a water leak",
+        title = uiText(Res.string.feature_water_leak_check_title, "Water leak detection"),
+        description = uiText(Res.string.feature_water_leak_check_desc, "Stops and alerts if the robot detects a water leak"),
         bit = 60,
         getMethod = "get_handle_leak_water_status",
         setMethod = "set_handle_leak_water_status",
@@ -200,8 +203,8 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "voice_control_led",
-        title = "Voice control light",
-        description = "Light on the robot that shows when it is listening",
+        title = uiText(Res.string.feature_voice_control_led_title, "Voice control light"),
+        description = uiText(Res.string.feature_voice_control_led_desc, "Light on the robot that shows when it is listening"),
         bit = 58,
         getMethod = "get_ap_mic_led_status",
         setMethod = "set_ap_mic_led_status",
@@ -209,8 +212,8 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "carpet_deep_clean",
-        title = "Carpet deep clean",
-        description = "Deeper cleaning passes over carpets",
+        title = uiText(Res.string.feature_carpet_deep_clean_title, "Carpet deep clean"),
+        description = uiText(Res.string.feature_carpet_deep_clean_desc, "Deeper cleaning passes over carpets"),
         bit = 3,
         getMethod = "app_get_carpet_deep_clean_status",
         setMethod = "app_set_carpet_deep_clean_status",
@@ -218,30 +221,30 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "clean_fluid_delivery",
-        title = "Cleaning fluid dosing",
-        description = "How much cleaning fluid the dock adds to the mop water",
+        title = uiText(Res.string.feature_clean_fluid_delivery_title, "Cleaning fluid dosing"),
+        description = uiText(Res.string.feature_clean_fluid_delivery_desc, "How much cleaning fluid the dock adds to the mop water"),
         bit = 112,
         getMethod = "get_auto_delivery_cleaning_fluid",
         setMethod = "set_auto_delivery_cleaning_fluid",
         section = FeatureSection.DOCK,
         // Captured from the official app on an a296: 0, 1 and 3, labelled None / Standard / High volume.
-        choices = listOf(0 to "None", 1 to "Standard", 3 to "High volume"),
+        choices = listOf(0 to uiText(Res.string.feature_choice_none, "None"), 1 to uiText(Res.string.feature_choice_standard, "Standard"), 3 to uiText(Res.string.feature_choice_high_volume, "High volume")),
     ),
     BetaFeatureDef(
         id = "dust_collection_switch",
-        title = "Auto-empty frequency",
-        description = "When the dock empties the robot's dust bin",
+        title = uiText(Res.string.feature_dust_collection_switch_title, "Auto-empty frequency"),
+        description = uiText(Res.string.feature_dust_collection_switch_desc, "When the dock empties the robot's dust bin"),
         bit = null,
         getMethod = "get_dust_collection_switch_status",
         setMethod = "set_dust_collection_switch_status",
         section = FeatureSection.DOCK,
         // Captured from the official app on an a296: Off, Balanced (after each clean), High (also during).
-        choices = listOf(0 to "Off", 1 to "Balanced", 2 to "High"),
+        choices = listOf(0 to uiText(Res.string.feature_choice_off, "Off"), 1 to uiText(Res.string.feature_choice_balanced, "Balanced"), 2 to uiText(Res.string.feature_choice_high, "High")),
     ),
     BetaFeatureDef(
         id = "identify_furniture",
-        title = "Furniture recognition",
-        description = "Recognizes furniture on the map",
+        title = uiText(Res.string.feature_identify_furniture_title, "Furniture recognition"),
+        description = uiText(Res.string.feature_identify_furniture_desc, "Recognizes furniture on the map"),
         bit = null,
         getMethod = "get_identify_furniture_status",
         setMethod = "set_identify_furniture_status",
@@ -249,8 +252,8 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "identify_ground_material",
-        title = "Floor type recognition",
-        description = "Recognizes carpet and hard floor",
+        title = uiText(Res.string.feature_identify_ground_material_title, "Floor type recognition"),
+        description = uiText(Res.string.feature_identify_ground_material_desc, "Recognizes carpet and hard floor"),
         bit = null,
         getMethod = "get_identify_ground_material_status",
         setMethod = "set_identify_ground_material_status",
@@ -258,8 +261,8 @@ val BetaFeatureDefs = listOf(
     ),
     BetaFeatureDef(
         id = "follow_ground_material",
-        title = "Clean by floor type",
-        description = "Adjusts cleaning to the floor type it detects",
+        title = uiText(Res.string.feature_follow_ground_material_title, "Clean by floor type"),
+        description = uiText(Res.string.feature_follow_ground_material_desc, "Adjusts cleaning to the floor type it detects"),
         bit = null,
         getMethod = "get_clean_follow_ground_material_status",
         setMethod = "set_clean_follow_ground_material_status",
@@ -270,72 +273,72 @@ val BetaFeatureDefs = listOf(
     // local_roborock_server, or read from its device plugin; see docs/robot-commands-a296.md.
     statusBitSwitch(
         id = "dirty_replenish", setMethod = "app_set_dirty_replenish_clean_status", statusBit = 4,
-        title = "Re-mop dirty spots", description = "Washes the mop and mops again where the floor is still dirty",
+        title = uiText(Res.string.feature_dirty_replenish_title, "Re-mop dirty spots"), description = uiText(Res.string.feature_dirty_replenish_desc, "Washes the mop and mops again where the floor is still dirty"),
         bit = 34, section = FeatureSection.FLOOR,
     ),
     robotSettingSwitch(
         id = "clean_direction", name = "clean_direction_status",
-        title = "Cleaning direction", description = "The pattern the robot follows across a room",
+        title = uiText(Res.string.feature_clean_direction_title, "Cleaning direction"), description = uiText(Res.string.feature_clean_direction_desc, "The pattern the robot follows across a room"),
         bit = 70, section = FeatureSection.FLOOR,
-        choices = listOf(0 to "Smart", 1 to "Along the floor", 2 to "Crosswise"),
+        choices = listOf(0 to uiText(Res.string.feature_choice_smart, "Smart"), 1 to uiText(Res.string.feature_choice_along_the_floor, "Along the floor"), 2 to uiText(Res.string.feature_choice_crosswise, "Crosswise")),
     ),
     robotSettingSwitch(
         id = "low_area_access", name = "restrict_low_area_access_status",
-        title = "Cleaning under low furniture", description = "How low a gap the robot drives into",
+        title = uiText(Res.string.feature_low_area_access_title, "Cleaning under low furniture"), description = uiText(Res.string.feature_low_area_access_desc, "How low a gap the robot drives into"),
         bit = 116, section = FeatureSection.FLOOR,
-        choices = listOf(2 to "Off", 1 to "Safe clearance", 0 to "Extreme clearance"),
+        choices = listOf(2 to uiText(Res.string.feature_choice_off, "Off"), 1 to uiText(Res.string.feature_choice_safe_clearance, "Safe clearance"), 0 to uiText(Res.string.feature_choice_extreme_clearance, "Extreme clearance")),
     ),
     robotSettingSwitch(
         id = "lds_lifting", name = "lds_lifting_switch",
-        title = "Lower the LiDAR", description = "Lowers the laser tower to reach under furniture",
+        title = uiText(Res.string.feature_lds_lifting_title, "Lower the LiDAR"), description = uiText(Res.string.feature_lds_lifting_desc, "Lowers the laser tower to reach under furniture"),
         bit = 79, section = FeatureSection.FLOOR,
     ),
     robotSettingSwitch(
         id = "sway_arm_door_sill", name = "enable_sway_arm_for_high_door_sill_carpet",
-        title = "Arm for high sills and carpets", description = "Uses the arm to climb high door sills and carpets",
+        title = uiText(Res.string.feature_sway_arm_door_sill_title, "Arm for high sills and carpets"), description = uiText(Res.string.feature_sway_arm_door_sill_desc, "Uses the arm to climb high door sills and carpets"),
         bit = null, section = FeatureSection.FLOOR,
     ),
     robotSettingSwitch(
         id = "remove_mop", name = "enable_remove_mop_status",
-        title = "Detach mops automatically", description = "Leaves the mops in the dock when only vacuuming",
+        title = uiText(Res.string.feature_remove_mop_title, "Detach mops automatically"), description = uiText(Res.string.feature_remove_mop_desc, "Leaves the mops in the dock when only vacuuming"),
         bit = 80, section = FeatureSection.FLOOR,
     ),
     robotSettingSwitch(
         id = "dynamic_obstacle_replenish", name = "dynamic_obstacle_replenish_status",
-        title = "Re-clean blocked areas", description = "Returns to spots that people or pets were blocking",
+        title = uiText(Res.string.feature_dynamic_obstacle_replenish_title, "Re-clean blocked areas"), description = uiText(Res.string.feature_dynamic_obstacle_replenish_desc, "Returns to spots that people or pets were blocking"),
         bit = 131, section = FeatureSection.FLOOR,
     ),
     robotSettingSwitch(
         id = "omission_reminder", name = "enable_omission_area_clean_status",
-        title = "Missed-area reminder", description = "Points out areas the robot could not clean",
+        title = uiText(Res.string.feature_omission_reminder_title, "Missed-area reminder"), description = uiText(Res.string.feature_omission_reminder_desc, "Points out areas the robot could not clean"),
         bit = 132, section = FeatureSection.FLOOR,
     ),
     statusBitSwitch(
         id = "priority_carpet", setMethod = "app_set_priority_carpet_cleaning_status", statusBit = 3,
-        title = "Carpets first", description = "Detaches the mops, vacuums carpets first and then cleans the rest",
+        title = uiText(Res.string.feature_priority_carpet_title, "Carpets first"), description = uiText(Res.string.feature_priority_carpet_desc, "Detaches the mops, vacuums carpets first and then cleans the rest"),
         bit = null, section = FeatureSection.CARPET,
     ),
     statusBitSwitch(
         id = "cross_carpet", setMethod = "app_set_cross_carpet_cleaning_status", statusBit = 5,
-        title = "Cross carpets", description = "Drives over carpets without cleaning them",
+        title = uiText(Res.string.feature_cross_carpet_title, "Cross carpets"), description = uiText(Res.string.feature_cross_carpet_desc, "Drives over carpets without cleaning them"),
         bit = 49, section = FeatureSection.CARPET,
     ),
     robotSettingSwitch(
         id = "long_haired_carpet", name = "long_haired_carpet_clean_status",
-        title = "Adaptive lift", description = "Tilts up for high-pile carpets while Carpets first is on",
+        title = uiText(Res.string.feature_long_haired_carpet_title, "Adaptive lift"), description = uiText(Res.string.feature_long_haired_carpet_desc, "Tilts up for high-pile carpets while Carpets first is on"),
         bit = 75, section = FeatureSection.CARPET,
         // The robot refused it with Carpets first off: -10007 "invalid param, not carpet clean first".
         shownWhenOn = "priority_carpet",
     ),
     robotSettingSwitch(
         id = "carpet_wire", name = "nearbycarpet_detecting_wire_status",
-        title = "Avoid cords at carpet edges", description = "Better cord detection along carpet edges",
+        title = uiText(Res.string.feature_carpet_wire_title, "Avoid cords at carpet edges"), description = uiText(Res.string.feature_carpet_wire_desc, "Better cord detection along carpet edges"),
         bit = 105, section = FeatureSection.CARPET,
     ),
     BetaFeatureDef(
         id = "carpet_boost",
-        title = "Carpet boost",
-        description = "Maximum suction on carpets",
+        title = uiText(Res.string.feature_carpet_boost_title, "Carpet boost"),
+        description = uiText(Res.string.feature_carpet_boost_desc, "Maximum suction on carpets"),
         bit = null,
         getMethod = "get_carpet_mode",
         setMethod = "set_carpet_mode",
@@ -347,18 +350,18 @@ val BetaFeatureDefs = listOf(
     ),
     robotSettingSwitch(
         id = "identify_room", name = "identify_room_status",
-        title = "Room recognition", description = "Recognizes room types from what the camera sees",
+        title = uiText(Res.string.feature_identify_room_title, "Room recognition"), description = uiText(Res.string.feature_identify_room_desc, "Recognizes room types from what the camera sees"),
         bit = 66, section = FeatureSection.OBSTACLE,
     ),
     robotSettingSwitch(
         id = "smart_wash", name = "smart_wash_status",
-        title = "Smart mop washing", description = "Adapts water, time and temperature to how dirty the mop is",
+        title = uiText(Res.string.feature_smart_wash_title, "Smart mop washing"), description = uiText(Res.string.feature_smart_wash_desc, "Adapts water, time and temperature to how dirty the mop is"),
         bit = 144, section = FeatureSection.DOCK,
     ),
     BetaFeatureDef(
         id = "offline_map",
-        title = "Offline map",
-        description = "Keeps showing where the robot was before it lost power",
+        title = uiText(Res.string.feature_offline_map_title, "Offline map"),
+        description = uiText(Res.string.feature_offline_map_desc, "Keeps showing where the robot was before it lost power"),
         bit = null,
         getMethod = "get_offline_map_status",
         setMethod = "set_offline_map_status",
@@ -369,32 +372,32 @@ val BetaFeatureDefs = listOf(
     ),
     cameraBitSwitch(
         id = "fill_light", bitIndex = 1,
-        title = "Fill light", description = "Lights up dark spots so obstacles are recognised better",
+        title = uiText(Res.string.feature_fill_light_title, "Fill light"), description = uiText(Res.string.feature_fill_light_desc, "Lights up dark spots so obstacles are recognised better"),
         bit = null, section = FeatureSection.OBSTACLE,
-        choices = listOf(1 to "Automatic", 0 to "Off"),
+        choices = listOf(1 to uiText(Res.string.feature_choice_automatic, "Automatic"), 0 to uiText(Res.string.feature_choice_off, "Off")),
     ),
     // Bit 10 (1024), captured 2026-11-19: the official app's "Obstakelfoto's" sent [10663] then [11687]
     // after its privacy notice (the photos are kept in the robot's memory).
     cameraBitSwitch(
         id = "obstacle_photos", bitIndex = 10,
-        title = "Obstacle photos",
-        description = "Keeps photos of obstacles the camera recognised, in the robot's memory; tap an obstacle on the map to see it",
+        title = uiText(Res.string.feature_obstacle_photos_title, "Obstacle photos"),
+        description = uiText(Res.string.feature_obstacle_photos_desc, "Keeps photos of obstacles the camera recognised, in the robot's memory; tap an obstacle on the map to see it"),
         bit = null, section = FeatureSection.OBSTACLE,
     ),
     cameraBitSwitch(
         id = "have_pets", bitIndex = 5,
-        title = "I have pets", description = "Watches out for pet waste and cleans pet areas with more care",
+        title = uiText(Res.string.feature_have_pets_title, "I have pets"), description = uiText(Res.string.feature_have_pets_desc, "Watches out for pet waste and cleans pet areas with more care"),
         bit = null, section = FeatureSection.PETS,
     ),
     cameraBitSwitch(
         id = "pet_snaps", bitIndex = 12,
-        title = "Pet Snaps", description = "Takes photos of your pets while cleaning",
+        title = uiText(Res.string.feature_pet_snaps_title, "Pet Snaps"), description = uiText(Res.string.feature_pet_snaps_desc, "Takes photos of your pets while cleaning"),
         bit = 50, section = FeatureSection.PETS,
     ),
     BetaFeatureDef(
         id = "voice_assistant",
-        title = "Voice assistant",
-        description = "The robot listens for spoken commands; it processes your voice to do so",
+        title = uiText(Res.string.feature_voice_assistant_title, "Voice assistant"),
+        description = uiText(Res.string.feature_voice_assistant_desc, "The robot listens for spoken commands; it processes your voice to do so"),
         bit = 37,
         getMethod = "get_voice_service_switch",
         setMethod = "set_voice_service_switch",
@@ -403,12 +406,12 @@ val BetaFeatureDefs = listOf(
     ),
     robotSettingSwitch(
         id = "product_experience", name = "product_experience_status",
-        title = "Share usage data", description = "Lets the robot send usage data to Roborock to improve the product",
+        title = uiText(Res.string.feature_product_experience_title, "Share usage data"), description = uiText(Res.string.feature_product_experience_desc, "Lets the robot send usage data to Roborock to improve the product"),
         bit = 121, section = FeatureSection.ROBOT,
     ),
     robotSettingSwitch(
         id = "voice_experience", name = "voice_experience_status",
-        title = "Share voice data", description = "Lets the robot send voice recordings to Roborock to improve recognition",
+        title = uiText(Res.string.feature_voice_experience_title, "Share voice data"), description = uiText(Res.string.feature_voice_experience_desc, "Lets the robot send voice recordings to Roborock to improve recognition"),
         bit = 121, section = FeatureSection.ROBOT,
     ),
 )
@@ -584,7 +587,10 @@ data class BetaFeatureState(
         get() = def.choices?.any { it.first == value } ?: (value == 0 || value == 1)
 
     /** The label of [value] for a picker, or null for a switch. */
-    val choiceLabel: String? get() = def.choices?.firstOrNull { it.first == value }?.second
+    val choiceLabel: String? get() = choiceText?.english
+
+    /** [choiceLabel] for the UI, in the app's language. */
+    val choiceText: UiText? get() = def.choices?.firstOrNull { it.first == value }?.second
 }
 
 /** The params for reading [def]: `{"name": K}` for a robot setting, none otherwise. */

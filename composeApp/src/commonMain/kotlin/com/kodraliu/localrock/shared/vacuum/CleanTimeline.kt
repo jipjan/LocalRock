@@ -8,6 +8,11 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.longOrNull
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.joinedText
+import com.kodraliu.localrock.shared.text.rawText
+import com.kodraliu.localrock.shared.text.uiText
 
 /** One event of a past clean (`get_clean_detail`): when, its type `i`, and its coded fields `e`. */
 data class CleanEvent(val epoch: Long, val type: Int, val fields: JsonObject)
@@ -62,14 +67,17 @@ internal fun cleanDetailParams(begin: Long, from: Int) = JsonObject(mapOf(
 /** A line of a past clean's timeline, as the official app words it. */
 data class CleanTimelineEntry(
     val epoch: Long,
-    val title: String,
-    val detail: String? = null,
+    val titleText: UiText,
+    val detailText: UiText? = null,
     val milestone: Boolean = false,
     /** How a room (or the whole clean) was cleaned, shown as the official app's row of icons. */
     val settings: CleanRunSettings? = null,
     /** The start's cleaning preferences, the official app's bullet lines under "Start full clean". */
     val preferences: List<CleanPreference> = emptyList(),
-)
+) {
+    val title: String get() = titleText.english
+    val detail: String? get() = detailText?.english
+}
 
 /** One line of the official app's start card (plugin strings `clean_node_clean_pref_line*`). */
 enum class CleanPreference {
@@ -105,25 +113,44 @@ fun cleanPreferences(values: List<Long>): List<CleanPreference> {
  * medium, high); route 0 is standard. Higher suction values follow the robot's usual order.
  */
 data class CleanRunSettings(val suction: Int?, val water: Int?, val route: Int?, val passes: Int?) {
-    val mode: String?
+    val modeText: UiText?
         get() = when {
             suction == null || water == null -> null
-            suction > 0 && water > 0 -> "Vacuum and mop"
-            water > 0 -> "Mop only"
-            suction > 0 -> "Vacuum only"
+            suction > 0 && water > 0 -> uiText(Res.string.run_vacuum_and_mop, "Vacuum and mop")
+            water > 0 -> uiText(Res.string.run_mop_only, "Mop only")
+            suction > 0 -> uiText(Res.string.run_vacuum_only, "Vacuum only")
             else -> null
         }
-    val suctionLabel: String?
-        get() = when (suction) { null, 0 -> null; 1 -> "Quiet"; 2 -> "Standard"; 3 -> "Strong"; 4 -> "MAX"; 5 -> "MAX+"; else -> "Suction $suction" }
-    val waterLabel: String?
+    val suctionText: UiText?
+        get() = when (suction) {
+            null, 0 -> null
+            1 -> uiText(Res.string.run_suction_quiet, "Quiet")
+            2 -> uiText(Res.string.run_suction_standard, "Standard")
+            3 -> uiText(Res.string.run_suction_strong, "Strong")
+            4 -> rawText("MAX")
+            5 -> rawText("MAX+")
+            else -> uiText(Res.string.run_suction_code, "Suction $suction", suction)
+        }
+    val waterText: UiText?
         get() = when (water) {
             null, 0 -> null
-            1 -> "Low"; 2 -> "Medium"; 3 -> "High"
+            1 -> uiText(Res.string.water_low, "Low")
+            2 -> uiText(Res.string.water_medium, "Medium")
+            3 -> uiText(Res.string.water_high, "High")
             // Water slide robots log the slider code without its 200 (a296: 35 for 235, the medium mark).
-            else -> WaterBoxMode.slideLabel(water + 200) ?: "Water $water"
+            else -> WaterBoxMode.slideText(water + 200) ?: uiText(Res.string.run_water_code, "Water $water", water)
         }
-    val routeLabel: String?
-        get() = when (route) { null -> null; 0 -> "Standard"; else -> "Route $route" }
+    val routeText: UiText?
+        get() = when (route) {
+            null -> null
+            0 -> uiText(Res.string.run_route_standard, "Standard")
+            else -> uiText(Res.string.run_route_code, "Route $route", route)
+        }
+
+    val mode: String? get() = modeText?.english
+    val suctionLabel: String? get() = suctionText?.english
+    val waterLabel: String? get() = waterText?.english
+    val routeLabel: String? get() = routeText?.english
 }
 
 /*
@@ -148,7 +175,7 @@ private fun runSettings(f: JsonObject): CleanRunSettings? =
     if (f.int("3") == null && f.int("4") == null) null
     else CleanRunSettings(f.int("3"), f.int("4"), f.int("5"), f.int("6"))
 
-private fun cleanMode(f: JsonObject): String? = runSettings(f)?.mode
+private fun cleanMode(f: JsonObject): UiText? = runSettings(f)?.modeText
 
 /**
  * The timeline of a past clean in the official app's words: start, each room, mop washes, resumes,
@@ -165,48 +192,76 @@ fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): L
         val f = e.fields
         when (e.type) {
             25 -> if (f.int("252") == null && f.int("251") == null) null else {
-                val type = when (f.int("252")) { 1 -> "full clean"; else -> "clean" }
-                val source = when (f.int("251")) { 2 -> "from the app"; else -> null }
+                val title = when (f.int("252")) {
+                    1 -> uiText(Res.string.timeline_started_full_clean, "Started full clean")
+                    else -> uiText(Res.string.timeline_started_clean, "Started clean")
+                }
+                val source = when (f.int("251")) { 2 -> uiText(Res.string.timeline_from_the_app, "from the app"); else -> null }
                 // The preferences come in a separate start event at the same moment.
                 val prefs = events.firstOrNull { it.type == 25 && it.epoch == e.epoch && it.fields["254"] is JsonArray }
                     ?.let { p -> (p.fields["254"] as JsonArray).mapNotNull { (it as? JsonPrimitive)?.longOrNull } }
                     ?.let(::cleanPreferences).orEmpty()
                 CleanTimelineEntry(
-                    e.epoch, "Started $type", listOfNotNull(source, cleanMode(f)).joinToString(" · ").ifEmpty { null },
+                    e.epoch, title, joinedText(listOf(source, cleanMode(f))),
                     milestone = true, preferences = prefs,
                 )
             }
             42 -> run {
                 val room = f.int("2")
-                val name = room?.let(roomName) ?: "room ${room ?: "?"}"
-                if (f.int("425") != null) return@run CleanTimelineEntry(e.epoch, "Resumed cleaning $name", milestone = true)
+                val name = room?.let(roomName)?.let(::rawText)
+                    ?: "${room ?: "?"}".let { uiText(Res.string.timeline_room_number, "room $it", it) }
+                if (f.int("425") != null) {
+                    return@run CleanTimelineEntry(
+                        e.epoch, uiText(Res.string.timeline_resumed_cleaning_room, "Resumed cleaning ${name.english}", name), milestone = true,
+                    )
+                }
                 if ((e.epoch to room) in resumed) return@run null
-                val title = if (f.int("421") == 3) "Re-cleaning areas blocked by people or pets"
-                else "Cleaning $name"
-                val passes = f.int("6")?.takeIf { it > 0 }?.let { "×$it" }
+                val title = if (f.int("421") == 3) {
+                    uiText(Res.string.timeline_recleaning_blocked_areas, "Re-cleaning areas blocked by people or pets")
+                } else {
+                    uiText(Res.string.timeline_cleaning_room, "Cleaning ${name.english}", name)
+                }
+                val passes = f.int("6")?.takeIf { it > 0 }?.let { rawText("×$it") }
                 CleanTimelineEntry(
-                    e.epoch, title, listOfNotNull(cleanMode(f), passes).joinToString(" · ").ifEmpty { null },
+                    e.epoch, title, joinedText(listOf(cleanMode(f), passes)),
                     milestone = true, settings = runSettings(f),
                 )
             }
             52 -> {
-                val mode = if (f.int("521") == 10) "Smart" else null
-                val temp = when (f.int("522")) { 0 -> "Room temperature"; 1 -> "Warm water"; 2 -> "Hot water"; else -> null }
-                CleanTimelineEntry(e.epoch, "Mop wash", listOfNotNull(mode, if (mode != null) temp else null).joinToString(" · ").ifEmpty { null })
+                val mode = if (f.int("521") == 10) uiText(Res.string.mode_smart, "Smart") else null
+                val temp = DockOptions.washWaterTemperature.firstOrNull { it.code == f.int("522") }?.text
+                CleanTimelineEntry(
+                    e.epoch, uiText(Res.string.timeline_mop_wash, "Mop wash"),
+                    joinedText(listOf(mode, if (mode != null) temp else null)),
+                )
             }
-            53 -> CleanTimelineEntry(e.epoch, "Resumed")
+            53 -> CleanTimelineEntry(e.epoch, uiText(Res.string.timeline_resumed, "Resumed"))
             31 -> f.int("311")?.takeIf { it != 0 && washFailures.add(it) }?.let {
-                CleanTimelineEntry(e.epoch, "Mop wash failed ($it)", DockErrorCodes.describe(it))
+                CleanTimelineEntry(e.epoch, uiText(Res.string.timeline_mop_wash_failed, "Mop wash failed ($it)", it), DockErrorCodes.text(it))
             }
-            22 -> if (f.int("3") == 5) CleanTimelineEntry(e.epoch, "Switched to vacuum only") else null
-            13 -> if (f.int("131") == 14) CleanTimelineEntry(e.epoch, "Resumed") else null
+            22 -> if (f.int("3") == 5) CleanTimelineEntry(e.epoch, uiText(Res.string.timeline_switched_to_vacuum_only, "Switched to vacuum only")) else null
+            13 -> if (f.int("131") == 14) CleanTimelineEntry(e.epoch, uiText(Res.string.timeline_resumed, "Resumed")) else null
             54 -> if (autoEmptyEnds.any { e.epoch - it in 0..AUTO_EMPTY_PAIR_SECONDS }) null
-            else CleanTimelineEntry(e.epoch, "Auto-empty", if (f.int("541") == 1) "Light" else null)
-            21 -> CleanTimelineEntry(e.epoch, "Settings changed by hand", if (f.int("211") == 1) "Water flow changed" else null)
-            12 -> CleanTimelineEntry(e.epoch, "Clean finished", milestone = true)
-            23 -> CleanTimelineEntry(e.epoch, "Auto-empty", when (f.int("231")) { 1 -> "Balanced"; 2 -> "High"; else -> null })
+            else CleanTimelineEntry(
+                e.epoch, uiText(Res.string.timeline_auto_empty, "Auto-empty"),
+                if (f.int("541") == 1) uiText(Res.string.mode_light, "Light") else null,
+            )
+            21 -> CleanTimelineEntry(
+                e.epoch, uiText(Res.string.timeline_settings_changed_by_hand, "Settings changed by hand"),
+                if (f.int("211") == 1) uiText(Res.string.timeline_water_flow_changed, "Water flow changed") else null,
+            )
+            12 -> CleanTimelineEntry(e.epoch, uiText(Res.string.timeline_clean_finished, "Clean finished"), milestone = true)
+            23 -> CleanTimelineEntry(
+                e.epoch, uiText(Res.string.timeline_auto_empty, "Auto-empty"),
+                when (f.int("231")) {
+                    1 -> uiText(Res.string.mode_balanced, "Balanced")
+                    2 -> uiText(Res.string.mode_high, "High")
+                    else -> null
+                },
+            )
             // State changes are not shown, except a pause, which the official app lists ("Pauzeren").
-            CLEAN_EVENT_STATE_CHANGE -> if (f.int("112") == VacuumStateCodes.PAUSED) CleanTimelineEntry(e.epoch, "Paused") else null
+            CLEAN_EVENT_STATE_CHANGE ->
+                if (f.int("112") == VacuumStateCodes.PAUSED) CleanTimelineEntry(e.epoch, uiText(Res.string.timeline_paused, "Paused")) else null
             else -> null
         }
     }

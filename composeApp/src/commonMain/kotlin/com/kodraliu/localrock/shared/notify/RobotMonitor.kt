@@ -73,7 +73,7 @@ class RobotMonitor(
                 status = change(status)
                 val events = detector.update(status)
                 if (!detector.runInProgress) room = null
-                events to if (detector.runInProgress) progressOf(device.duid, device.name, status, room) else null
+                events to if (detector.runInProgress) localizedProgressOf(device.duid, device.name, status, room) else null
             }
             onProgress(device, progress)
             for (event in events) {

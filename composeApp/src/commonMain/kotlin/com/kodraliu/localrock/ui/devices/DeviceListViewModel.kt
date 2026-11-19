@@ -11,6 +11,7 @@ import com.kodraliu.localrock.resources.Res
 import com.kodraliu.localrock.resources.devices_action_refused
 import com.kodraliu.localrock.resources.devices_load_failed
 import org.jetbrains.compose.resources.getString
+import com.kodraliu.localrock.shared.text.localizedText
 
 class DeviceListViewModel(
     private val container: AppContainer,
@@ -37,7 +38,7 @@ class DeviceListViewModel(
                 container.deviceRepository.refresh()
                 container.deviceRepository.probeReachability()
             } catch (e: Throwable) {
-                _error.value = e.message ?: getString(Res.string.devices_load_failed)
+                _error.value = e.localizedText() ?: getString(Res.string.devices_load_failed)
             } finally {
                 _refreshing.value = false
             }
@@ -55,7 +56,7 @@ class DeviceListViewModel(
         viewModelScope.launch {
             _actionError.value = null
             runCatching { container.quickAction(device, action) }
-                .onFailure { _actionError.value = it.message ?: getString(Res.string.devices_action_refused) }
+                .onFailure { _actionError.value = it.localizedText() ?: getString(Res.string.devices_action_refused) }
             kotlinx.coroutines.delay(1_500)
             container.deviceRepository.probeReachability()
         }

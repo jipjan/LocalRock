@@ -1,5 +1,11 @@
 package com.kodraliu.localrock.shared.vacuum
 
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.joinedText
+import com.kodraliu.localrock.shared.text.uiPlural
+import com.kodraliu.localrock.shared.text.uiText
+
 data class CleanRecord(
     val beginEpoch: Long,
     val endEpoch: Long,
@@ -20,14 +26,17 @@ data class CleanRecord(
     val cleanType: Int? = null,
 ) {
     /** [cleanType] as the official app's history names it, or null when unknown. */
-    val typeLabel: String?
+    val typeLabel: String? get() = typeText?.english
+
+    /** [typeLabel] for the UI, in the app's language. */
+    val typeText: UiText?
         get() = when (cleanType) {
-            1 -> "Full"
-            2 -> "Zones"
-            3 -> "Rooms"
-            4 -> "Quick mapping"
-            5 -> "Cruise"
-            6 -> "Find the pet"
+            1 -> uiText(Res.string.record_type_full, "Full")
+            2 -> uiText(Res.string.record_type_zones, "Zones")
+            3 -> uiText(Res.string.record_type_rooms, "Rooms")
+            4 -> uiText(Res.string.record_type_quick_mapping, "Quick mapping")
+            5 -> uiText(Res.string.record_type_cruise, "Cruise")
+            6 -> uiText(Res.string.record_type_find_the_pet, "Find the pet")
             else -> null
         }
 
@@ -39,11 +48,18 @@ data class CleanRecord(
         get() = if (durationSeconds >= 60 && areaMm2 > 0) (areaMm2 / 1_000_000f) / (durationSeconds / 60f) else null
 
     /** A short line of what the robot did, e.g. "47 obstacles avoided · 2 mop washes · bin emptied". */
-    val detailLine: String?
-        get() = listOfNotNull(
-            avoidCount?.takeIf { it > 0 }?.let { "$it obstacle${if (it == 1) "" else "s"} avoided" },
-            washCount?.takeIf { it > 0 }?.let { "$it mop wash${if (it == 1) "" else "es"}" },
-            if (dustCollected == true) "bin emptied" else null,
-            passes?.takeIf { it > 1 }?.let { "$it passes" },
-        ).joinToString(" · ").ifEmpty { null }
+    val detailLine: String? get() = detailText?.english
+
+    /** [detailLine] for the UI, in the app's language. */
+    val detailText: UiText?
+        get() = joinedText(listOf(
+            avoidCount?.takeIf { it > 0 }?.let {
+                uiPlural(Res.plurals.record_obstacles_avoided, it, "$it obstacle${if (it == 1) "" else "s"} avoided", it)
+            },
+            washCount?.takeIf { it > 0 }?.let {
+                uiPlural(Res.plurals.record_mop_washes, it, "$it mop wash${if (it == 1) "" else "es"}", it)
+            },
+            if (dustCollected == true) uiText(Res.string.record_bin_emptied, "bin emptied") else null,
+            passes?.takeIf { it > 1 }?.let { uiText(Res.string.record_passes, "$it passes", it) },
+        ))
 }

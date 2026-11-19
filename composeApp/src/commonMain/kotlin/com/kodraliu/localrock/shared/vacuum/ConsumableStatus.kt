@@ -2,6 +2,9 @@ package com.kodraliu.localrock.shared.vacuum
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.uiText
 
 @Serializable
 data class ConsumableStatus(
@@ -32,20 +35,50 @@ data class ConsumableStatus(
  * One line for the Maintenance entry, as the official app's "Normaal": the part that is worn out, the
  * one closest to it when it has under 10% left, or "Normal". Null before the robot has answered.
  */
-fun ConsumableStatus.summary(): String? {
+fun ConsumableStatus.summary(): String? = summaryText()?.english
+
+/** The parts [summary] weighs: name, what to do once worn out, used seconds and lifetime. */
+private class ConsumablePart(val name: UiText, val wornOut: UiText, val used: Long, val life: Long)
+
+/** [summary] for the UI, in the app's language. */
+fun ConsumableStatus.summaryText(): UiText? {
     val parts = listOfNotNull(
-        mainBrushWorkTime?.let { Triple("Main brush", it, ConsumableStatus.MAIN_BRUSH_LIFETIME_S) },
-        sideBrushWorkTime?.let { Triple("Side brush", it, ConsumableStatus.SIDE_BRUSH_LIFETIME_S) },
-        filterWorkTime?.let { Triple("Filter", it, ConsumableStatus.FILTER_LIFETIME_S) },
-        sensorDirtyTime?.let { Triple("Sensors", it, ConsumableStatus.SENSOR_LIFETIME_S) },
+        mainBrushWorkTime?.let {
+            ConsumablePart(
+                uiText(Res.string.consumable_main_brush, "Main brush"),
+                uiText(Res.string.consumable_replace_main_brush, "Replace the main brush"),
+                it, ConsumableStatus.MAIN_BRUSH_LIFETIME_S,
+            )
+        },
+        sideBrushWorkTime?.let {
+            ConsumablePart(
+                uiText(Res.string.consumable_side_brush, "Side brush"),
+                uiText(Res.string.consumable_replace_side_brush, "Replace the side brush"),
+                it, ConsumableStatus.SIDE_BRUSH_LIFETIME_S,
+            )
+        },
+        filterWorkTime?.let {
+            ConsumablePart(
+                uiText(Res.string.consumable_filter, "Filter"),
+                uiText(Res.string.consumable_replace_filter, "Replace the filter"),
+                it, ConsumableStatus.FILTER_LIFETIME_S,
+            )
+        },
+        sensorDirtyTime?.let {
+            ConsumablePart(
+                uiText(Res.string.consumable_sensors, "Sensors"),
+                uiText(Res.string.consumable_clean_sensors, "Clean the sensors"),
+                it, ConsumableStatus.SENSOR_LIFETIME_S,
+            )
+        },
     )
     if (parts.isEmpty()) return null
-    val (name, used, life) = parts.maxBy { (_, used, life) -> used.toDouble() / life }
-    val left = 100 - (used * 100 / life)
+    val part = parts.maxBy { it.used.toDouble() / it.life }
+    val left = 100 - (part.used * 100 / part.life)
     return when {
-        left <= 0 -> if (name == "Sensors") "Clean the sensors" else "Replace the ${name.lowercase()}"
-        left < 10 -> "$name: $left% left"
-        else -> "Normal"
+        left <= 0 -> part.wornOut
+        left < 10 -> uiText(Res.string.consumable_percent_left, "${part.name.english}: $left% left", part.name, left)
+        else -> uiText(Res.string.consumable_normal, "Normal")
     }
 }
 

@@ -6,6 +6,10 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
 import kotlin.math.roundToInt
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.rawText
+import com.kodraliu.localrock.shared.text.uiText
 
 data class RobotSettings(
     val volume: Int = 50,
@@ -21,9 +25,12 @@ val VolumeRange = 0..100
 fun volumeFromSlider(position: Float): Int = position.roundToInt().coerceIn(VolumeRange)
 
 /** "Off" only at 0, as a robot at 10 still speaks; any other volume as its percentage, e.g. "45%". */
-fun volumeLabel(volume: Int): String {
+fun volumeLabel(volume: Int): String = volumeText(volume).english
+
+/** [volumeLabel] for the UI, in the app's language. */
+fun volumeText(volume: Int): UiText {
     val clamped = volume.coerceIn(VolumeRange)
-    return if (clamped == 0) "Off" else "$clamped%"
+    return if (clamped == 0) uiText(Res.string.mode_off, "Off") else rawText("$clamped%")
 }
 
 data class DockSettings(
@@ -64,12 +71,19 @@ internal fun encodeSmartWashParams(settings: SmartWashSettings): JsonObject = Js
     "wash_interval" to JsonPrimitive(settings.intervalSeconds),
 ))
 
-fun washFrequencyLabel(settings: SmartWashSettings?): String = when (settings?.mode) {
-    null -> "Unavailable"
-    0 -> if (settings.intervalSeconds % 60 == 0) "${settings.intervalSeconds / 60} min" else "${settings.intervalSeconds} sec"
-    1 -> "After each room"
-    2 -> "Smart"
-    else -> "Unknown (${settings.mode})"
+fun washFrequencyLabel(settings: SmartWashSettings?): String = washFrequencyText(settings).english
+
+/** [washFrequencyLabel] for the UI, in the app's language. */
+fun washFrequencyText(settings: SmartWashSettings?): UiText = when (settings?.mode) {
+    null -> uiText(Res.string.mode_unavailable, "Unavailable")
+    0 -> if (settings.intervalSeconds % 60 == 0) {
+        (settings.intervalSeconds / 60).let { uiText(Res.string.duration_minutes, "$it min", it) }
+    } else {
+        uiText(Res.string.duration_sec, "${settings.intervalSeconds} sec", settings.intervalSeconds)
+    }
+    1 -> uiText(Res.string.dock_wash_after_each_room, "After each room")
+    2 -> uiText(Res.string.mode_smart, "Smart")
+    else -> uiText(Res.string.mode_unknown, "Unknown (${settings.mode})", settings.mode)
 }
 
 data class CleanSummary(
@@ -164,12 +178,14 @@ internal fun dryerSettingBody(reported: JsonObject?, enabled: Boolean, dryTimeSe
  * off the carpet), 2 vacuum and mop; crossing carpets is its own switch there. Other robots keep the
  * list LocalRock had.
  */
-fun carpetModeOptions(newFeatureSet: String?): List<Pair<Int, String>> =
-    if (newFeatureBit(newFeatureSet, 49)) {
-        listOf(0 to "Avoid carpet", 3 to "Vacuum only", 2 to "Vacuum and mop")
+fun carpetModeOptions(newFeatureSet: String?): List<Pair<Int, UiText>> {
+    val avoid = uiText(Res.string.carpet_avoid, "Avoid carpet")
+    return if (newFeatureBit(newFeatureSet, 49)) {
+        listOf(0 to avoid, 3 to uiText(Res.string.run_vacuum_only, "Vacuum only"), 2 to uiText(Res.string.run_vacuum_and_mop, "Vacuum and mop"))
     } else {
-        listOf(0 to "Avoid carpet", 1 to "Standard", 2 to "Carpet boost")
+        listOf(0 to avoid, 1 to uiText(Res.string.run_suction_standard, "Standard"), 2 to uiText(Res.string.carpet_boost, "Carpet boost"))
     }
+}
 
 const val DRY_START_OFF = 0
 const val DRY_START_AFTER_CLEANING = 1

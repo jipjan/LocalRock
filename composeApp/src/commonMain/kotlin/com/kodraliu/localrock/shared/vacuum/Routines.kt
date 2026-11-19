@@ -13,6 +13,11 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.rawText
+import com.kodraliu.localrock.shared.text.uiPlural
+import com.kodraliu.localrock.shared.text.uiText
 
 /**
  * A routine as the official app saves it ("scene", type WORKFLOW): steps run one after another, each
@@ -257,9 +262,17 @@ fun decodeRoutine(name: String, param: JsonElement?): RoutineDraft? {
 }
 
 /** A step's title, also stored as the step's name for the official app's list. */
-fun stepTitle(step: RoutineStep, roomName: (Int) -> String? = { null }): String = when (step.kind) {
-    RoutineStepKind.FULL -> "Full clean"
-    RoutineStepKind.ROOMS -> if (step.rooms.isEmpty()) "Rooms" else
-        step.rooms.joinToString(", ") { roomName(it) ?: "Room $it" }
-    RoutineStepKind.ZONES -> if (step.zones.size == 1) "1 zone" else "${step.zones.size} zones"
+fun stepTitle(step: RoutineStep, roomName: (Int) -> String? = { null }): String = stepTitleText(step, roomName).english
+
+/** [stepTitle] for the UI, in the app's language. */
+fun stepTitleText(step: RoutineStep, roomName: (Int) -> String? = { null }): UiText = when (step.kind) {
+    RoutineStepKind.FULL -> uiText(Res.string.step_full_clean, "Full clean")
+    RoutineStepKind.ROOMS -> if (step.rooms.isEmpty()) {
+        uiText(Res.string.step_rooms, "Rooms")
+    } else {
+        UiText.Joined(step.rooms.map { id -> roomName(id)?.let(::rawText) ?: uiText(Res.string.step_room_number, "Room $id", id) }, ", ")
+    }
+    RoutineStepKind.ZONES -> step.zones.size.let {
+        uiPlural(Res.plurals.step_zones, it, if (it == 1) "1 zone" else "$it zones", it)
+    }
 }

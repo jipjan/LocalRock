@@ -20,6 +20,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import com.kodraliu.localrock.shared.vacuum.VacuumStatus
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiTextException
+import com.kodraliu.localrock.shared.text.uiText
 
 class DeviceRepository(
     private val deviceApi: DeviceApi,
@@ -111,7 +114,7 @@ class DeviceRepository(
 
     /** Create (or look up by name) a cloud room in the current home. */
     suspend fun createRoom(name: String): Room {
-        if (isDemo()) error("Rooms can't be renamed in demo mode")
+        if (isDemo()) throw UiTextException(uiText(Res.string.device_demo_rooms, "Rooms can't be renamed in demo mode"))
         val homeId = _home.value?.id ?: error("Home not loaded")
         return deviceApi.createRoom(homeId, name)
     }
@@ -123,23 +126,23 @@ class DeviceRepository(
     }
 
     suspend fun createScene(duid: String, name: String, param: kotlinx.serialization.json.JsonObject): Scene {
-        if (isDemo()) error("Routines can't be saved in demo mode")
+        if (isDemo()) throw UiTextException(uiText(Res.string.device_demo_routines_save, "Routines can't be saved in demo mode"))
         return deviceApi.createScene(_home.value?.id, duid, name, param)
     }
 
     suspend fun updateScene(sceneId: Long, duid: String, name: String?, param: kotlinx.serialization.json.JsonObject) {
-        if (isDemo()) error("Routines can't be saved in demo mode")
+        if (isDemo()) throw UiTextException(uiText(Res.string.device_demo_routines_save, "Routines can't be saved in demo mode"))
         deviceApi.updateSceneParam(sceneId, duid, param)
         if (name != null) deviceApi.renameScene(sceneId, name)
     }
 
     suspend fun deleteScene(sceneId: Long) {
-        if (isDemo()) error("Routines can't be deleted in demo mode")
+        if (isDemo()) throw UiTextException(uiText(Res.string.device_demo_routines_delete, "Routines can't be deleted in demo mode"))
         deviceApi.deleteScene(sceneId)
     }
 
     suspend fun runScene(sceneId: Long): SceneRunResult {
-        if (isDemo()) error("Routines can't be run in demo mode")
+        if (isDemo()) throw UiTextException(uiText(Res.string.device_demo_routines_run, "Routines can't be run in demo mode"))
         return deviceApi.executeScene(sceneId)
     }
 

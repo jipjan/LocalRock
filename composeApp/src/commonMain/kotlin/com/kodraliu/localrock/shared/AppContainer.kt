@@ -34,7 +34,6 @@ import com.kodraliu.localrock.shared.notify.RobotMonitor
 import com.kodraliu.localrock.shared.notify.RobotNotifier
 import com.kodraliu.localrock.shared.notify.RobotProgress
 import com.kodraliu.localrock.shared.notify.platformRobotNotifier
-import com.kodraliu.localrock.shared.notify.toNotification
 import com.kodraliu.localrock.shared.settings.AppSettings
 import com.kodraliu.localrock.shared.vacuum.VacuumRepository
 import com.kodraliu.localrock.shared.vacuum.VacuumSession
@@ -60,6 +59,12 @@ import kotlinx.coroutines.withContext
 import kotlin.concurrent.Volatile
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.banner_back_online
+import com.kodraliu.localrock.resources.banner_offline
+import com.kodraliu.localrock.resources.banner_session_expired
+import com.kodraliu.localrock.shared.notify.localizedNotification
+import org.jetbrains.compose.resources.getString
 
 class AppContainer(
     settings: Settings,
@@ -214,14 +219,16 @@ class AppContainer(
             is RobotEvent.DockAlert -> appSettings.notifyDock.value
         }
         if (!wanted) return
-        val notification = event.toNotification(device.duid, device.name)
-        if (inForeground) {
-            messages.post(
-                "${notification.title}: ${notification.body}",
-                if (notification.alert) MessageSeverity.WARNING else MessageSeverity.SUCCESS,
-            )
-        } else {
-            notifier.post(notification)
+        scope.launch {
+            val notification = event.localizedNotification(device.duid, device.name)
+            if (inForeground) {
+                messages.post(
+                    "${notification.title}: ${notification.body}",
+                    if (notification.alert) MessageSeverity.WARNING else MessageSeverity.SUCCESS,
+                )
+            } else {
+                notifier.post(notification)
+            }
         }
     }
 
@@ -283,7 +290,7 @@ class AppContainer(
             !authRepository.canReLogin -> {
                 messages.showBanner(
                     key = MessageCenter.BANNER_MQTT,
-                    text = "Session expired — sign out and sign in again to reconnect.",
+                    text = getString(Res.string.banner_session_expired),
                     severity = MessageSeverity.ERROR,
                     dismissible = false,
                 )
@@ -308,7 +315,7 @@ class AppContainer(
             mqttClient.connected.collectLatest { up ->
                 if (up) {
                     messages.dismissBanner(MessageCenter.BANNER_MQTT)
-                    if (bannerShown) messages.success("Back online")
+                    if (bannerShown) messages.success(getString(Res.string.banner_back_online))
                     bannerShown = false
                 } else {
                     // The link is down for a moment on every app start. collectLatest cancels
@@ -317,7 +324,7 @@ class AppContainer(
                     if (!mqttStarted) return@collectLatest
                     messages.showBanner(
                         key = MessageCenter.BANNER_MQTT,
-                        text = "Offline — reconnecting…",
+                        text = getString(Res.string.banner_offline),
                         severity = MessageSeverity.WARNING,
                         dismissible = false,
                     )

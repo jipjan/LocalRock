@@ -1,6 +1,29 @@
 package com.kodraliu.localrock.shared.vacuum
 
-data class WashFrequencyOption(val label: String, val mode: Int, val intervalMinutes: Int? = null)
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.rawText
+import com.kodraliu.localrock.shared.text.uiText
+
+data class WashFrequencyOption(val label: String, val mode: Int, val intervalMinutes: Int? = null) {
+    /** [label] for the UI, in the app's language. */
+    val text: UiText
+        get() = when {
+            mode == 0 && intervalMinutes != null -> uiText(Res.string.duration_minutes, label, intervalMinutes)
+            mode == 1 -> uiText(Res.string.dock_wash_by_room, label)
+            mode == 2 -> uiText(Res.string.mode_smart, label)
+            else -> rawText(label)
+        }
+}
+
+private val smart get() = uiText(Res.string.mode_smart, "Smart")
+private val light get() = uiText(Res.string.mode_light, "Light")
+private val balanced get() = uiText(Res.string.mode_balanced, "Balanced")
+private val deep get() = uiText(Res.string.mode_deep, "Deep")
+private val strong get() = uiText(Res.string.mode_strong, "Strong")
+private val max get() = uiText(Res.string.mode_max, "Max")
+private val unavailable get() = uiText(Res.string.mode_unavailable, "Unavailable")
+private fun unknown(mode: Int) = uiText(Res.string.mode_unknown, "Unknown ($mode)", mode)
 
 // Official plugin: FM.Dock.isOldWashFrequency, DockConfigs and getWashModes.
 private val legacyWashModels = setOf(
@@ -33,27 +56,29 @@ class DockCapabilities(model: String?, featureSet: String?, newFeatureSet: Strin
     }
 
     // Dust mode support is bit 25 of decimal featureSet, not the hex newFeatureSet.
-    val autoEmptyModes: List<Pair<Int, String>> = if (
+    val autoEmptyModes: List<Pair<Int, UiText>> = if (
         (featureSet?.toULongOrNull() ?: 0uL) and (1uL shl 25) != 0uL
     ) {
-        listOf(0 to "Smart", 1 to "Light", 2 to "Balanced", 4 to "Max")
+        listOf(0 to smart, 1 to light, 2 to balanced, 4 to max)
     } else {
         emptyList()
     }
 
-    fun washModes(dockType: Int?, dss: Int?): List<Pair<Int, String>> {
-        if (dockType !in knownWashDockTypes) return listOf(0 to "Light")
+    private val superDeepText get() = if (soakWash) uiText(Res.string.mode_soak, "Soak") else uiText(Res.string.mode_super_deep, "Super Deep")
+
+    fun washModes(dockType: Int?, dss: Int?): List<Pair<Int, UiText>> {
+        if (dockType !in knownWashDockTypes) return listOf(0 to light)
         val simple = dockType in simpleWashDockTypes
         return buildList {
             // With AI washing (bit 144) the official app sets "smart" through smart_wash_status, not wash_mode 10
             // (captured on an a296); LocalRock offers that as its own switch.
-            if (smartWash && !aiWash) add(10 to "Smart")
-            add(0 to "Light")
-            if (!simple || aiWash) add(1 to "Balanced")
-            if (!simple) add(2 to "Deep")
+            if (smartWash && !aiWash) add(10 to smart)
+            add(0 to light)
+            if (!simple || aiWash) add(1 to balanced)
+            if (!simple) add(2 to deep)
             // dss low bits report the plumbing module; a dock type alone cannot establish it.
             if (superDeepWash && (soakWash || (dss?.and(3) == 2 && !smartWash))) {
-                add(8 to if (soakWash) "Soak" else "Super Deep")
+                add(8 to superDeepText)
             }
         }
     }
@@ -65,23 +90,29 @@ class DockCapabilities(model: String?, featureSet: String?, newFeatureSet: Strin
         else -> raw
     }
 
-    fun washModeLabel(raw: Int?, dockType: Int?): String = when (val mode = washModeCode(raw, dockType)) {
-        null -> "Unavailable"
-        0 -> "Light"
-        1 -> "Balanced"
-        2 -> "Deep"
-        8 -> if (soakWash) "Soak" else "Super Deep"
-        10 -> "Smart"
-        else -> "Unknown ($mode)"
+    fun washModeLabel(raw: Int?, dockType: Int?): String = washModeText(raw, dockType).english
+
+    /** [washModeLabel] for the UI, in the app's language. */
+    fun washModeText(raw: Int?, dockType: Int?): UiText = when (val mode = washModeCode(raw, dockType)) {
+        null -> unavailable
+        0 -> light
+        1 -> balanced
+        2 -> deep
+        8 -> superDeepText
+        10 -> smart
+        else -> unknown(mode)
     }
 
-    fun autoEmptyModeLabel(mode: Int?): String = when (mode) {
-        null -> "Unavailable"
-        0 -> "Smart"
-        1 -> "Light"
-        2 -> "Balanced"
-        3 -> "Strong"
-        4 -> "Max"
-        else -> "Unknown ($mode)"
+    fun autoEmptyModeLabel(mode: Int?): String = autoEmptyModeText(mode).english
+
+    /** [autoEmptyModeLabel] for the UI, in the app's language. */
+    fun autoEmptyModeText(mode: Int?): UiText = when (mode) {
+        null -> unavailable
+        0 -> smart
+        1 -> light
+        2 -> balanced
+        3 -> strong
+        4 -> max
+        else -> unknown(mode)
     }
 }

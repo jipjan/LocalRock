@@ -100,7 +100,8 @@ import com.kodraliu.localrock.shared.vacuum.RoutineStep
 import com.kodraliu.localrock.shared.vacuum.RoutineStepKind
 import com.kodraliu.localrock.shared.vacuum.VacuumFanPower
 import com.kodraliu.localrock.shared.vacuum.WaterBoxMode
-import com.kodraliu.localrock.shared.vacuum.stepTitle
+import com.kodraliu.localrock.shared.vacuum.stepTitleText
+import com.kodraliu.localrock.ui.text.text
 
 /**
  * Make or change a routine, as the official app's routine editor: a name and steps that run one after
@@ -265,7 +266,7 @@ private fun RoutineStepCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(Res.string.routine_editor_step, index + 1), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    Text(stepTitle(step, roomName), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+                    Text(stepTitleText(step, roomName).text(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
                 }
                 IconButton(onClick = { onMove(-1) }, enabled = index > 0) { Icon(Icons.Default.KeyboardArrowUp, stringResource(Res.string.routine_editor_move_up)) }
                 IconButton(onClick = { onMove(1) }, enabled = index < count - 1) { Icon(Icons.Default.KeyboardArrowDown, stringResource(Res.string.routine_editor_move_down)) }

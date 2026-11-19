@@ -428,7 +428,6 @@ import com.kodraliu.localrock.shared.vacuum.isCustomizeModeSet
 import com.kodraliu.localrock.shared.vacuum.isSmartModeSet
 import com.kodraliu.localrock.shared.vacuum.mapNameBlocker
 import com.kodraliu.localrock.shared.vacuum.roomCleanModesFor
-import com.kodraliu.localrock.shared.vacuum.washFrequencyLabel
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMapRoom
 import com.kodraliu.localrock.shared.vacuum.map.MapObstacle
@@ -438,6 +437,8 @@ import com.kodraliu.localrock.ui.adaptive.LocalWindowLayout
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.kodraliu.localrock.shared.vacuum.washFrequencyText
+import com.kodraliu.localrock.ui.text.text
 
 
 private val FAN_OPTIONS = listOf(
@@ -762,7 +763,7 @@ fun VacuumDetailScreen(
                 currentFloorFlag = currentFloorFlag,
                 loading = recoverLoading,
                 busy = busy,
-                blockedReason = viewModel.repository.mapManageBlockedReason(status.state),
+                blockedReason = viewModel.repository.mapManageBlockedReason(status.state)?.text(),
                 canAddMap = floorMaps.size < (maxFloorMaps ?: 1),
                 unsavedMap = unsavedMap,
                 mapSaving = status.mapSavingEnabled,
@@ -1617,7 +1618,7 @@ private fun StatusBar(
     // The robot's own error is the most important thing it can tell you, so it replaces the state
     // label in place rather than only living in the app-wide banner.
     val headline = when {
-        errorCode != 0 -> VacuumErrorCodes.describe(errorCode)
+        errorCode != 0 -> VacuumErrorCodes.text(errorCode).text()
         drying -> dryingLabel(status.remainingDryTimeSec)
         status.taskPausedAtDock -> stringResource(Res.string.robot_paused_at_dock)
         status.state == VacuumStateCodes.GOING_TO_WASH_MOP && status.backType == 4 -> stringResource(Res.string.robot_returning_to_empty)
@@ -1741,7 +1742,7 @@ private fun StatusBar(
             ) {
                 Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
                 Text(
-                    DockErrorCodes.describe(dockError),
+                    DockErrorCodes.text(dockError).text(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -2618,7 +2619,7 @@ private fun WaterSlideSelector(current: Int?, enabled: Boolean, onSelect: (Int) 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(Res.string.robot_water_flow), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-            Text(WaterBoxMode.slideLabel(code).orEmpty(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+            Text(WaterBoxMode.slideText(code)?.text().orEmpty(), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
         }
         // Less water on the left, more on the right, as the official slider's two drops show.
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2832,16 +2833,16 @@ private fun DockSettingsTab(
 
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            DockSettingCard(Modifier.weight(1f), Icons.Default.Repeat, AppColors.Water, stringResource(Res.string.robot_mop_wash_frequency), washFrequencyLabel(smartWash), washFrequencyEnabled) { dialogTarget = "wash_freq" }
-            DockSettingCard(Modifier.weight(1f), Icons.Default.WaterDrop, AppColors.Water, stringResource(Res.string.robot_washing_mode), dockCapabilities.washModeLabel(dockSettings.washMode, dockType), washModeEnabled) { dialogTarget = "wash_mode" }
+            DockSettingCard(Modifier.weight(1f), Icons.Default.Repeat, AppColors.Water, stringResource(Res.string.robot_mop_wash_frequency), washFrequencyText(smartWash).text(), washFrequencyEnabled) { dialogTarget = "wash_freq" }
+            DockSettingCard(Modifier.weight(1f), Icons.Default.WaterDrop, AppColors.Water, stringResource(Res.string.robot_washing_mode), dockCapabilities.washModeText(dockSettings.washMode, dockType).text(), washModeEnabled) { dialogTarget = "wash_mode" }
         }
-        DockSettingCard(Modifier.fillMaxWidth(), Icons.Default.Delete, MaterialTheme.colorScheme.primary, stringResource(Res.string.robot_auto_empty_mode), dockCapabilities.autoEmptyModeLabel(dockSettings.autoEmptyMode), autoEmptyEnabled) { dialogTarget = "auto_empty" }
+        DockSettingCard(Modifier.fillMaxWidth(), Icons.Default.Delete, MaterialTheme.colorScheme.primary, stringResource(Res.string.robot_auto_empty_mode), dockCapabilities.autoEmptyModeText(dockSettings.autoEmptyMode).text(), autoEmptyEnabled) { dialogTarget = "auto_empty" }
     }
 
     when (dialogTarget) {
         "wash_freq" -> RadioPickerDialog(
             title = stringResource(Res.string.robot_mop_wash_frequency),
-            options = washFrequencyOptions.map { it.label },
+            options = washFrequencyOptions.map { it.text.text() },
             selected = washFrequencyIndex,
             onSelect = { washFrequencyOptions[it].let { option -> onWashFrequencyChange(option.mode, option.intervalMinutes) } },
             enabled = washFrequencyEnabled,
@@ -2849,7 +2850,7 @@ private fun DockSettingsTab(
         )
         "wash_mode" -> RadioPickerDialog(
             title = stringResource(Res.string.robot_washing_mode),
-            options = washModes.map { it.second },
+            options = washModes.map { it.second.text() },
             selected = washModeIndex,
             onSelect = { onWashModeChange(washModes[it].first) },
             enabled = washModeEnabled,
@@ -2857,7 +2858,7 @@ private fun DockSettingsTab(
         )
         "auto_empty" -> RadioPickerDialog(
             title = stringResource(Res.string.robot_auto_empty_mode),
-            options = autoEmptyModes.map { it.second },
+            options = autoEmptyModes.map { it.second.text() },
             selected = autoEmptyModes.indexOfFirst { it.first == dockSettings.autoEmptyMode },
             onSelect = { onAutoEmptyModeChange(autoEmptyModes[it].first) },
             enabled = autoEmptyEnabled,
@@ -3482,7 +3483,7 @@ private fun batteryColor(battery: Int?): Color = when {
 
 @Composable
 private fun stateLabel(state: Int?): String =
-    if (state == null) "—" else VacuumStateCodes.describe(state)
+    if (state == null) "—" else VacuumStateCodes.text(state).text()
 
 @Composable
 private fun dryingLabel(remainingDrySec: Long?): String {

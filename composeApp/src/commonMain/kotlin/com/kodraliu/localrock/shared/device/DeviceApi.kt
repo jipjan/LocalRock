@@ -30,6 +30,12 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.isSuccess
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.HasUiText
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.UiTextException
+import com.kodraliu.localrock.shared.text.rawText
+import com.kodraliu.localrock.shared.text.uiText
 
 class DeviceApi(private val client: HttpClient) {
     /** The voice packs for a product, from the server's mirror of Roborock's list. */
@@ -72,7 +78,7 @@ class DeviceApi(private val client: HttpClient) {
     suspend fun getScenes(duid: String): List<Scene> {
         val resp = client.get("/user/scene/device/$duid")
         if (!resp.status.isSuccess()) {
-            throw DeviceApiException(resp.status.value, "Routines unavailable (HTTP ${resp.status.value})")
+            throw DeviceApiException(resp.status.value, httpText(uiText(Res.string.device_routines_unavailable, "Routines unavailable"), resp.status.value))
         }
         val response: SceneListResponse = resp.body()
         if (response.code != 200) throw DeviceApiException(response.code, response.msg)
@@ -83,7 +89,10 @@ class DeviceApi(private val client: HttpClient) {
     suspend fun executeScene(sceneId: Long): SceneRunResult {
         val resp = client.post("/user/scene/$sceneId/execute")
         if (!resp.status.isSuccess()) {
-            throw DeviceApiException(resp.status.value, "The server could not run the routine (HTTP ${resp.status.value})")
+            throw DeviceApiException(
+                resp.status.value,
+                httpText(uiText(Res.string.device_routine_run_failed, "The server could not run the routine"), resp.status.value),
+            )
         }
         val response: SceneRunResponse = resp.body()
         if (response.code != 200) throw DeviceApiException(response.code, response.msg)
@@ -100,9 +109,9 @@ class DeviceApi(private val client: HttpClient) {
             put("enabled", true)
             put("param", Json.encodeToString(JsonObject.serializer(), param))
         }
-        return sceneCall("save the routine") {
+        return sceneCall(uiText(Res.string.device_routine_save_failed, "The server could not save the routine")) {
             client.post("/v2/user/scene") { setBody(TextContent(body.toString(), ContentType.Application.Json)) }
-        } ?: error("The server did not return the new routine")
+        } ?: throw UiTextException(uiText(Res.string.device_routine_not_returned, "The server did not return the new routine"))
     }
 
     /** Replaces a routine's steps. */
@@ -111,13 +120,13 @@ class DeviceApi(private val client: HttpClient) {
             put("deviceId", duid)
             put("param", Json.encodeToString(JsonObject.serializer(), param))
         }
-        sceneCall("save the routine") {
+        sceneCall(uiText(Res.string.device_routine_save_failed, "The server could not save the routine")) {
             client.put("/user/scene/$sceneId/param") { setBody(TextContent(body.toString(), ContentType.Application.Json)) }
         }
     }
 
     suspend fun renameScene(sceneId: Long, name: String) {
-        sceneCall("rename the routine") {
+        sceneCall(uiText(Res.string.device_routine_rename_failed, "The server could not rename the routine")) {
             client.put("/user/scene/$sceneId/name") {
                 setBody(TextContent(buildJsonObject { put("name", name) }.toString(), ContentType.Application.Json))
             }
@@ -125,14 +134,15 @@ class DeviceApi(private val client: HttpClient) {
     }
 
     suspend fun deleteScene(sceneId: Long) {
-        sceneCall("delete the routine") { client.delete("/user/scene/$sceneId") }
+        sceneCall(uiText(Res.string.device_routine_delete_failed, "The server could not delete the routine")) { client.delete("/user/scene/$sceneId") }
     }
 
-    private suspend fun sceneCall(what: String, request: suspend () -> HttpResponse): Scene? {
+    /** [failed] says what could not be done, e.g. "The server could not save the routine". */
+    private suspend fun sceneCall(failed: UiText, request: suspend () -> HttpResponse): Scene? {
         val resp = request()
-        if (!resp.status.isSuccess()) throw DeviceApiException(resp.status.value, "The server could not $what (HTTP ${resp.status.value})")
+        if (!resp.status.isSuccess()) throw DeviceApiException(resp.status.value, httpText(failed, resp.status.value))
         val response: SceneSaveResponse = resp.body()
-        if (response.code != 200) throw DeviceApiException(response.code, response.msg.ifBlank { "The server could not $what" })
+        if (response.code != 200) throw DeviceApiException(response.code, response.msg.takeIf { it.isNotBlank() }?.let(::rawText) ?: failed)
         return response.result ?: response.data
     }
 
@@ -142,7 +152,7 @@ class DeviceApi(private val client: HttpClient) {
             header(HttpHeaders.Accept, "application/json")
         }
         if (!resp.status.isSuccess()) {
-            throw DeviceApiException(resp.status.value, "Firmware check unavailable (HTTP ${resp.status.value})")
+            throw DeviceApiException(resp.status.value, httpText(uiText(Res.string.device_firmware_check_unavailable, "Firmware check unavailable"), resp.status.value))
         }
         return resp.body<FirmwareOtaResponse>().result
     }
@@ -175,7 +185,12 @@ private data class SceneRunResponse(
     val result: SceneRunResult? = null,
 )
 
-class DeviceApiException(val responseCode: Int, message: String) : RuntimeException(message)
+class DeviceApiException(val responseCode: Int, override val text: UiText) : RuntimeException(text.english), HasUiText {
+    constructor(responseCode: Int, message: String) : this(responseCode, rawText(message))
+}
+
+/** [text] followed by the HTTP status, e.g. "Routines unavailable (HTTP 404)". */
+private fun httpText(text: UiText, status: Int): UiText = UiText.Joined(listOf(text, rawText(" (HTTP $status)")), "")
 
 private fun <T> ensureOk(response: ApiResponse<T>) {
     if (response.code != 200) throw DeviceApiException(response.code, response.msg)

@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Texts made in the model layer (shared/), read through UiText; see shared/text/UiText.kt -->
+
+    <!-- Robot states (VacuumStateCodes) -->
+    <string name="state_starting">Opstarten</string>
+    <string name="state_charger_disconnected">Lader losgekoppeld</string>
+    <string name="state_idle">Stand-by</string>
+    <string name="state_remote_control">Afstandsbediening</string>
+    <string name="state_cleaning">Reinigen</string>
+    <string name="state_returning_home">Terugkeren</string>
+    <string name="state_manual_mode">Handmatige modus</string>
+    <string name="state_charging">Opladen</string>
+    <string name="state_charging_error">Oplaadfout</string>
+    <string name="state_paused">Gepauzeerd</string>
+    <string name="state_spot_cleaning">Plekreiniging</string>
+    <string name="state_error">Fout</string>
+    <string name="state_shutting_down">Uitschakelen</string>
+    <string name="state_updating">Bijwerken</string>
+    <string name="state_docking">Docken</string>
+    <string name="state_going_to_target">Naar bestemming</string>
+    <string name="state_zoned_cleaning">Zonereiniging</string>
+    <string name="state_room_cleaning">Kamerreiniging</string>
+    <string name="state_mapping">Kaart maken</string>
+    <string name="state_washing_mop">Dweil wassen</string>
+    <string name="state_going_to_wash_mop">Terugkeren om dweil te wassen</string>
+    <string name="state_drying_mop">Drogen</string>
+    <string name="state_returning_to_dock">Terugkeren naar dock</string>
+    <string name="state_emptying_the_bin">Automatisch legen</string>
+    <string name="state_cupid_mode">Cupid-modus</string>
+    <string name="state_patrolling">Patrouilleren</string>
+    <string name="state_reinstalling_mop_mounts">Dweilhouders terugplaatsen</string>
+    <string name="state_detaching_mop_mounts">Dweilhouders loskoppelen</string>
+    <string name="state_exhibition_mode">Demonstratiemodus</string>
+    <string name="state_dancing">Dansen</string>
+    <string name="state_emergency_stop">Noodstop</string>
+    <string name="state_resetting_the_arm">Arm resetten</string>
+    <string name="state_program_mode">Programmeermodus</string>
+    <string name="state_changing_mop">Dweil wisselen</string>
+    <string name="state_fully_charged">Opgeladen</string>
+    <string name="state_unknown">Status %1$d</string>
+
+    <!-- Robot errors (VacuumErrorCodes) -->
+    <string name="robot_error_laser_sensor_fault">Storing lasersensor</string>
+    <string name="robot_error_collision_sensor_fault">Storing botsingssensor</string>
+    <string name="robot_error_wheel_floating">Wiel hangt los van de vloer</string>
+    <string name="robot_error_cliff_sensor_fault">Storing valsensor</string>
+    <string name="robot_error_main_brush_blocked">Hoofdborstel geblokkeerd</string>
+    <string name="robot_error_side_brush_blocked">Zijborstel geblokkeerd</string>
+    <string name="robot_error_wheel_blocked">Wiel geblokkeerd</string>
+    <string name="robot_error_robot_stuck">Robot zit vast</string>
+    <string name="robot_error_dustbin_missing">Stofbak ontbreekt</string>
+    <string name="robot_error_filter_blocked">Filter verstopt</string>
+    <string name="robot_error_magnetic_field_detected">Magnetisch veld gedetecteerd</string>
+    <string name="robot_error_low_battery">Batterij bijna leeg</string>
+    <string name="robot_error_charging_problem">Probleem met opladen</string>
+    <string name="robot_error_battery_failure">Batterijstoring</string>
+    <string name="robot_error_wall_sensor_fault">Storing muursensor</string>
+    <string name="robot_error_uneven_surface">Ongelijke ondergrond</string>
+    <string name="robot_error_side_brush_failure">Storing zijborstel</string>
+    <string name="robot_error_suction_fan_failure">Storing zuigventilator</string>
+    <string name="robot_error_unpowered_dock">Dock heeft geen stroom</string>
+    <string name="robot_error_laser_pressure_sensor_problem">Probleem met druksensor van de laser</string>
+    <string name="robot_error_charge_sensor_problem">Probleem met laadsensor</string>
+    <string name="robot_error_dock_problem">Probleem met het dock</string>
+    <string name="robot_error_no_go_zone_or_invisible">Verboden zone of onzichtbare muur gedetecteerd</string>
+    <string name="robot_error_mop_pad_dirty">Dweilpad vuil</string>
+    <string name="robot_error_mop_wash_tank_empty">Watertank voor dweil wassen leeg</string>
+    <string name="robot_error_dirty_water_tank_full">Vuilwatertank vol</string>
+    <string name="robot_error_mop_pad_not_installed">Dweilpad niet geplaatst</string>
+    <string name="robot_error_battery_overheating">Batterij oververhit</string>
+    <string name="robot_error_mop_pad_blocked">Dweilpad geblokkeerd</string>
+    <string name="robot_error_dustbin_not_installed">Stofbak niet geplaatst</string>
+    <string name="robot_error_code">Foutcode %1$d</string>
+
+    <!-- Dock errors (DockErrorCodes) -->
+    <string name="dock_error_dock_dust_duct_blocked">Stofkanaal van het dock verstopt</string>
+    <string name="dock_error_clean_water_tank_empty">Controleer de schoonwatertank</string>
+    <string name="dock_error_dirty_water_tank_full">Vuilwatertank vol</string>
+    <string name="dock_error_dirty_water_tank_latch_open">Vergrendeling vuilwatertank open</string>
+    <string name="dock_error_dock_dust_bag_missing">Stofzak van het dock ontbreekt</string>
+    <string name="dock_error_dock_cleaning_tray_full_or">Reinigingsbak van het dock vol of verstopt</string>
+    <string name="dock_error_code">Dockfout %1$d</string>
+
+    <!-- A past clean's timeline (CleanTimeline) -->
+    <string name="timeline_started_full_clean">Start volledige reiniging</string>
+    <string name="timeline_started_clean">Start reiniging</string>
+    <string name="timeline_from_the_app">via de app</string>
+    <string name="timeline_room_number">kamer %1$s</string>
+    <string name="timeline_resumed_cleaning_room">Reinigen %1$s hervat</string>
+    <string name="timeline_recleaning_blocked_areas">Door mensen of huisdieren geblokkeerde gebieden opnieuw reinigen</string>
+    <string name="timeline_cleaning_room">Reinigen %1$s</string>
+    <string name="timeline_mop_wash">Dweil wassen</string>
+    <string name="timeline_resumed">Hervatten</string>
+    <string name="timeline_mop_wash_failed">Dweil wassen mislukt(%1$d)</string>
+    <string name="timeline_switched_to_vacuum_only">Naar alleen-stofzuigen schakelen</string>
+    <string name="timeline_auto_empty">Automatisch legen</string>
+    <string name="timeline_settings_changed_by_hand">Instellingen handmatig gewijzigd</string>
+    <string name="timeline_water_flow_changed">Waterstroom gewijzigd</string>
+    <string name="timeline_clean_finished">Reiniging voltooid</string>
+    <string name="timeline_paused">Pauzeren</string>
+
+    <!-- How a room or clean was cleaned (CleanRunSettings) -->
+    <string name="run_vacuum_and_mop">Stofzuigen en dweilen</string>
+    <string name="run_mop_only">Alleen dweilen</string>
+    <string name="run_vacuum_only">Alleen stofzuigen</string>
+    <string name="run_suction_quiet">Stil</string>
+    <string name="run_suction_standard">Gebalanceerd</string>
+    <string name="run_suction_strong">Turbo</string>
+    <string name="run_suction_code">Zuigkracht %1$d</string>
+    <string name="run_water_code">Water %1$d</string>
+    <string name="run_route_standard">Standaard</string>
+    <string name="run_route_code">Route %1$d</string>
+
+    <!-- Water flow marks -->
+    <string name="water_extra_high">Extra hoog</string>
+    <string name="water_high">Hoog</string>
+    <string name="water_medium">Medium</string>
+    <string name="water_low">Laag</string>
+
+    <!-- Modes shared by dock settings and the timeline -->
+    <string name="mode_smart">Slim</string>
+    <string name="mode_light">Licht</string>
+    <string name="mode_balanced">Gebalanceerd</string>
+    <string name="mode_high">Hoog</string>
+    <string name="mode_deep">Grondig</string>
+    <string name="mode_strong">Sterk</string>
+    <string name="mode_max">Max</string>
+    <string name="mode_unavailable">Niet beschikbaar</string>
+    <string name="mode_unknown">Onbekend (%1$d)</string>
+    <string name="mode_soak">Weken</string>
+    <string name="mode_super_deep">Extra grondig</string>
+    <string name="mode_off">Uit</string>
+
+    <!-- Dock options -->
+    <string name="dock_temp_room">Kamertemperatuur</string>
+    <string name="dock_temp_warm">Warm water</string>
+    <string name="dock_temp_hot">Heet water</string>
+    <string name="dock_other_code">Overig (%1$d)</string>
+    <string name="dock_wash_by_room">Per kamer</string>
+    <string name="dock_wash_after_each_room">Na elke kamer</string>
+
+    <!-- Durations -->
+    <string name="duration_hours">%1$d u</string>
+    <string name="duration_minutes">%1$d min</string>
+    <string name="duration_seconds">%1$d s</string>
+    <string name="duration_sec">%1$d sec</string>
+
+    <!-- Carpet modes -->
+    <string name="carpet_avoid">Tapijt vermijden</string>
+    <string name="carpet_boost">Tapijtboost</string>
+
+    <!-- Cleaning history records (CleanRecord) -->
+    <string name="record_type_full">Volledig</string>
+    <string name="record_type_zones">Zones</string>
+    <string name="record_type_rooms">Kamers</string>
+    <string name="record_type_quick_mapping">Snel kaart maken</string>
+    <string name="record_type_cruise">Patrouille</string>
+    <string name="record_type_find_the_pet">Huisdier zoeken</string>
+    <plurals name="record_obstacles_avoided">
+        <item quantity="one">%1$d obstakel vermeden</item>
+        <item quantity="other">%1$d obstakels vermeden</item>
+    </plurals>
+    <plurals name="record_mop_washes">
+        <item quantity="one">dweil %1$d keer gewassen</item>
+        <item quantity="other">dweil %1$d keer gewassen</item>
+    </plurals>
+    <string name="record_bin_emptied">stofbak geleegd</string>
+    <string name="record_passes">%1$d keer</string>
+
+    <!-- Maintenance summary (ConsumableStatus) -->
+    <string name="consumable_main_brush">Hoofdborstel</string>
+    <string name="consumable_replace_main_brush">Vervang de hoofdborstel</string>
+    <string name="consumable_side_brush">Zijborstel</string>
+    <string name="consumable_replace_side_brush">Vervang de zijborstel</string>
+    <string name="consumable_filter">Filter</string>
+    <string name="consumable_replace_filter">Vervang het filter</string>
+    <string name="consumable_sensors">Sensoren</string>
+    <string name="consumable_clean_sensors">Reinig de sensoren</string>
+    <string name="consumable_percent_left">%1$s: nog %2$d%</string>
+    <string name="consumable_normal">Normaal</string>
+
+    <!-- Room types (RoomType) -->
+    <string name="room_type_living_room">Woonkamer</string>
+    <string name="room_type_kitchen">Keuken</string>
+    <string name="room_type_dining_room">Eetkamer</string>
+    <string name="room_type_bedroom">Slaapkamer</string>
+    <string name="room_type_master_bedroom">Hoofdslaapkamer</string>
+    <string name="room_type_guest_bedroom">Logeerkamer</string>
+    <string name="room_type_bathroom">Badkamer</string>
+    <string name="room_type_study">Studeerkamer</string>
+    <string name="room_type_corridor">Gang</string>
+    <string name="room_type_hall">Hal</string>
+    <string name="room_type_balcony">Balkon</string>
+
+    <!-- Robot features and their choices (BetaFeatures) -->
+    <string name="feature_right_brush_stretch_title">FlexiArm-zijborstel</string>
+    <string name="feature_right_brush_stretch_desc">Schuift de zijborstel uit om in hoeken en langs randen te komen</string>
+    <string name="feature_corner_mop_stretch_title">FlexiArm-dweil</string>
+    <string name="feature_corner_mop_stretch_desc">Schuift de dweil uit om hoeken te reinigen</string>
+    <string name="feature_gap_deep_clean_title">Kieren grondig reinigen</string>
+    <string name="feature_gap_deep_clean_desc">Reinigt smalle kieren langs muren en meubels</string>
+    <string name="feature_pet_supplies_deep_clean_title">Grondig reinigen rond huisdierspullen</string>
+    <string name="feature_pet_supplies_deep_clean_desc">Extra reiniging rond voerbakken en manden</string>
+    <string name="feature_dirty_object_detect_title">Vuile objecten herkennen</string>
+    <string name="feature_dirty_object_detect_desc">Herkent vuile objecten zoals uitwerpselen van huisdieren tijdens het reinigen</string>
+    <string name="feature_avoid_collision_title">Botsingen vermijden</string>
+    <string name="feature_avoid_collision_desc">Rijdt om obstakels heen in plaats van ertegenaan te botsen</string>
+    <string name="feature_collision_mode_title">Botsingsmodus</string>
+    <string name="feature_collision_mode_desc">Hoe dicht de robot rond obstakels reinigt</string>
+    <string name="feature_choice_large_coverage">Grote dekking</string>
+    <string name="feature_choice_less_collision">Minder botsingen</string>
+    <string name="feature_water_leak_check_title">Waterlekdetectie</string>
+    <string name="feature_water_leak_check_desc">Stopt en waarschuwt als de robot een waterlek detecteert</string>
+    <string name="feature_voice_control_led_title">Lampje spraakbediening</string>
+    <string name="feature_voice_control_led_desc">Lampje op de robot dat laat zien wanneer hij luistert</string>
+    <string name="feature_carpet_deep_clean_title">Tapijt grondig reinigen</string>
+    <string name="feature_carpet_deep_clean_desc">Grondigere reinigingsrondes over tapijt</string>
+    <string name="feature_clean_fluid_delivery_title">Dosering reinigingsmiddel</string>
+    <string name="feature_clean_fluid_delivery_desc">Hoeveel reinigingsmiddel het dock aan het dweilwater toevoegt</string>
+    <string name="feature_choice_none">Geen</string>
+    <string name="feature_choice_standard">Standaard</string>
+    <string name="feature_choice_high_volume">Hoog volume</string>
+    <string name="feature_dust_collection_switch_title">Frequentie automatisch legen</string>
+    <string name="feature_dust_collection_switch_desc">Wanneer het dock de stofbak van de robot leegt</string>
+    <string name="feature_choice_off">Uit</string>
+    <string name="feature_choice_balanced">Gebalanceerd</string>
+    <string name="feature_choice_high">Hoog</string>
+    <string name="feature_identify_furniture_title">Meubelherkenning</string>
+    <string name="feature_identify_furniture_desc">Herkent meubels op de kaart</string>
+    <string name="feature_identify_ground_material_title">Vloertypeherkenning</string>
+    <string name="feature_identify_ground_material_desc">Herkent tapijt en harde vloer</string>
+    <string name="feature_follow_ground_material_title">Reinigen per vloertype</string>
+    <string name="feature_follow_ground_material_desc">Past het reinigen aan op het vloertype dat hij herkent</string>
+    <string name="feature_dirty_replenish_title">Vuile plekken opnieuw dweilen</string>
+    <string name="feature_dirty_replenish_desc">Wast de dweil en dweilt opnieuw waar de vloer nog vuil is</string>
+    <string name="feature_clean_direction_title">Reinigingsrichting</string>
+    <string name="feature_clean_direction_desc">Het patroon dat de robot door een kamer volgt</string>
+    <string name="feature_choice_smart">Slim</string>
+    <string name="feature_choice_along_the_floor">Langs de vloer</string>
+    <string name="feature_choice_crosswise">Kruiselings</string>
+    <string name="feature_low_area_access_title">Reinigen onder lage meubels</string>
+    <string name="feature_low_area_access_desc">Hoe lage openingen de robot in rijdt</string>
+    <string name="feature_choice_safe_clearance">Veilige doorgang</string>
+    <string name="feature_choice_extreme_clearance">Extreme doorgang</string>
+    <string name="feature_lds_lifting_title">LiDAR laten zakken</string>
+    <string name="feature_lds_lifting_desc">Laat de lasertoren zakken om onder meubels te komen</string>
+    <string name="feature_sway_arm_door_sill_title">Arm voor hoge drempels en tapijten</string>
+    <string name="feature_sway_arm_door_sill_desc">Gebruikt de arm om over hoge drempels en tapijten te klimmen</string>
+    <string name="feature_remove_mop_title">Dweilen automatisch loskoppelen</string>
+    <string name="feature_remove_mop_desc">Laat de dweilen in het dock als hij alleen stofzuigt</string>
+    <string name="feature_dynamic_obstacle_replenish_title">Geblokkeerde gebieden opnieuw reinigen</string>
+    <string name="feature_dynamic_obstacle_replenish_desc">Keert terug naar plekken waar mensen of huisdieren in de weg stonden</string>
+    <string name="feature_omission_reminder_title">Melding gemiste gebieden</string>
+    <string name="feature_omission_reminder_desc">Wijst gebieden aan die de robot niet kon reinigen</string>
+    <string name="feature_priority_carpet_title">Eerst tapijten</string>
+    <string name="feature_priority_carpet_desc">Koppelt de dweilen los, zuigt eerst de tapijten en reinigt daarna de rest</string>
+    <string name="feature_cross_carpet_title">Over tapijten rijden</string>
+    <string name="feature_cross_carpet_desc">Rijdt over tapijten zonder ze te reinigen</string>
+    <string name="feature_long_haired_carpet_title">Adaptief optillen</string>
+    <string name="feature_long_haired_carpet_desc">Kantelt omhoog voor hoogpolige tapijten als Eerst tapijten aan staat</string>
+    <string name="feature_carpet_wire_title">Snoeren bij tapijtranden vermijden</string>
+    <string name="feature_carpet_wire_desc">Betere snoerdetectie langs tapijtranden</string>
+    <string name="feature_carpet_boost_title">Tapijtboost</string>
+    <string name="feature_carpet_boost_desc">Maximale zuigkracht op tapijt</string>
+    <string name="feature_identify_room_title">Kamerherkenning</string>
+    <string name="feature_identify_room_desc">Herkent het soort kamer aan wat de camera ziet</string>
+    <string name="feature_smart_wash_title">Slim dweil wassen</string>
+    <string name="feature_smart_wash_desc">Past water, tijd en temperatuur aan op hoe vuil de dweil is</string>
+    <string name="feature_offline_map_title">Offline kaart</string>
+    <string name="feature_offline_map_desc">Blijft tonen waar de robot was voordat hij stroom verloor</string>
+    <string name="feature_fill_light_title">Hulplicht</string>
+    <string name="feature_fill_light_desc">Verlicht donkere plekken zodat obstakels beter worden herkend</string>
+    <string name="feature_choice_automatic">Automatisch</string>
+    <string name="feature_obstacle_photos_title">Obstakelfoto's</string>
+    <string name="feature_obstacle_photos_desc">Bewaart foto's van obstakels die de camera herkende in het geheugen van de robot; tik op een obstakel op de kaart om de foto te zien</string>
+    <string name="feature_have_pets_title">Ik heb huisdieren</string>
+    <string name="feature_have_pets_desc">Let op uitwerpselen van huisdieren en reinigt plekken van huisdieren zorgvuldiger</string>
+    <string name="feature_pet_snaps_title">Huisdierfoto's</string>
+    <string name="feature_pet_snaps_desc">Maakt foto's van je huisdieren tijdens het reinigen</string>
+    <string name="feature_voice_assistant_title">Stemassistent</string>
+    <string name="feature_voice_assistant_desc">De robot luistert naar gesproken opdrachten; daarvoor verwerkt hij je stem</string>
+    <string name="feature_product_experience_title">Gebruiksgegevens delen</string>
+    <string name="feature_product_experience_desc">Laat de robot gebruiksgegevens naar Roborock sturen om het product te verbeteren</string>
+    <string name="feature_voice_experience_title">Spraakgegevens delen</string>
+    <string name="feature_voice_experience_desc">Laat de robot spraakopnamen naar Roborock sturen om de herkenning te verbeteren</string>
+
+    <!-- Obstacle types on the map (MapObstacles) -->
+    <string name="obstacle_cable">Kabel</string>
+    <string name="obstacle_pet_waste">Uitwerpselen van huisdier</string>
+    <string name="obstacle_shoes">Schoenen</string>
+    <string name="obstacle_poop">Poep</string>
+    <string name="obstacle_pedestal">Voetstuk</string>
+    <string name="obstacle_extension_cord">Verlengsnoer</string>
+    <string name="obstacle_weighing_scale">Weegschaal</string>
+    <string name="obstacle_clothes">Kleding</string>
+    <string name="obstacle_dustpan">Blik</string>
+    <string name="obstacle_furniture_crossbar">Meubel met dwarsbalk</string>
+    <string name="obstacle_pet">Huisdier</string>
+    <string name="obstacle_fabric_paper_ball">Prop stof of papier</string>
+
+    <!-- Robot refusals -->
+    <string name="robot_refused_method">De robot weigerde %1$s</string>
+
+    <!-- Map edit blockers and validation (MapEditCommands) -->
+    <string name="mapedit_block_no_mop_zones">Deze kaart heeft zones waar niet gedweild wordt. LocalRock kan die nog niet terugschrijven, dus opslaan kan ze hier wissen.</string>
+    <string name="mapedit_block_mop_only_areas">Deze kaart heeft gebieden waar alleen gedweild wordt. LocalRock kan die nog niet terugschrijven, dus opslaan kan ze hier wissen.</string>
+    <string name="mapedit_block_map_index">De robot heeft niet gezegd welke van zijn kaarten geladen is, dus kaartwijzigingen kunnen nog niet worden opgeslagen.</string>
+    <string name="mapedit_coordinate_outside">Coördinaat %1$d mm ligt buiten de kaart</string>
+    <string name="mapedit_too_many_restrictions">Te veel beperkingen: %1$d van %2$d punten gebruikt</string>
+    <string name="mapedit_draw_line_across">Teken de lijn dwars over de deuropening of het raam</string>
+    <string name="mapedit_split_refused">De robot kon de kamer niet langs die lijn splitsen. Teken de lijn helemaal over de kamer, voorbij de muur aan beide kanten, zodat hij de kamer in tweeën deelt.</string>
+    <string name="mapedit_map_name_empty">Geef de kaart een naam</string>
+    <string name="mapedit_map_name_ascii">Kaartnamen kunnen voorlopig alleen gewone letters, cijfers en leestekens bevatten (geen æ, ø, å of emoji)</string>
+
+    <!-- Robot commands that failed or are blocked (VacuumRepository) -->
+    <string name="repo_the_cleaning_order_cant_be_saved">De reinigingsvolgorde kan in de demo niet worden opgeslagen</string>
+    <string name="repo_the_robot_is_busy_dock_it">De robot is bezig. Stuur hem naar het dock of laat hem eerst klaar zijn.</string>
+    <string name="repo_the_robot_accepted_the_cleaning_order">De robot heeft de reinigingsvolgorde aangenomen, maar meldt hem niet terug.</string>
+    <string name="repo_room_settings_cant_be_saved_in">Kamerinstellingen kunnen in de demo niet worden opgeslagen</string>
+    <string name="repo_the_map_has_not_loaded_yet">De kaart is nog niet geladen</string>
+    <string name="repo_couldnt_read_the_robots_saved_maps">De opgeslagen kaarten van de robot konden niet worden gelezen, dus er is niets opgeslagen. Probeer het opnieuw.</string>
+    <string name="repo_the_robot_loaded_another_map_while">De robot heeft een andere kaart geladen terwijl je aan het bewerken was. Er is niets opgeslagen; sluit de editor en open hem opnieuw.</string>
+    <string name="repo_that_room_is_not_on_the">Die kamer staat niet op de huidige kaart</string>
+    <string name="repo_pick_two_different_rooms_on_the">Kies twee verschillende kamers op de huidige kaart</string>
+    <string name="repo_only_wood_floors_have_a_direction">Alleen houten vloeren hebben een richting</string>
+    <string name="repo_the_robot_did_not_return_its">De robot gaf zijn kamertabel niet terug. Er is niets gewijzigd.</string>
+    <string name="repo_couldnt_read_the_robots_saved_maps_2">De opgeslagen kaarten van de robot konden niet worden gelezen. Er is niets gewijzigd.</string>
+    <string name="repo_couldnt_read_saved_maps_not_started">De opgeslagen kaarten van de robot konden niet worden gelezen. Er is niets gestart.</string>
+    <string name="repo_that_map_is_no_longer_on">Die kaart staat niet meer op de robot</string>
+    <string name="repo_this_map_has_no_backup_on">Deze kaart heeft nog geen back-up op de robot</string>
+    <string name="repo_load_this_map_first_then_restore">Laad eerst deze kaart en zet daarna de back-up terug</string>
+    <string name="repo_the_robot_didnt_report_its_map">De robot heeft zijn kaartinstellingen niet gemeld. Er is niets gewijzigd.</string>
+    <string name="repo_pick_the_map_to_keep">Kies de kaart die je wilt houden</string>
+    <string name="repo_there_is_no_new_map_to">Er is geen nieuwe kaart om op te slaan</string>
+    <string name="repo_the_robot_sent_a_map_this">De robot stuurde een kaart die deze app niet kan lezen</string>
+    <string name="repo_the_robots_current_task_is_unavailable">De huidige taak van de robot is niet beschikbaar</string>
+    <string name="repo_there_is_no_supported_cleaning_task">Er is geen ondersteunde reinigingstaak om te hervatten</string>
+    <string name="repo_the_robots_suction_is_unknown">De zuigkracht van de robot is onbekend</string>
+    <string name="repo_the_robots_water_flow_is_unknown">De waterstroom van de robot is onbekend</string>
+    <string name="repo_the_robots_route_is_unknown">De route van de robot is onbekend</string>
+    <string name="repo_the_robot_cant_change_this_while">De robot kan dit niet wijzigen terwijl hij reinigt. Laat de huidige reiniging eerst afronden of stop hem.</string>
+    <string name="repo_the_robot_accepted_the_change_but">De robot heeft de wijziging aangenomen, maar meldt nog de oude instelling.</string>
+    <string name="repo_the_robots_mop_washing_frequency_is">De frequentie van dweil wassen van de robot is niet beschikbaar</string>
+    <string name="repo_the_robot_accepted_the_quiet_hours">De robot heeft de stille uren aangenomen, maar meldt andere terug.</string>
+    <string name="repo_couldnt_read_the_robots_quiet_hours">De stille uren van de robot konden niet worden gelezen, dus er is niets gewijzigd.</string>
+    <string name="repo_routine_step_not_registered">De robot heeft de routinestap niet geregistreerd</string>
+    <string name="repo_voice_pack_install_failed">De robot kon het stempakket niet installeren (fout %1$s).</string>
+    <string name="repo_voice_pack_not_switched">De robot is niet overgeschakeld naar %1$s; misschien is hij het nog aan het installeren.</string>
+    <string name="repo_map_limit_one">De robot heeft nog een opgeslagen kaart. Verwijder die eerst om het huis opnieuw in kaart te brengen.</string>
+    <string name="repo_map_limit">De robot heeft al %1$d kaarten, zijn maximum. Verwijder er eerst een.</string>
+    <string name="repo_map_editing_demo">Kaart bewerken is niet beschikbaar in de demo</string>
+    <string name="repo_busy_before_editing">De robot is bezig. Stuur hem naar het dock of laat hem eerst klaar zijn voordat je de kaart bewerkt.</string>
+    <string name="repo_map_format_unsupported">Kaart bewerken wordt voor het kaartformaat van deze robot nog niet ondersteund</string>
+    <string name="repo_managing_maps_demo">Kaarten beheren is niet beschikbaar in de demo</string>
+    <string name="repo_room_modes_not_confirmed">De robot heeft de kamerinstellingen aangenomen, maar meldt ze niet terug. Open de reinigingsmodus opnieuw om het te controleren.</string>
+    <string name="repo_map_not_kept">Kaarten opslaan staat nu aan, maar de robot heeft de kaart die hij had gemaakt niet bewaard. Laat hem het huis nog een keer reinigen of in kaart brengen en sla de kaart dan op.</string>
+    <string name="repo_not_confirmed">De robot heeft de wijziging aangenomen, maar de kaart toont die nog niet. Vernieuw de kaart over een moment om het te controleren.</string>
+    <string name="repo_no_rooms_for_settings">Er zijn geen kamers om instellingen voor op te slaan</string>
+    <string name="repo_room_needs_suction_or_water">Elke kamer heeft zuigkracht of water nodig</string>
+
+    <!-- Room name validation -->
+    <string name="room_name_empty">Voer een kamernaam in</string>
+    <string name="room_name_too_long">Kamernamen mogen hoogstens %1$d tekens lang zijn</string>
+    <string name="room_name_bracket">Kamernamen mogen niet met { of [ beginnen</string>
+
+    <!-- Camera live view: stages and errors (CameraLiveSession) -->
+    <string name="camera_stage_preparing">Voorbereiden…</string>
+    <string name="camera_stage_setting_pin">PIN instellen op de robot…</string>
+    <string name="camera_stage_checking_pin">PIN controleren…</string>
+    <string name="camera_stage_claiming">Camera overnemen…</string>
+    <string name="camera_stage_starting">Camera starten…</string>
+    <string name="camera_stage_negotiating">Verbinding opzetten…</string>
+    <string name="camera_pin_disabled">Deze robot meldt dat de camera-PIN uitgeschakeld is (-1007). Zet kijken op afstand voor deze robot één keer aan in de app van de fabrikant en probeer het daarna hier opnieuw.</string>
+    <string name="camera_pin_refused">De robot weigerde de PIN in te stellen: %1$s</string>
+    <string name="camera_talk_refused">De robot weigerde het spreken via de robot: %1$s</string>
+    <string name="camera_pin_check_failed">PIN-controle mislukt: %1$s</string>
+    <string name="camera_wrong_pin">Verkeerde camera-PIN</string>
+    <string name="camera_remote_viewing_off">Kijken op afstand staat niet aan op deze robot (-10012, camera_status=%1$s). Zet het één keer aan in de officiële Roborock-app (Kijken op afstand: stel het patroon in en druk daarna op de aan/uit-knop van de robot als daarom gevraagd wordt). Bij sommige oudere modellen werkt dit alleen zolang de robot de cloud van Roborock gebruikt.</string>
+    <string name="camera_turn_failed">De robot kreeg geen videorelay van de server (-10014). De server heeft camera-ondersteuning (TURN) nodig, en de robot moet zo gekoppeld zijn dat hij die kan vinden: koppel een Saros 20 of Qrevo MaxV met een cameradomein en "Ook gebruiken als servernaam van de robot" aan. Zie de cameradocumentatie van de server.</string>
+    <string name="camera_preview_refused">De robot weigerde het camerabeeld: %1$s</string>
+    <string name="camera_no_answer">De robot antwoordde niet — heeft dit model wel een camera?</string>
+    <string name="camera_video_failed">Videoverbinding mislukt</string>
+    <string name="camera_video_lost">Videoverbinding verbroken</string>
+    <string name="camera_unknown_error">Onbekende fout</string>
+    <string name="camera_domain_scheme">Het cameradomein is alleen een hostnaam, zonder https://</string>
+    <string name="camera_domain_port_path">Het cameradomein is alleen een hostnaam, zonder poort of pad</string>
+    <string name="camera_domain_invalid">Cameradomein '%1$s' is geen geldige hostnaam</string>
+    <string name="camera_domain_too_long">Cameradomein '%1$s' is %2$d tekens lang; de robot bewaart er hoogstens 14</string>
+
+    <!-- Routine step titles (stepTitle) -->
+    <string name="step_full_clean">Volledige reiniging</string>
+    <string name="step_rooms">Kamers</string>
+    <string name="step_room_number">Kamer %1$d</string>
+    <plurals name="step_zones">
+        <item quantity="one">%1$d zone</item>
+        <item quantity="other">%1$d zones</item>
+    </plurals>
+
+    <!-- Notifications (RobotEvents) -->
+    <string name="notify_area_in_time">%1$s in %2$s</string>
+    <string name="notify_cleaning_finished">Reiniging voltooid</string>
+    <string name="notify_cleaning_finished_detail">Reiniging voltooid: %1$s</string>
+    <string name="notify_working">Bezig</string>
+    <string name="notify_battery">Batterij %1$d%</string>
+    <string name="notify_progress_title">%1$s: %2$s</string>
+    <string name="notify_progress_title_room">%1$s: %2$s in %3$s</string>
+    <string name="notify_area">%1$d,%2$d m²</string>
+
+    <!-- Connection banners (AppContainer) -->
+    <string name="banner_session_expired">Sessie verlopen — meld je af en weer aan om opnieuw te verbinden.</string>
+    <string name="banner_back_online">Weer online</string>
+    <string name="banner_offline">Offline — opnieuw verbinden…</string>
+
+    <!-- Server and demo-mode refusals (DeviceApi, DeviceRepository) -->
+    <string name="device_routines_unavailable">Routines niet beschikbaar</string>
+    <string name="device_routine_run_failed">De server kon de routine niet uitvoeren</string>
+    <string name="device_routine_not_returned">De server gaf de nieuwe routine niet terug</string>
+    <string name="device_routine_save_failed">De server kon de routine niet opslaan</string>
+    <string name="device_routine_rename_failed">De server kon de routine niet hernoemen</string>
+    <string name="device_routine_delete_failed">De server kon de routine niet verwijderen</string>
+    <string name="device_firmware_check_unavailable">Firmwarecontrole niet beschikbaar</string>
+    <string name="device_demo_rooms">Kamers kunnen in de demo niet worden hernoemd</string>
+    <string name="device_demo_routines_save">Routines kunnen in de demo niet worden opgeslagen</string>
+    <string name="device_demo_routines_delete">Routines kunnen in de demo niet worden verwijderd</string>
+    <string name="device_demo_routines_run">Routines kunnen in de demo niet worden uitgevoerd</string>
+</resources>

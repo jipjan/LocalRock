@@ -133,6 +133,8 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import com.kodraliu.localrock.resources.onboarding_hide_password
 import com.kodraliu.localrock.resources.onboarding_show_password
+import com.kodraliu.localrock.shared.text.HasUiText
+import com.kodraliu.localrock.ui.text.text
 
 private class AddVacuumModel(
     private val container: AppContainer,
@@ -334,7 +336,8 @@ fun AddVacuumScreen(onBack: () -> Unit) {
     var timezone by remember { mutableStateOf(DEFAULT_IANA_TZ) }
     var cameraDomain by remember { mutableStateOf("") }
     var cameraDomainAsServer by remember { mutableStateOf(false) }
-    val cameraDomainError = runCatching { cameraDomainInput(cameraDomain) }.exceptionOrNull()?.message
+    val cameraDomainError = runCatching { cameraDomainInput(cameraDomain) }.exceptionOrNull()
+        ?.let { e -> (e as? HasUiText)?.text?.text() ?: e.message }
 
     val canStartPairing = !running && !loadingDevices &&
         selectedDuid != null && ssid.isNotBlank() && password.isNotBlank() && timezone.isNotBlank() &&

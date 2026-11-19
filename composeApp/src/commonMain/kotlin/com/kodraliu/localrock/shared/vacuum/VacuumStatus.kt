@@ -2,6 +2,10 @@ package com.kodraliu.localrock.shared.vacuum
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.rawText
+import com.kodraliu.localrock.shared.text.uiText
 
 
 @Serializable
@@ -93,15 +97,18 @@ object DockErrorCodes {
     const val NO_DUSTBIN = 46
     const val CLEANING_TANK_FULL_OR_BLOCKED = 53
 
-    fun describe(code: Int): String = when (code) {
-        OK -> ""
-        DUCT_BLOCKAGE -> "Dock dust duct blocked"
-        WATER_EMPTY -> "Clean water tank empty"
-        DIRTY_TANK_FULL -> "Dirty water tank full"
-        DIRTY_TANK_LATCH_OPEN -> "Dirty water tank latch open"
-        NO_DUSTBIN -> "Dock dust bag missing"
-        CLEANING_TANK_FULL_OR_BLOCKED -> "Dock cleaning tray full or blocked"
-        else -> "Dock error $code"
+    fun describe(code: Int): String = text(code).english
+
+    /** [describe] for the UI, in the app's language. */
+    fun text(code: Int): UiText = when (code) {
+        OK -> rawText("")
+        DUCT_BLOCKAGE -> uiText(Res.string.dock_error_dock_dust_duct_blocked, "Dock dust duct blocked")
+        WATER_EMPTY -> uiText(Res.string.dock_error_clean_water_tank_empty, "Clean water tank empty")
+        DIRTY_TANK_FULL -> uiText(Res.string.dock_error_dirty_water_tank_full, "Dirty water tank full")
+        DIRTY_TANK_LATCH_OPEN -> uiText(Res.string.dock_error_dirty_water_tank_latch_open, "Dirty water tank latch open")
+        NO_DUSTBIN -> uiText(Res.string.dock_error_dock_dust_bag_missing, "Dock dust bag missing")
+        CLEANING_TANK_FULL_OR_BLOCKED -> uiText(Res.string.dock_error_dock_cleaning_tray_full_or, "Dock cleaning tray full or blocked")
+        else -> uiText(Res.string.dock_error_code, "Dock error $code", code)
     }
 }
 
@@ -165,82 +172,88 @@ object VacuumStateCodes {
     const val CHANGING_MOP = 43
     const val CHARGING_COMPLETE = 100
 
-    fun describe(state: Int): String = when (state) {
-        STARTING -> "Starting"
-        CHARGER_DISCONNECTED -> "Charger disconnected"
-        IDLE -> "Idle"
-        REMOTE_CONTROL_ACTIVE -> "Remote control"
-        CLEANING -> "Cleaning"
-        RETURNING_HOME -> "Returning home"
-        MANUAL_MODE -> "Manual mode"
-        CHARGING -> "Charging"
-        CHARGING_ERROR -> "Charging error"
-        PAUSED -> "Paused"
-        SPOT_CLEANING -> "Spot cleaning"
-        ERROR -> "Error"
-        SHUTTING_DOWN -> "Shutting down"
-        UPDATING -> "Updating"
-        DOCKING -> "Docking"
-        GOING_TO_TARGET -> "Going to target"
-        ZONED_CLEANING -> "Zoned cleaning"
-        SEGMENT_CLEANING -> "Room cleaning"
-        MAPPING -> "Mapping"
-        NOT_CHARGING -> "Idle"
-        WASHING_MOP, WASHING_MOP_2 -> "Washing mop"
-        GOING_TO_WASH_MOP -> "Going to wash mop"
-        DRYING_MOP -> "Drying mop"
-        RETURNING_TO_DOCK_FOR_DRYING -> "Returning to dock"
-        EMPTYING_BIN -> "Emptying the bin"
-        CUPID_MODE -> "Cupid mode"
-        PATROL -> "Patrolling"
-        REINSTALLING_MOP_MOUNTS -> "Reinstalling mop mounts"
-        DETACHING_MOP_MOUNTS -> "Detaching mop mounts"
-        EXHIBITION_MODE -> "Exhibition mode"
-        DANCING -> "Dancing"
-        EMERGENCY_STOP -> "Emergency stop"
-        ARM_RESETTING -> "Resetting the arm"
-        PROGRAM_MODE -> "Program mode"
-        CHANGING_MOP -> "Changing mop"
-        CHARGING_COMPLETE -> "Fully charged"
-        else -> "State $state"
+    fun describe(state: Int): String = text(state).english
+
+    /** [describe] for the UI, in the app's language. */
+    fun text(state: Int): UiText = when (state) {
+        STARTING -> uiText(Res.string.state_starting, "Starting")
+        CHARGER_DISCONNECTED -> uiText(Res.string.state_charger_disconnected, "Charger disconnected")
+        IDLE -> uiText(Res.string.state_idle, "Idle")
+        REMOTE_CONTROL_ACTIVE -> uiText(Res.string.state_remote_control, "Remote control")
+        CLEANING -> uiText(Res.string.state_cleaning, "Cleaning")
+        RETURNING_HOME -> uiText(Res.string.state_returning_home, "Returning home")
+        MANUAL_MODE -> uiText(Res.string.state_manual_mode, "Manual mode")
+        CHARGING -> uiText(Res.string.state_charging, "Charging")
+        CHARGING_ERROR -> uiText(Res.string.state_charging_error, "Charging error")
+        PAUSED -> uiText(Res.string.state_paused, "Paused")
+        SPOT_CLEANING -> uiText(Res.string.state_spot_cleaning, "Spot cleaning")
+        ERROR -> uiText(Res.string.state_error, "Error")
+        SHUTTING_DOWN -> uiText(Res.string.state_shutting_down, "Shutting down")
+        UPDATING -> uiText(Res.string.state_updating, "Updating")
+        DOCKING -> uiText(Res.string.state_docking, "Docking")
+        GOING_TO_TARGET -> uiText(Res.string.state_going_to_target, "Going to target")
+        ZONED_CLEANING -> uiText(Res.string.state_zoned_cleaning, "Zoned cleaning")
+        SEGMENT_CLEANING -> uiText(Res.string.state_room_cleaning, "Room cleaning")
+        MAPPING -> uiText(Res.string.state_mapping, "Mapping")
+        NOT_CHARGING -> uiText(Res.string.state_idle, "Idle")
+        WASHING_MOP, WASHING_MOP_2 -> uiText(Res.string.state_washing_mop, "Washing mop")
+        GOING_TO_WASH_MOP -> uiText(Res.string.state_going_to_wash_mop, "Going to wash mop")
+        DRYING_MOP -> uiText(Res.string.state_drying_mop, "Drying mop")
+        RETURNING_TO_DOCK_FOR_DRYING -> uiText(Res.string.state_returning_to_dock, "Returning to dock")
+        EMPTYING_BIN -> uiText(Res.string.state_emptying_the_bin, "Emptying the bin")
+        CUPID_MODE -> uiText(Res.string.state_cupid_mode, "Cupid mode")
+        PATROL -> uiText(Res.string.state_patrolling, "Patrolling")
+        REINSTALLING_MOP_MOUNTS -> uiText(Res.string.state_reinstalling_mop_mounts, "Reinstalling mop mounts")
+        DETACHING_MOP_MOUNTS -> uiText(Res.string.state_detaching_mop_mounts, "Detaching mop mounts")
+        EXHIBITION_MODE -> uiText(Res.string.state_exhibition_mode, "Exhibition mode")
+        DANCING -> uiText(Res.string.state_dancing, "Dancing")
+        EMERGENCY_STOP -> uiText(Res.string.state_emergency_stop, "Emergency stop")
+        ARM_RESETTING -> uiText(Res.string.state_resetting_the_arm, "Resetting the arm")
+        PROGRAM_MODE -> uiText(Res.string.state_program_mode, "Program mode")
+        CHANGING_MOP -> uiText(Res.string.state_changing_mop, "Changing mop")
+        CHARGING_COMPLETE -> uiText(Res.string.state_fully_charged, "Fully charged")
+        else -> uiText(Res.string.state_unknown, "State $state", state)
     }
 }
 
 object VacuumErrorCodes {
-    fun describe(code: Int): String = when (code) {
-        0 -> ""
-        1 -> "Laser sensor fault"
-        2 -> "Collision sensor fault"
-        3 -> "Wheel floating"
-        4 -> "Cliff sensor fault"
-        5 -> "Main brush blocked"
-        6 -> "Side brush blocked"
-        7 -> "Wheel blocked"
-        8 -> "Robot stuck"
-        9 -> "Dustbin missing"
-        10 -> "Filter blocked"
-        11 -> "Magnetic field detected"
-        12 -> "Low battery"
-        13 -> "Charging problem"
-        14 -> "Battery failure"
-        15 -> "Wall sensor fault"
-        16 -> "Uneven surface"
-        17 -> "Side brush failure"
-        18 -> "Suction fan failure"
-        19 -> "Unpowered dock"
-        21 -> "Laser pressure sensor problem"
-        22 -> "Charge sensor problem"
-        23 -> "Dock problem"
-        24 -> "No-go zone or invisible wall detected"
-        25 -> "Mop pad dirty"
-        26 -> "Mop wash tank empty"
-        27 -> "Dirty water tank full"
-        28 -> "Mop pad not installed"
-        29 -> "Battery overheating"
-        30 -> "Mop pad blocked"
-        31 -> "Mop pad not installed"
-        32 -> "Dustbin not installed"
-        else -> "Error code $code"
+    fun describe(code: Int): String = text(code).english
+
+    /** [describe] for the UI, in the app's language. */
+    fun text(code: Int): UiText = when (code) {
+        0 -> rawText("")
+        1 -> uiText(Res.string.robot_error_laser_sensor_fault, "Laser sensor fault")
+        2 -> uiText(Res.string.robot_error_collision_sensor_fault, "Collision sensor fault")
+        3 -> uiText(Res.string.robot_error_wheel_floating, "Wheel floating")
+        4 -> uiText(Res.string.robot_error_cliff_sensor_fault, "Cliff sensor fault")
+        5 -> uiText(Res.string.robot_error_main_brush_blocked, "Main brush blocked")
+        6 -> uiText(Res.string.robot_error_side_brush_blocked, "Side brush blocked")
+        7 -> uiText(Res.string.robot_error_wheel_blocked, "Wheel blocked")
+        8 -> uiText(Res.string.robot_error_robot_stuck, "Robot stuck")
+        9 -> uiText(Res.string.robot_error_dustbin_missing, "Dustbin missing")
+        10 -> uiText(Res.string.robot_error_filter_blocked, "Filter blocked")
+        11 -> uiText(Res.string.robot_error_magnetic_field_detected, "Magnetic field detected")
+        12 -> uiText(Res.string.robot_error_low_battery, "Low battery")
+        13 -> uiText(Res.string.robot_error_charging_problem, "Charging problem")
+        14 -> uiText(Res.string.robot_error_battery_failure, "Battery failure")
+        15 -> uiText(Res.string.robot_error_wall_sensor_fault, "Wall sensor fault")
+        16 -> uiText(Res.string.robot_error_uneven_surface, "Uneven surface")
+        17 -> uiText(Res.string.robot_error_side_brush_failure, "Side brush failure")
+        18 -> uiText(Res.string.robot_error_suction_fan_failure, "Suction fan failure")
+        19 -> uiText(Res.string.robot_error_unpowered_dock, "Unpowered dock")
+        21 -> uiText(Res.string.robot_error_laser_pressure_sensor_problem, "Laser pressure sensor problem")
+        22 -> uiText(Res.string.robot_error_charge_sensor_problem, "Charge sensor problem")
+        23 -> uiText(Res.string.robot_error_dock_problem, "Dock problem")
+        24 -> uiText(Res.string.robot_error_no_go_zone_or_invisible, "No-go zone or invisible wall detected")
+        25 -> uiText(Res.string.robot_error_mop_pad_dirty, "Mop pad dirty")
+        26 -> uiText(Res.string.robot_error_mop_wash_tank_empty, "Mop wash tank empty")
+        27 -> uiText(Res.string.robot_error_dirty_water_tank_full, "Dirty water tank full")
+        28 -> uiText(Res.string.robot_error_mop_pad_not_installed, "Mop pad not installed")
+        29 -> uiText(Res.string.robot_error_battery_overheating, "Battery overheating")
+        30 -> uiText(Res.string.robot_error_mop_pad_blocked, "Mop pad blocked")
+        31 -> uiText(Res.string.robot_error_mop_pad_not_installed, "Mop pad not installed")
+        32 -> uiText(Res.string.robot_error_dustbin_not_installed, "Dustbin not installed")
+        else -> uiText(Res.string.robot_error_code, "Error code $code", code)
     }
 }
 
@@ -282,15 +295,18 @@ object WaterBoxMode {
     fun slideLevel(code: Int?): Int? = code?.takeIf { it in SLIDE_RANGE }?.let { it - SLIDE_RANGE.first + 1 }
 
     /** A slide code with its nearest mark, e.g. "12 · Medium"; null for a code outside the slide. */
-    fun slideLabel(code: Int?): String? {
+    fun slideLabel(code: Int?): String? = slideText(code)?.english
+
+    /** [slideLabel] for the UI, in the app's language. */
+    fun slideText(code: Int?): UiText? {
         val level = slideLevel(code) ?: return null
         val band = when {
-            code!! >= SLIDE_EXTRA_HIGH_FROM -> "Extra high"
-            code >= (SLIDE_MEDIUM + SLIDE_HIGH) / 2 -> "High"
-            code >= (SLIDE_LOW + SLIDE_MEDIUM) / 2 -> "Medium"
-            else -> "Low"
+            code!! >= SLIDE_EXTRA_HIGH_FROM -> uiText(Res.string.water_extra_high, "Extra high")
+            code >= (SLIDE_MEDIUM + SLIDE_HIGH) / 2 -> uiText(Res.string.water_high, "High")
+            code >= (SLIDE_LOW + SLIDE_MEDIUM) / 2 -> uiText(Res.string.water_medium, "Medium")
+            else -> uiText(Res.string.water_low, "Low")
         }
-        return "$level · $band"
+        return UiText.Joined(listOf(rawText("$level"), band))
     }
 
     /** Pure-water-flow robots (e.g. Saros 10R) report 201/202/203 back as 225/235/245. */

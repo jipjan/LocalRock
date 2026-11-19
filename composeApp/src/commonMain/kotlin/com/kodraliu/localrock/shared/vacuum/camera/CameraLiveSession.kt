@@ -48,6 +48,12 @@ import kotlinx.serialization.json.put
 import org.kotlincrypto.hash.md.MD5
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.HasUiText
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.UiTextException
+import com.kodraliu.localrock.shared.text.rawText
+import com.kodraliu.localrock.shared.text.uiText
 
 
 @OptIn(ExperimentalEncodingApi::class)
@@ -55,9 +61,11 @@ class CameraLiveSession(private val session: VacuumSession) {
 
     sealed interface State {
         data object Idle : State
-        data class Connecting(val stage: String) : State
+        data class Connecting(val stage: UiText) : State
         data object Streaming : State
-        data class Failed(val message: String) : State
+        data class Failed(val text: UiText) : State {
+            val message: String get() = text.english
+        }
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -71,14 +79,14 @@ class CameraLiveSession(private val session: VacuumSession) {
 
     fun start(pin: String) {
         if (connectJob?.isActive == true) return
-        _state.value = State.Connecting("Preparing…")
+        _state.value = State.Connecting(uiText(Res.string.camera_stage_preparing, "Preparing…"))
         connectJob = scope.launch {
             try {
                 connect(pin)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                _state.value = State.Failed(e.message ?: e::class.simpleName ?: "Unknown error")
+                _state.value = State.Failed(failureText(e))
                 closePeer()
             }
         }
@@ -87,7 +95,7 @@ class CameraLiveSession(private val session: VacuumSession) {
 
     fun setPinAndStart(pin: String) {
         if (connectJob?.isActive == true) return
-        _state.value = State.Connecting("Setting PIN on robot…")
+        _state.value = State.Connecting(uiText(Res.string.camera_stage_setting_pin, "Setting PIN on robot…"))
         connectJob = scope.launch {
             try {
                 val passwordMd5 = md5Hex(pin)
@@ -97,16 +105,16 @@ class CameraLiveSession(private val session: VacuumSession) {
                     val retry = session.setHomesecPassword(passwordMd5)
                     if (retry.error != null) {
                         if (errorCode(retry.error) == ERR_PASSWORD_DISABLED) {
-                            throw IllegalStateException(PASSWORD_DISABLED_HINT)
+                            throw UiTextException(uiText(Res.string.camera_pin_disabled, PASSWORD_DISABLED_HINT))
                         }
-                        throw IllegalStateException("Robot refused to set the PIN: ${retry.error}")
+                        throw UiTextException(uiText(Res.string.camera_pin_refused, "Robot refused to set the PIN: ${retry.error}", "${retry.error}"))
                     }
                 }
                 connect(pin)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                _state.value = State.Failed(e.message ?: e::class.simpleName ?: "Unknown error")
+                _state.value = State.Failed(failureText(e))
                 closePeer()
             }
         }
@@ -123,7 +131,7 @@ class CameraLiveSession(private val session: VacuumSession) {
             val reply = session.startVoiceChat()
             if (reply.error != null) {
                 p.setMicrophone(false)
-                throw IllegalStateException("The robot refused talk-back: ${reply.error}")
+                throw UiTextException(uiText(Res.string.camera_talk_refused, "The robot refused talk-back: ${reply.error}", "${reply.error}"))
             }
             runCatching { session.setVoiceChatVolume(0) }
         } else {
@@ -157,19 +165,19 @@ class CameraLiveSession(private val session: VacuumSession) {
     private suspend fun connect(pin: String) {
         val passwordMd5 = md5Hex(pin)
 
-        _state.value = State.Connecting("Checking PIN…")
+        _state.value = State.Connecting(uiText(Res.string.camera_stage_checking_pin, "Checking PIN…"))
         val check = session.checkHomesecPassword(passwordMd5)
         if (check.error != null) {
             if (errorCode(check.error) == ERR_PASSWORD_DISABLED) {
-                throw IllegalStateException(PASSWORD_DISABLED_HINT)
+                throw UiTextException(uiText(Res.string.camera_pin_disabled, PASSWORD_DISABLED_HINT))
             }
-            throw IllegalStateException("PIN check failed: ${check.error}")
+            throw UiTextException(uiText(Res.string.camera_pin_check_failed, "PIN check failed: ${check.error}", "${check.error}"))
         }
         val ok = firstInt(check.result)
-        if (ok != null && ok != 1) throw IllegalStateException("Wrong camera PIN")
+        if (ok != null && ok != 1) throw UiTextException(uiText(Res.string.camera_wrong_pin, "Wrong camera PIN"))
 
         // If another client (e.g. the official app) holds the camera, ask it to let go.
-        _state.value = State.Connecting("Claiming camera…")
+        _state.value = State.Connecting(uiText(Res.string.camera_stage_claiming, "Claiming camera…"))
         var kicks = 0
         while (kicks < 5) {
             val status = runCatching { session.getHomesecConnectStatus() }.getOrNull()
@@ -188,7 +196,7 @@ class CameraLiveSession(private val session: VacuumSession) {
             kicks++
         }
 
-        _state.value = State.Connecting("Starting camera…")
+        _state.value = State.Connecting(uiText(Res.string.camera_stage_starting, "Starting camera…"))
         var startResp = session.startCameraPreview(CLIENT_ID, passwordMd5)
         if (errorCode(startResp.error) == ERR_ALREADY_IN_PREVIEW) {
             // Still held by a session the status did not show: stop the one the robot names, then retry once.
@@ -200,18 +208,23 @@ class CameraLiveSession(private val session: VacuumSession) {
         if (startResp.error != null) {
             if (errorCode(startResp.error) == ERR_CAMERA_PREVIEW_DENIED) {
                 val status = runCatching { firstInt(session.getCameraStatus().result) }.getOrNull()
-                throw IllegalStateException(
-                    "Remote viewing is not enabled on this robot (-10012, camera_status=" +
-                        "${status ?: "unknown"}). Turn it on once in the official Roborock app (Remote " +
-                        "viewing: set the pattern, then press the robot's power button when asked). On some " +
-                        "older models this only works while the robot uses Roborock's cloud."
+                val shown = "${status ?: "unknown"}"
+                throw UiTextException(
+                    uiText(
+                        Res.string.camera_remote_viewing_off,
+                        "Remote viewing is not enabled on this robot (-10012, camera_status=" +
+                            "$shown). Turn it on once in the official Roborock app (Remote " +
+                            "viewing: set the pattern, then press the robot's power button when asked). On some " +
+                            "older models this only works while the robot uses Roborock's cloud.",
+                        shown,
+                    ),
                 )
             }
-            if (errorCode(startResp.error) == ERR_TURN_SERVER_FAILED) throw IllegalStateException(TURN_SERVER_HINT)
-            throw IllegalStateException("Robot refused camera preview: ${startResp.error}")
+            if (errorCode(startResp.error) == ERR_TURN_SERVER_FAILED) throw UiTextException(uiText(Res.string.camera_turn_failed, TURN_SERVER_HINT))
+            throw UiTextException(uiText(Res.string.camera_preview_refused, "Robot refused camera preview: ${startResp.error}", "${startResp.error}"))
         }
 
-        _state.value = State.Connecting("Negotiating…")
+        _state.value = State.Connecting(uiText(Res.string.camera_stage_negotiating, "Negotiating…"))
         val iceServers = mutableListOf<RtcIceServer>()
         runCatching {
             val turn = firstObject(session.getTurnServer().result) ?: return@runCatching
@@ -263,7 +276,7 @@ class CameraLiveSession(private val session: VacuumSession) {
             }
             if (answerSdp == null) {
                 localIceJob.cancel()
-                throw IllegalStateException("Robot did not answer — does this model have a camera?")
+                throw UiTextException(uiText(Res.string.camera_no_answer, "Robot did not answer — does this model have a camera?"))
             }
             peer.setRemoteAnswer(answerSdp)
 
@@ -300,14 +313,19 @@ class CameraLiveSession(private val session: VacuumSession) {
                         remoteIceJob.cancel()
                     }
                     RtcConnectionState.FAILED ->
-                        throw IllegalStateException("Video connection failed")
+                        throw UiTextException(uiText(Res.string.camera_video_failed, "Video connection failed"))
                     RtcConnectionState.DISCONNECTED ->
-                        if (_state.value is State.Streaming) throw IllegalStateException("Video connection lost")
+                        if (_state.value is State.Streaming) throw UiTextException(uiText(Res.string.camera_video_lost, "Video connection lost"))
                     else -> Unit
                 }
             }
         }
     }
+
+    /** What to show for a failed start: the failure's own text, else its message or class. */
+    private fun failureText(e: Throwable): UiText =
+        (e as? HasUiText)?.text ?: e.message?.let(::rawText) ?: e::class.simpleName?.let(::rawText)
+            ?: uiText(Res.string.camera_unknown_error, "Unknown error")
 
     private fun b64(json: JsonElement): String =
         Base64.encode(SignalingJson.encodeToString(JsonElement.serializer(), json).encodeToByteArray())

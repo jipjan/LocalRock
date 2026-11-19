@@ -103,6 +103,7 @@ import com.kodraliu.localrock.resources.devices_sign_out_text
 import com.kodraliu.localrock.resources.devices_sign_out_title
 import com.kodraliu.localrock.resources.devices_title
 import org.jetbrains.compose.resources.stringResource
+import com.kodraliu.localrock.ui.text.text
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -438,7 +439,7 @@ private fun LiveRobotPanel(status: VacuumStatus, onAction: (AppContainer.QuickAc
                 when {
                     status.taskPausedAtDock -> stringResource(Res.string.devices_paused_at_dock)
                     status.dryStatus == 1 && !cleaning -> stringResource(Res.string.devices_drying_mop)
-                    else -> VacuumStateCodes.describe(state)
+                    else -> VacuumStateCodes.text(state).text()
                 },
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
@@ -451,7 +452,7 @@ private fun LiveRobotPanel(status: VacuumStatus, onAction: (AppContainer.QuickAc
         }
         status.dockErrorStatus?.takeIf { it != 0 }?.let { code ->
             Text(
-                DockErrorCodes.describe(code),
+                DockErrorCodes.text(code).text(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
             )

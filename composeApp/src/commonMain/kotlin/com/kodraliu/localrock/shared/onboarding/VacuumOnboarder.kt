@@ -4,6 +4,10 @@ import com.kodraliu.localrock.shared.protocol.secureRandomBytes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withTimeoutOrNull
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.UiTextArgumentException
+import com.kodraliu.localrock.shared.text.uiText
 
 
 class VacuumOnboarder(
@@ -103,11 +107,16 @@ fun robotServerStack(input: OnboardingInput): String =
 fun cameraDomainInput(raw: String): String? {
     val host = raw.trim().trimEnd('/')
     if (host.isEmpty()) return null
-    require("://" !in host) { "Camera domain is a hostname only, without https://" }
-    require(':' !in host && '/' !in host && ' ' !in host) { "Camera domain is a hostname only, without port or path" }
-    require(Regex("^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$").matches(host)) {
-        "Camera domain '$host' is not a valid hostname"
+    fun refuse(text: UiText): Nothing = throw UiTextArgumentException(text)
+    if ("://" in host) refuse(uiText(Res.string.camera_domain_scheme, "Camera domain is a hostname only, without https://"))
+    if (':' in host || '/' in host || ' ' in host) {
+        refuse(uiText(Res.string.camera_domain_port_path, "Camera domain is a hostname only, without port or path"))
     }
-    require(host.length <= 14) { "Camera domain '$host' is ${host.length} characters; the robot keeps at most 14" }
+    if (!Regex("^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$").matches(host)) {
+        refuse(uiText(Res.string.camera_domain_invalid, "Camera domain '$host' is not a valid hostname", host))
+    }
+    if (host.length > 14) {
+        refuse(uiText(Res.string.camera_domain_too_long, "Camera domain '$host' is ${host.length} characters; the robot keeps at most 14", host, host.length))
+    }
     return "$host/"
 }

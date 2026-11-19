@@ -46,6 +46,7 @@ import com.kodraliu.localrock.shared.vacuum.map.MapObstacle
 import com.kodraliu.localrock.shared.vacuum.map.ParsedMap
 import kotlin.math.roundToInt
 import org.jetbrains.compose.resources.decodeToImageBitmap
+import com.kodraliu.localrock.ui.text.text
 
 /** Where an obstacle sits on screen, given the map's current zoom and pan. */
 internal fun ParsedMap.obstacleOnScreen(obstacle: MapObstacle, content: Size, offset: Offset, scale: Float): Offset =
@@ -111,7 +112,7 @@ internal fun ObstacleSheetContent(obstacle: MapObstacle, loadPhoto: suspend (Str
     Column(
         Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
     ) {
-        Text(obstacle.typeName ?: stringResource(Res.string.robot_obstacle), style = MaterialTheme.typography.titleLarge)
+        Text(obstacle.typeText?.text() ?: stringResource(Res.string.robot_obstacle), style = MaterialTheme.typography.titleLarge)
         val details = listOfNotNull(
             obstacle.confidence?.takeIf { it > 0f }?.let { stringResource(Res.string.robot_obstacle_confidence, (it * 100).roundToInt()) },
             stringResource(Res.string.robot_obstacle_ignored).takeIf { obstacle.ignored },

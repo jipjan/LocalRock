@@ -1,5 +1,9 @@
 package com.kodraliu.localrock.shared.vacuum
 
+import com.kodraliu.localrock.resources.*
+import com.kodraliu.localrock.shared.text.UiText
+import com.kodraliu.localrock.shared.text.uiText
+
 /**
  * The room types the official app offers when you edit a room. The robot keeps the type as a
  * numeric tag per room, and uses it to adjust cleaning preferences and order in the smart modes.
@@ -19,6 +23,25 @@ enum class RoomType(val label: String, val tag: Int) {
     CORRIDOR("Corridor", 8),
     HALL("Hall", 10),
     BALCONY("Balcony", 7);
+
+    /** [label] for the UI, in the app's language. */
+    val text: UiText
+        get() = uiText(
+            when (this) {
+                LIVING_ROOM -> Res.string.room_type_living_room
+                KITCHEN -> Res.string.room_type_kitchen
+                DINING_ROOM -> Res.string.room_type_dining_room
+                BEDROOM -> Res.string.room_type_bedroom
+                MASTER_BEDROOM -> Res.string.room_type_master_bedroom
+                GUEST_BEDROOM -> Res.string.room_type_guest_bedroom
+                BATHROOM -> Res.string.room_type_bathroom
+                STUDY -> Res.string.room_type_study
+                CORRIDOR -> Res.string.room_type_corridor
+                HALL -> Res.string.room_type_hall
+                BALCONY -> Res.string.room_type_balcony
+            },
+            label,
+        )
 
     companion object {
         fun fromTag(tag: Int): RoomType? = entries.firstOrNull { it.tag == tag }
