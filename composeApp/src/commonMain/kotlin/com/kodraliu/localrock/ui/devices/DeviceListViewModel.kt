@@ -7,6 +7,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.devices_action_refused
+import com.kodraliu.localrock.resources.devices_load_failed
+import org.jetbrains.compose.resources.getString
 
 class DeviceListViewModel(
     private val container: AppContainer,
@@ -33,7 +37,7 @@ class DeviceListViewModel(
                 container.deviceRepository.refresh()
                 container.deviceRepository.probeReachability()
             } catch (e: Throwable) {
-                _error.value = e.message ?: "Failed to load devices"
+                _error.value = e.message ?: getString(Res.string.devices_load_failed)
             } finally {
                 _refreshing.value = false
             }
@@ -51,7 +55,7 @@ class DeviceListViewModel(
         viewModelScope.launch {
             _actionError.value = null
             runCatching { container.quickAction(device, action) }
-                .onFailure { _actionError.value = it.message ?: "The robot did not accept that" }
+                .onFailure { _actionError.value = it.message ?: getString(Res.string.devices_action_refused) }
             kotlinx.coroutines.delay(1_500)
             container.deviceRepository.probeReachability()
         }

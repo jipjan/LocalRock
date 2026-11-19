@@ -53,6 +53,49 @@ import com.kodraliu.localrock.ui.LocalAppContainer
 import com.kodraliu.localrock.ui.rememberNotificationPermissionRequest
 import com.kodraliu.localrock.ui.whatsnew.WhatsNewSheet
 import com.kodraliu.localrock.ui.whatsnew.whatsNewFor
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.appsettings_about
+import com.kodraliu.localrock.resources.appsettings_about_text
+import com.kodraliu.localrock.resources.appsettings_ack_intro
+import com.kodraliu.localrock.resources.appsettings_ack_outro
+import com.kodraliu.localrock.resources.appsettings_alerts_note_android
+import com.kodraliu.localrock.resources.appsettings_alerts_note_ios
+import com.kodraliu.localrock.resources.appsettings_appearance
+import com.kodraliu.localrock.resources.appsettings_built_for
+import com.kodraliu.localrock.resources.appsettings_connection
+import com.kodraliu.localrock.resources.appsettings_contribute
+import com.kodraliu.localrock.resources.appsettings_contribute_github
+import com.kodraliu.localrock.resources.appsettings_contribute_text
+import com.kodraliu.localrock.resources.appsettings_donate
+import com.kodraliu.localrock.resources.appsettings_donate_text
+import com.kodraliu.localrock.resources.appsettings_notifications
+import com.kodraliu.localrock.resources.appsettings_notifications_denied
+import com.kodraliu.localrock.resources.appsettings_notify_background
+import com.kodraliu.localrock.resources.appsettings_notify_background_text
+import com.kodraliu.localrock.resources.appsettings_notify_dock
+import com.kodraliu.localrock.resources.appsettings_notify_dock_text
+import com.kodraliu.localrock.resources.appsettings_notify_errors
+import com.kodraliu.localrock.resources.appsettings_notify_finished
+import com.kodraliu.localrock.resources.appsettings_notify_progress
+import com.kodraliu.localrock.resources.appsettings_notify_progress_text
+import com.kodraliu.localrock.resources.appsettings_privacy
+import com.kodraliu.localrock.resources.appsettings_robot_alerts
+import com.kodraliu.localrock.resources.appsettings_robot_alerts_text
+import com.kodraliu.localrock.resources.appsettings_room_outlines
+import com.kodraliu.localrock.resources.appsettings_room_outlines_text
+import com.kodraliu.localrock.resources.appsettings_server_url
+import com.kodraliu.localrock.resources.appsettings_server_url_text
+import com.kodraliu.localrock.resources.appsettings_thanks
+import com.kodraliu.localrock.resources.appsettings_theme_dark
+import com.kodraliu.localrock.resources.appsettings_theme_light
+import com.kodraliu.localrock.resources.appsettings_theme_system
+import com.kodraliu.localrock.resources.appsettings_title
+import com.kodraliu.localrock.resources.appsettings_whats_new
+import com.kodraliu.localrock.resources.common_cancel
+import com.kodraliu.localrock.resources.common_save
+import com.kodraliu.localrock.resources.login_demo
+import com.kodraliu.localrock.resources.onboarding_back
+import org.jetbrains.compose.resources.stringResource
 
 const val APP_VERSION: String = "1.4.0"
 
@@ -76,11 +119,11 @@ fun SettingsScreen(onDone: () -> Unit, allowCancel: Boolean) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(Res.string.appsettings_title)) },
                 navigationIcon = {
                     if (allowCancel) {
                         IconButton(onClick = onDone) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.onboarding_back))
                         }
                     }
                 },
@@ -98,11 +141,11 @@ fun SettingsScreen(onDone: () -> Unit, allowCancel: Boolean) {
                     .padding(horizontal = 24.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                SectionLabel("Appearance")
+                SectionLabel(stringResource(Res.string.appsettings_appearance))
                 val themeModes = listOf(
-                    ThemeMode.SYSTEM to "System",
-                    ThemeMode.LIGHT to "Light",
-                    ThemeMode.DARK to "Dark",
+                    ThemeMode.SYSTEM to stringResource(Res.string.appsettings_theme_system),
+                    ThemeMode.LIGHT to stringResource(Res.string.appsettings_theme_light),
+                    ThemeMode.DARK to stringResource(Res.string.appsettings_theme_dark),
                 )
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     themeModes.forEachIndexed { index, (mode, label) ->
@@ -117,25 +160,25 @@ fun SettingsScreen(onDone: () -> Unit, allowCancel: Boolean) {
                 }
                 val roomOutlines by container.appSettings.mapRoomOutlines.collectAsState()
                 SwitchRow(
-                    "Room outlines on the map",
-                    "Draw rooms with straight walls from the robot's floor plan, as the Roborock app does. Off shows the robot's own map pixels.",
+                    stringResource(Res.string.appsettings_room_outlines),
+                    stringResource(Res.string.appsettings_room_outlines_text),
                     roomOutlines,
                     container.appSettings::setMapRoomOutlines,
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                SectionLabel("Connection")
+                SectionLabel(stringResource(Res.string.appsettings_connection))
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text("Server URL") },
+                    label = { Text(stringResource(Res.string.appsettings_server_url)) },
                     placeholder = { Text("https://api-test.example.com") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Text(
-                    "The address of your self-hosted LocalRock server on your network.",
+                    stringResource(Res.string.appsettings_server_url_text),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -148,15 +191,15 @@ fun SettingsScreen(onDone: () -> Unit, allowCancel: Boolean) {
                         onDone()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Save") }
+                ) { Text(stringResource(Res.string.common_save)) }
                 if (allowCancel) {
-                    TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text("Cancel") }
+                    TextButton(onClick = onDone, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.common_cancel)) }
                 }
                 if (userData == null) {
                     TextButton(
                         onClick = { container.authRepository.enterDemo() },
                         modifier = Modifier.fillMaxWidth(),
-                    ) { Text("Explore the demo (no server needed)") }
+                    ) { Text(stringResource(Res.string.login_demo)) }
                 }
 
                 // Alerts are about robots, and there are none to watch before signing in.
@@ -167,10 +210,9 @@ fun SettingsScreen(onDone: () -> Unit, allowCancel: Boolean) {
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                SectionLabel("Contribute")
+                SectionLabel(stringResource(Res.string.appsettings_contribute))
                 Text(
-                    "LocalRock is a free, open-source community project. Issue reports, ideas, and " +
-                        "pull requests are all welcome.",
+                    stringResource(Res.string.appsettings_contribute_text),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -180,32 +222,30 @@ fun SettingsScreen(onDone: () -> Unit, allowCancel: Boolean) {
                 ) {
                     Icon(Icons.Default.Favorite, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Contribute on GitHub")
+                    Text(stringResource(Res.string.appsettings_contribute_github))
                 }
 
                 if (donationsEnabled) {
                     Text(
-                        "A small donation helps keep it maintained. It is never required — the app " +
-                            "is and stays free.",
+                        stringResource(Res.string.appsettings_donate_text),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedButton(
                         onClick = { uriHandler.openUri(donationUrl) },
                         modifier = Modifier.fillMaxWidth(),
-                    ) { Text("Donate") }
+                    ) { Text(stringResource(Res.string.appsettings_donate)) }
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                SectionLabel("About")
+                SectionLabel(stringResource(Res.string.appsettings_about))
                 Text(
                     "LocalRock $APP_VERSION",
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
-                    "Control vacuums locally through your own server. Not affiliated with, " +
-                        "endorsed by, or connected to Roborock. \"Roborock\" is a trademark of its owner.",
+                    stringResource(Res.string.appsettings_about_text),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -213,26 +253,27 @@ fun SettingsScreen(onDone: () -> Unit, allowCancel: Boolean) {
                     OutlinedButton(
                         onClick = { showWhatsNew = true },
                         modifier = Modifier.fillMaxWidth(),
-                    ) { Text("What's new in $APP_VERSION") }
+                    ) { Text(stringResource(Res.string.appsettings_whats_new, APP_VERSION)) }
                 }
                 OutlinedButton(
                     onClick = { uriHandler.openUri(PRIVACY_URL) },
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Privacy policy") }
+                ) { Text(stringResource(Res.string.appsettings_privacy)) }
 
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Thanks & open-source licenses",
+                    stringResource(Res.string.appsettings_thanks),
                     style = MaterialTheme.typography.labelLarge,
                 )
                 Text(
-                    ACKNOWLEDGEMENTS,
+                    stringResource(Res.string.appsettings_ack_intro) + "\n\n" + ACKNOWLEDGED_PROJECTS + "\n\n" +
+                        stringResource(Res.string.appsettings_ack_outro),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Built for the self-hosting community.",
+                    stringResource(Res.string.appsettings_built_for),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -258,58 +299,53 @@ private fun NotificationSettings() {
     val dock by settings.notifyDock.collectAsState()
     val background by settings.notifyBackground.collectAsState()
     val progress by settings.notifyProgress.collectAsState()
+    val deniedText = stringResource(Res.string.appsettings_notifications_denied)
     val requestPermission = rememberNotificationPermissionRequest { granted ->
         if (granted) {
             settings.setNotifyEnabled(true)
         } else {
-            container.messages.warn("Allow notifications for LocalRock in your phone's settings to get robot alerts.")
+            container.messages.warn(deniedText)
         }
     }
 
-    SectionLabel("Notifications")
+    SectionLabel(stringResource(Res.string.appsettings_notifications))
     SwitchRow(
-        title = "Robot alerts",
-        description = "Tells you when a robot gets stuck, finishes cleaning, or its dock needs attention.",
+        title = stringResource(Res.string.appsettings_robot_alerts),
+        description = stringResource(Res.string.appsettings_robot_alerts_text),
         checked = enabled,
         onCheckedChange = { on -> if (on) requestPermission() else settings.setNotifyEnabled(false) },
     )
     if (!enabled) return
-    SwitchRow("Errors and stuck robot", null, errors, settings::setNotifyErrors)
-    SwitchRow("Cleaning finished", null, finished, settings::setNotifyFinished)
+    SwitchRow(stringResource(Res.string.appsettings_notify_errors), null, errors, settings::setNotifyErrors)
+    SwitchRow(stringResource(Res.string.appsettings_notify_finished), null, finished, settings::setNotifyFinished)
     SwitchRow(
-        title = "Dock needs attention",
-        description = "Clean water empty, dirty water full, dust bag missing.",
+        title = stringResource(Res.string.appsettings_notify_dock),
+        description = stringResource(Res.string.appsettings_notify_dock_text),
         checked = dock,
         onCheckedChange = settings::setNotifyDock,
     )
     if (backgroundAlertsSupported) {
         SwitchRow(
-            title = "Keep watching in the background",
-            description = "Keeps the connection to your server open so alerts arrive while the app is " +
-                "closed. Android shows one permanent notification while this is on.",
+            title = stringResource(Res.string.appsettings_notify_background),
+            description = stringResource(Res.string.appsettings_notify_background_text),
             checked = background,
             onCheckedChange = settings::setNotifyBackground,
         )
         // Progress needs the background watch: without it nothing keeps the notification moving.
         if (background) {
             SwitchRow(
-                title = "Show cleaning progress",
-                description = "While a clean runs, the background notification shows what the " +
-                    "robot is doing, which room it is in, and how far along it is.",
+                title = stringResource(Res.string.appsettings_notify_progress),
+                description = stringResource(Res.string.appsettings_notify_progress_text),
                 checked = progress,
                 onCheckedChange = settings::setNotifyProgress,
             )
         }
     }
     Text(
-        if (backgroundAlertsSupported) {
-            "Alerts come straight from your own server, so they only arrive while your phone can " +
-                "reach it: on your home Wi-Fi or through your VPN."
-        } else {
-            "Alerts arrive while LocalRock is open. iOS does not let an app keep a connection to " +
-                "your own server open in the background, and LocalRock does not send anything " +
-                "through Apple's push service."
-        },
+        stringResource(
+            if (backgroundAlertsSupported) Res.string.appsettings_alerts_note_android
+            else Res.string.appsettings_alerts_note_ios,
+        ),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -346,9 +382,9 @@ private fun SectionLabel(text: String) {
     )
 }
 
-private const val ACKNOWLEDGEMENTS =
-    "LocalRock stands on the shoulders of open-source work. With thanks to:\n\n" +
-        "• Kotlin Multiplatform & Compose Multiplatform (Apache-2.0) — JetBrains\n" +
+/** Project names and licences stay as their authors wrote them; the text around them is translated. */
+private const val ACKNOWLEDGED_PROJECTS =
+    "• Kotlin Multiplatform & Compose Multiplatform (Apache-2.0) — JetBrains\n" +
         "• Ktor client (Apache-2.0) — JetBrains\n" +
         "• kotlinx.serialization / coroutines (Apache-2.0) — JetBrains\n" +
         "• KMQTT (MIT) — Davide Pianca\n" +
@@ -356,6 +392,4 @@ private const val ACKNOWLEDGEMENTS =
         "• stream-webrtc-android (Apache-2.0) — GetStream / the WebRTC project\n" +
         "• multiplatform-settings (Apache-2.0) — Russell Wolf\n" +
         "• KotlinCrypto hash & macs (Apache-2.0)\n" +
-        "• Okio (Apache-2.0) — Square\n\n" +
-        "And to the reverse-engineering community — especially the python-roborock " +
-        "project — whose protocol work made local control possible."
+        "• Okio (Apache-2.0) — Square"

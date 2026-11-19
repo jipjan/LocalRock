@@ -30,6 +30,8 @@ import com.kodraliu.localrock.resources.Res
 import com.kodraliu.localrock.resources.app_icon
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
+import com.kodraliu.localrock.resources.intro_tagline
+import org.jetbrains.compose.resources.stringResource
 
 
 @Composable
@@ -65,7 +67,7 @@ fun SplashScreen(onTimeout: () -> Unit) {
                 color = MaterialTheme.colorScheme.primary,
             )
             Text(
-                "Local control for your robot vacuum",
+                stringResource(Res.string.intro_tagline),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

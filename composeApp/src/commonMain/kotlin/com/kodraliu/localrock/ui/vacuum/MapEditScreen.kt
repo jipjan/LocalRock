@@ -135,6 +135,123 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.hypot
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.app_dismiss
+import com.kodraliu.localrock.resources.common_cancel
+import com.kodraliu.localrock.resources.common_save
+import com.kodraliu.localrock.resources.mapedit_add_furniture
+import com.kodraliu.localrock.resources.mapedit_add_to_map
+import com.kodraliu.localrock.resources.mapedit_add_tool
+import com.kodraliu.localrock.resources.mapedit_cant_change
+import com.kodraliu.localrock.resources.mapedit_checking_maps
+import com.kodraliu.localrock.resources.mapedit_close_editor
+import com.kodraliu.localrock.resources.mapedit_count_carpets
+import com.kodraliu.localrock.resources.mapedit_count_curtains
+import com.kodraliu.localrock.resources.mapedit_count_erased
+import com.kodraliu.localrock.resources.mapedit_count_furniture
+import com.kodraliu.localrock.resources.mapedit_count_low_space
+import com.kodraliu.localrock.resources.mapedit_count_no_go
+import com.kodraliu.localrock.resources.mapedit_count_thresholds
+import com.kodraliu.localrock.resources.mapedit_count_walls
+import com.kodraliu.localrock.resources.mapedit_custom_name
+import com.kodraliu.localrock.resources.mapedit_custom_name_text
+import com.kodraliu.localrock.resources.mapedit_delete_kind
+import com.kodraliu.localrock.resources.mapedit_detected_carpet
+import com.kodraliu.localrock.resources.mapedit_detected_carpet_help
+import com.kodraliu.localrock.resources.mapedit_discard
+import com.kodraliu.localrock.resources.mapedit_discard_text
+import com.kodraliu.localrock.resources.mapedit_discard_title
+import com.kodraliu.localrock.resources.mapedit_done
+import com.kodraliu.localrock.resources.mapedit_floor_current
+import com.kodraliu.localrock.resources.mapedit_floor_current_unknown
+import com.kodraliu.localrock.resources.mapedit_floor_default
+import com.kodraliu.localrock.resources.mapedit_floor_not_reported
+import com.kodraliu.localrock.resources.mapedit_floor_sent
+import com.kodraliu.localrock.resources.mapedit_floor_set
+import com.kodraliu.localrock.resources.mapedit_floor_tile
+import com.kodraliu.localrock.resources.mapedit_floor_type
+import com.kodraliu.localrock.resources.mapedit_floor_wood
+import com.kodraliu.localrock.resources.mapedit_floor_wood_horizontal
+import com.kodraliu.localrock.resources.mapedit_floor_wood_vertical
+import com.kodraliu.localrock.resources.mapedit_furniture_armchair
+import com.kodraliu.localrock.resources.mapedit_furniture_cat_tree
+import com.kodraliu.localrock.resources.mapedit_furniture_closed_litter_box
+import com.kodraliu.localrock.resources.mapedit_furniture_coffee_table
+import com.kodraliu.localrock.resources.mapedit_furniture_dining_set
+import com.kodraliu.localrock.resources.mapedit_furniture_double_bed
+import com.kodraliu.localrock.resources.mapedit_furniture_floor_mirror
+import com.kodraliu.localrock.resources.mapedit_furniture_litter_box
+import com.kodraliu.localrock.resources.mapedit_furniture_modular_sofa
+import com.kodraliu.localrock.resources.mapedit_furniture_nightstand
+import com.kodraliu.localrock.resources.mapedit_furniture_pet_basket
+import com.kodraliu.localrock.resources.mapedit_furniture_pet_bowls
+import com.kodraliu.localrock.resources.mapedit_furniture_pet_cage
+import com.kodraliu.localrock.resources.mapedit_furniture_shoe_rack
+import com.kodraliu.localrock.resources.mapedit_furniture_single_bed
+import com.kodraliu.localrock.resources.mapedit_furniture_sofa_multi
+import com.kodraliu.localrock.resources.mapedit_furniture_sofa_two
+import com.kodraliu.localrock.resources.mapedit_furniture_square_table
+import com.kodraliu.localrock.resources.mapedit_furniture_tv_cabinet
+import com.kodraliu.localrock.resources.mapedit_furniture_wardrobe
+import com.kodraliu.localrock.resources.mapedit_help_box
+import com.kodraliu.localrock.resources.mapedit_help_curtain
+import com.kodraliu.localrock.resources.mapedit_help_eraser
+import com.kodraliu.localrock.resources.mapedit_help_line
+import com.kodraliu.localrock.resources.mapedit_help_low_space
+import com.kodraliu.localrock.resources.mapedit_help_no_mop
+import com.kodraliu.localrock.resources.mapedit_help_round_carpet
+import com.kodraliu.localrock.resources.mapedit_keep_editing
+import com.kodraliu.localrock.resources.mapedit_kind_erased
+import com.kodraliu.localrock.resources.mapedit_kind_no_go
+import com.kodraliu.localrock.resources.mapedit_kind_no_mop
+import com.kodraliu.localrock.resources.mapedit_kind_round_carpet
+import com.kodraliu.localrock.resources.mapedit_map_not_loaded
+import com.kodraliu.localrock.resources.mapedit_map_not_loaded_text
+import com.kodraliu.localrock.resources.mapedit_merge
+import com.kodraliu.localrock.resources.mapedit_merge_done
+import com.kodraliu.localrock.resources.mapedit_merge_help
+import com.kodraliu.localrock.resources.mapedit_merge_room_title
+import com.kodraliu.localrock.resources.mapedit_merge_text
+import com.kodraliu.localrock.resources.mapedit_merge_title
+import com.kodraliu.localrock.resources.mapedit_merge_with
+import com.kodraliu.localrock.resources.mapedit_mode_rooms
+import com.kodraliu.localrock.resources.mapedit_mode_zones
+import com.kodraliu.localrock.resources.mapedit_no_saved_map
+import com.kodraliu.localrock.resources.mapedit_rename
+import com.kodraliu.localrock.resources.mapedit_room_number
+import com.kodraliu.localrock.resources.mapedit_room_renamed
+import com.kodraliu.localrock.resources.mapedit_room_type
+import com.kodraliu.localrock.resources.mapedit_room_type_set
+import com.kodraliu.localrock.resources.mapedit_room_type_text
+import com.kodraliu.localrock.resources.mapedit_rooms_help
+import com.kodraliu.localrock.resources.mapedit_save_detected_carpet
+import com.kodraliu.localrock.resources.mapedit_save_text
+import com.kodraliu.localrock.resources.mapedit_save_title
+import com.kodraliu.localrock.resources.mapedit_saved
+import com.kodraliu.localrock.resources.mapedit_something_went_wrong
+import com.kodraliu.localrock.resources.mapedit_split
+import com.kodraliu.localrock.resources.mapedit_split_done
+import com.kodraliu.localrock.resources.mapedit_split_help
+import com.kodraliu.localrock.resources.mapedit_split_room
+import com.kodraliu.localrock.resources.mapedit_split_room_title
+import com.kodraliu.localrock.resources.mapedit_split_text
+import com.kodraliu.localrock.resources.mapedit_split_title
+import com.kodraliu.localrock.resources.mapedit_this_room
+import com.kodraliu.localrock.resources.mapedit_title
+import com.kodraliu.localrock.resources.mapedit_tool_carpet
+import com.kodraliu.localrock.resources.mapedit_tool_curtain
+import com.kodraliu.localrock.resources.mapedit_tool_eraser
+import com.kodraliu.localrock.resources.mapedit_tool_furniture
+import com.kodraliu.localrock.resources.mapedit_tool_no_go
+import com.kodraliu.localrock.resources.mapedit_tool_threshold
+import com.kodraliu.localrock.resources.mapedit_tool_under_furniture
+import com.kodraliu.localrock.resources.mapedit_tool_wall
+import com.kodraliu.localrock.resources.mapedit_vertex_limit
+import com.kodraliu.localrock.resources.mapedit_zone_points
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.pluralStringResource
+import org.jetbrains.compose.resources.stringResource
 
 private val NO_GO_COLOR = Color(0xfff44336)
 private val NO_MOP_COLOR = Color(0xff2196f3)
@@ -152,33 +269,33 @@ private val ERASER_COLOR = Color(0xfff06292)
  * Furniture the official app offers (a296, 2026-11-14): type and subtype as `save_furnitures` takes
  * them, and the size in mm a new piece starts at, as the official app placed it.
  */
-private data class FurnitureChoice(val label: String, val type: Int, val subtype: Int, val widthMm: Int, val depthMm: Int)
+private data class FurnitureChoice(val label: StringResource, val type: Int, val subtype: Int, val widthMm: Int, val depthMm: Int)
 
 private val FURNITURE_CHOICES = listOf(
-    FurnitureChoice("Double bed", 45, 2, 2400, 2400),
-    FurnitureChoice("Single bed", 45, 1, 1200, 2400),
-    FurnitureChoice("TV cabinet", 43, 0, 2500, 800),
-    FurnitureChoice("Sofa, multi-seat", 46, 3, 3500, 1000),
-    FurnitureChoice("Sofa, two-seat", 46, 2, 2000, 1000),
-    FurnitureChoice("Armchair", 46, 1, 1000, 1000),
-    FurnitureChoice("Modular sofa", 46, 5, 4000, 1500),
-    FurnitureChoice("Dining set", 47, 0, 2400, 1500),
-    FurnitureChoice("Square table", 48, 2, 1500, 1500),
-    FurnitureChoice("Coffee table", 48, 1, 1200, 900),
-    FurnitureChoice("Shoe rack", 49, 0, 1000, 400),
-    FurnitureChoice("Wardrobe", 51, 0, 2500, 700),
-    FurnitureChoice("Nightstand", 50, 0, 600, 600),
-    FurnitureChoice("Litter box", 52, 0, 500, 700),
-    FurnitureChoice("Closed litter box", 53, 0, 500, 700),
-    FurnitureChoice("Pet cage", 54, 0, 1500, 800),
-    FurnitureChoice("Pet basket", 55, 0, 1500, 800),
-    FurnitureChoice("Pet bowls", 56, 0, 600, 300),
-    FurnitureChoice("Floor mirror", 57, 0, 800, 500),
-    FurnitureChoice("Cat tree", 58, 0, 1000, 800),
+    FurnitureChoice(Res.string.mapedit_furniture_double_bed, 45, 2, 2400, 2400),
+    FurnitureChoice(Res.string.mapedit_furniture_single_bed, 45, 1, 1200, 2400),
+    FurnitureChoice(Res.string.mapedit_furniture_tv_cabinet, 43, 0, 2500, 800),
+    FurnitureChoice(Res.string.mapedit_furniture_sofa_multi, 46, 3, 3500, 1000),
+    FurnitureChoice(Res.string.mapedit_furniture_sofa_two, 46, 2, 2000, 1000),
+    FurnitureChoice(Res.string.mapedit_furniture_armchair, 46, 1, 1000, 1000),
+    FurnitureChoice(Res.string.mapedit_furniture_modular_sofa, 46, 5, 4000, 1500),
+    FurnitureChoice(Res.string.mapedit_furniture_dining_set, 47, 0, 2400, 1500),
+    FurnitureChoice(Res.string.mapedit_furniture_square_table, 48, 2, 1500, 1500),
+    FurnitureChoice(Res.string.mapedit_furniture_coffee_table, 48, 1, 1200, 900),
+    FurnitureChoice(Res.string.mapedit_furniture_shoe_rack, 49, 0, 1000, 400),
+    FurnitureChoice(Res.string.mapedit_furniture_wardrobe, 51, 0, 2500, 700),
+    FurnitureChoice(Res.string.mapedit_furniture_nightstand, 50, 0, 600, 600),
+    FurnitureChoice(Res.string.mapedit_furniture_litter_box, 52, 0, 500, 700),
+    FurnitureChoice(Res.string.mapedit_furniture_closed_litter_box, 53, 0, 500, 700),
+    FurnitureChoice(Res.string.mapedit_furniture_pet_cage, 54, 0, 1500, 800),
+    FurnitureChoice(Res.string.mapedit_furniture_pet_basket, 55, 0, 1500, 800),
+    FurnitureChoice(Res.string.mapedit_furniture_pet_bowls, 56, 0, 600, 300),
+    FurnitureChoice(Res.string.mapedit_furniture_floor_mirror, 57, 0, 800, 500),
+    FurnitureChoice(Res.string.mapedit_furniture_cat_tree, 58, 0, 1000, 800),
 )
 
 /** A furniture piece's name ("Sofa"), for the bar shown while it is selected. */
-private fun furnitureLabel(z: MapZone?): String? =
+private fun furnitureLabel(z: MapZone?): StringResource? =
     FURNITURE_CHOICES.firstOrNull { it.type == z?.furnitureType && it.subtype == z.furnitureSubtype }?.label
 
 /** Shapes smaller than this (either side of a zone, or a line) are treated as accidental drags. */
@@ -204,13 +321,13 @@ private data class PendingSplit(val segment: Int, val a: Pair<Int, Int>, val b: 
 private data class PendingMerge(val segmentA: Int, val segmentB: Int)
 
 /** The floor choices offered, as (label, material, wood direction). */
-private data class FloorChoice(val label: String, val material: FloorMaterial, val direction: Int?)
+private data class FloorChoice(val label: StringResource, val material: FloorMaterial, val direction: Int?)
 
 private val FLOOR_CHOICES = listOf(
-    FloorChoice("Default", FloorMaterial.DEFAULT, null),
-    FloorChoice("Wood, horizontal", FloorMaterial.WOOD, 0),
-    FloorChoice("Wood, vertical", FloorMaterial.WOOD, 90),
-    FloorChoice("Tile", FloorMaterial.TILE, null),
+    FloorChoice(Res.string.mapedit_floor_default, FloorMaterial.DEFAULT, null),
+    FloorChoice(Res.string.mapedit_floor_wood_horizontal, FloorMaterial.WOOD, 0),
+    FloorChoice(Res.string.mapedit_floor_wood_vertical, FloorMaterial.WOOD, 90),
+    FloorChoice(Res.string.mapedit_floor_tile, FloorMaterial.TILE, null),
 )
 
 private fun zoneColor(kind: ZoneKind) = when (kind) {
@@ -307,7 +424,7 @@ fun MapEditScreen(
     // Until the robot's map list arrives nothing is blocked for drawing; only Save waits for it.
     val indexBlocker = when {
         !floorMapsLoaded -> null
-        floorMaps.isEmpty() -> "The robot has no saved map yet. Map edits need a saved map."
+        floorMaps.isEmpty() -> stringResource(Res.string.mapedit_no_saved_map)
         else -> mapIndexBlocker(mapIndex)
     }
     val saveBlocker = if (floorMapsLoaded) pm?.let { restrictionSaveBlocker(it, mapIndex) } else null
@@ -322,14 +439,14 @@ fun MapEditScreen(
         }
     }
 
-    fun runEdit(successText: String, block: suspend () -> String?) {
+    fun runEdit(successText: StringResource, block: suspend () -> String?) {
         scope.launch {
             working = true
             notice = null
             try {
-                notice = Notice(block() ?: successText, isError = false)
+                notice = Notice(block() ?: getString(successText), isError = false)
             } catch (e: Throwable) {
-                notice = Notice(e.message ?: "Something went wrong", isError = true)
+                notice = Notice(e.message ?: getString(Res.string.mapedit_something_went_wrong), isError = true)
             } finally {
                 working = false
             }
@@ -345,9 +462,9 @@ fun MapEditScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Edit map") },
+                title = { Text(stringResource(Res.string.mapedit_title)) },
                 navigationIcon = {
-                    IconButton(onClick = requestBack) { Icon(Icons.Default.Close, "Close editor") }
+                    IconButton(onClick = requestBack) { Icon(Icons.Default.Close, stringResource(Res.string.mapedit_close_editor)) }
                 },
                 actions = {
                     if (working) {
@@ -359,7 +476,7 @@ fun MapEditScreen(
                             enabled = blockedReason == null && floorMapsLoaded && indexBlocker == null &&
                                 (saveBlocker == null || !restrictionsChanged),
                             modifier = Modifier.padding(end = 8.dp),
-                        ) { Text("Save") }
+                        ) { Text(stringResource(Res.string.common_save)) }
                     }
                 },
             )
@@ -398,6 +515,7 @@ fun MapEditScreen(
                 null -> false
             }
 
+            val vertexLimitText = stringResource(Res.string.mapedit_vertex_limit, MAX_RESTRICTION_VERTICES)
             fun addShape(t: Tool) {
                 val (cx, cy) = viewport.centerMm(pm) ?: return
                 // Sized to what is on screen so the handles never crowd together when zoomed out.
@@ -409,7 +527,7 @@ fun MapEditScreen(
                     else -> false
                 }
                 if (restrictionLimitHit) {
-                    notice = Notice("The robot stores at most $MAX_RESTRICTION_VERTICES zone and wall points. Remove one first.", true)
+                    notice = Notice(vertexLimitText, true)
                     return
                 }
                 // New shapes start in the middle of what is on screen, already selected, so the
@@ -526,7 +644,7 @@ fun MapEditScreen(
                     if (warning != null) {
                         WarningCard(warning)
                     } else if (!floorMapsLoaded && mode == EditMode.RESTRICTIONS) {
-                        WarningCard("Checking the robot's saved maps. You can edit now; saving waits for this.", isError = false)
+                        WarningCard(stringResource(Res.string.mapedit_checking_maps), isError = false)
                     }
                 }
                 notice?.let { n ->
@@ -550,8 +668,9 @@ fun MapEditScreen(
                             ShapeBar(
                                 kind = kind,
                                 round = selectedZone?.isRoundCarpet == true,
-                                title = furnitureLabel(selectedZone) ?: "Detected carpet".takeIf { selectedZone?.isDetectedCarpet == true },
-                                help = DETECTED_CARPET_HELP.takeIf { selectedZone?.isDetectedCarpet == true && pm?.ignoredCarpetZones != null },
+                                title = furnitureLabel(selectedZone)?.let { stringResource(it) }
+                                    ?: stringResource(Res.string.mapedit_detected_carpet).takeIf { selectedZone?.isDetectedCarpet == true },
+                                help = stringResource(Res.string.mapedit_detected_carpet_help).takeIf { selectedZone?.isDetectedCarpet == true && pm?.ignoredCarpetZones != null },
                                 canEdit = deleteEnabled,
                                 onDelete = {
                                     when (sel) {
@@ -567,7 +686,7 @@ fun MapEditScreen(
                     }
                     EditMode.ROOMS -> RoomDock(
                         action = roomAction,
-                        roomName = { id -> pm.rooms.find { it.id == id }?.name ?: "Room $id" },
+                        roomName = { id -> pm.rooms.find { it.id == id }?.name },
                         onCancel = { roomAction = RoomAction.None },
                     )
                 }
@@ -578,12 +697,12 @@ fun MapEditScreen(
     if (showFurniturePicker) {
         AlertDialog(
             onDismissRequest = { showFurniturePicker = false },
-            title = { Text("Add furniture") },
+            title = { Text(stringResource(Res.string.mapedit_add_furniture)) },
             text = {
                 Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                     FURNITURE_CHOICES.forEach { choice ->
                         Text(
-                            choice.label,
+                            stringResource(choice.label),
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.fillMaxWidth().clickable {
                                 showFurniturePicker = false
@@ -601,7 +720,7 @@ fun MapEditScreen(
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showFurniturePicker = false }) { Text("Cancel") } },
+            confirmButton = { TextButton(onClick = { showFurniturePicker = false }) { Text(stringResource(Res.string.common_cancel)) } },
         )
     }
 
@@ -613,21 +732,26 @@ fun MapEditScreen(
             old.isDetectedCarpet && zones.none { it.kind == ZoneKind.CARPET && zoneMatches(it, old) }
         }
         val extras = listOfNotNull(
-            zones.count { it.kind == ZoneKind.CURTAIN }.takeIf { pm?.curtains != null }?.let { "$it curtain(s)" },
-            zones.count { it.kind == ZoneKind.LOW_SPACE }.takeIf { pm?.lowSpaceZones != null }?.let { "$it under-furniture zone(s)" },
-            zones.count { it.kind == ZoneKind.FURNITURE }.takeIf { pm?.furniture != null }?.let { "$it piece(s) of furniture" },
-            zones.count { it.kind == ZoneKind.ERASER }.takeIf { pm?.eraserZones != null }?.let { "$it erased area(s)" },
-        ).joinToString(", ").let { if (it.isEmpty()) "" else ", $it" }
+            zones.count { it.kind == ZoneKind.CURTAIN }.takeIf { pm?.curtains != null }?.let { pluralStringResource(Res.plurals.mapedit_count_curtains, it, it) },
+            zones.count { it.kind == ZoneKind.LOW_SPACE }.takeIf { pm?.lowSpaceZones != null }?.let { pluralStringResource(Res.plurals.mapedit_count_low_space, it, it) },
+            zones.count { it.kind == ZoneKind.FURNITURE }.takeIf { pm?.furniture != null }?.let { pluralStringResource(Res.plurals.mapedit_count_furniture, it, it) },
+            zones.count { it.kind == ZoneKind.ERASER }.takeIf { pm?.eraserZones != null }?.let { pluralStringResource(Res.plurals.mapedit_count_erased, it, it) },
+        )
+        val kept = (
+            listOf(
+                pluralStringResource(Res.plurals.mapedit_count_no_go, noGo, noGo),
+                pluralStringResource(Res.plurals.mapedit_count_walls, walls.size, walls.size),
+                pluralStringResource(Res.plurals.mapedit_count_carpets, carpets, carpets),
+                pluralStringResource(Res.plurals.mapedit_count_thresholds, thresholds, thresholds),
+            ) + extras
+            ).joinToString(", ")
+        val saveText = stringResource(Res.string.mapedit_save_text, kept) +
+            (if (deletesDetectedCarpet) " " + stringResource(Res.string.mapedit_save_detected_carpet) else "")
         AlertDialog(
             onDismissRequest = { showSaveConfirm = false },
-            title = { Text("Save to robot?") },
+            title = { Text(stringResource(Res.string.mapedit_save_title)) },
             text = {
-                Text(
-                    "The robot will keep exactly these: $noGo no-go zone(s), ${walls.size} wall(s), " +
-                        "$carpets carpet area(s), $thresholds threshold(s)$extras. Anything removed here is " +
-                        "removed from the robot." +
-                        (if (deletesDetectedCarpet) " Where you deleted a carpet the robot found, it stops detecting carpet." else "")
-                )
+                Text(saveText)
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -641,27 +765,27 @@ fun MapEditScreen(
                     val lowSpace = zones.filter { it.kind == ZoneKind.LOW_SPACE }.takeIf { m?.lowSpaceZones != null }
                     val furniture = zones.filter { it.kind == ZoneKind.FURNITURE }.takeIf { m?.furniture != null }
                     val eraser = zones.filter { it.kind == ZoneKind.ERASER }.takeIf { m?.eraserZones != null }
-                    runEdit("Saved. The robot's map shows the changes.") {
+                    runEdit(Res.string.mapedit_saved) {
                         repository.saveMapEdits(noGoZones, savedWalls, carpetAreas, thresholdStrips, curtains, lowSpace, furniture, eraser, floorFlag = editingFloor)
                         dirty = false
                         selection = null
                         null
                     }
-                }) { Text("Save") }
+                }) { Text(stringResource(Res.string.common_save)) }
             },
-            dismissButton = { TextButton(onClick = { showSaveConfirm = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { showSaveConfirm = false }) { Text(stringResource(Res.string.common_cancel)) } },
         )
     }
 
     if (showDiscardConfirm) {
         AlertDialog(
             onDismissRequest = { showDiscardConfirm = false },
-            title = { Text("Discard changes?") },
-            text = { Text("Your map changes have not been saved to the robot.") },
+            title = { Text(stringResource(Res.string.mapedit_discard_title)) },
+            text = { Text(stringResource(Res.string.mapedit_discard_text)) },
             confirmButton = {
-                TextButton(onClick = { showDiscardConfirm = false; onBack() }) { Text("Discard") }
+                TextButton(onClick = { showDiscardConfirm = false; onBack() }) { Text(stringResource(Res.string.mapedit_discard)) }
             },
-            dismissButton = { TextButton(onClick = { showDiscardConfirm = false }) { Text("Keep editing") } },
+            dismissButton = { TextButton(onClick = { showDiscardConfirm = false }) { Text(stringResource(Res.string.mapedit_keep_editing)) } },
         )
     }
 
@@ -674,22 +798,22 @@ fun MapEditScreen(
                 working = working,
                 enabled = blockedReason == null,
                 onRename = { name ->
-                    runEdit("Room renamed.") {
+                    runEdit(Res.string.mapedit_room_renamed) {
                         viewModel.renameRoom(room, name)
                         null
                     }
                 },
                 onRoomType = { type ->
-                    runEdit("Room type set.") {
+                    runEdit(Res.string.mapedit_room_type_set) {
                         viewModel.setRoomType(room, type)
                         null
                     }
                 },
                 onFloor = { choice ->
-                    runEdit("Floor type set. The robot's map shows the change.") {
+                    runEdit(Res.string.mapedit_floor_set) {
                         val confirmed = repository.setFloorMaterial(room, choice.material, choice.direction)
                         if (confirmed) null
-                        else "Floor type sent. This robot's map doesn't report floor types, so LocalRock can't confirm it."
+                        else getString(Res.string.mapedit_floor_sent)
                     }
                 },
                 onSplit = {
@@ -707,56 +831,48 @@ fun MapEditScreen(
     }
 
     pendingSplit?.let { split ->
-        val name = pm?.rooms?.find { it.id == split.segment }?.name ?: "this room"
+        val name = pm?.rooms?.find { it.id == split.segment }?.name ?: stringResource(Res.string.mapedit_this_room)
         AlertDialog(
             onDismissRequest = { pendingSplit = null },
-            title = { Text("Split $name?") },
+            title = { Text(stringResource(Res.string.mapedit_split_title, name)) },
             text = {
-                Text(
-                    "The robot divides the room along the line you drew. The line must cross the room from wall to " +
-                        "wall. Both parts get new room numbers, so give them names afterwards and check any " +
-                        "schedules that include this room."
-                )
+                Text(stringResource(Res.string.mapedit_split_text))
             },
             confirmButton = {
                 TextButton(onClick = {
                     pendingSplit = null
                     roomAction = RoomAction.None
-                    runEdit("Room split. The robot's map shows the new rooms. Name them from the room list.") {
+                    runEdit(Res.string.mapedit_split_done) {
                         repository.splitRoom(split.segment, split.a.first, split.a.second, split.b.first, split.b.second)
                         null
                     }
-                }) { Text("Split") }
+                }) { Text(stringResource(Res.string.mapedit_split)) }
             },
-            dismissButton = { TextButton(onClick = { pendingSplit = null }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { pendingSplit = null }) { Text(stringResource(Res.string.common_cancel)) } },
         )
     }
 
     pendingMerge?.let { merge ->
-        val nameA = pm?.rooms?.find { it.id == merge.segmentA }?.name ?: "Room ${merge.segmentA}"
-        val nameB = pm?.rooms?.find { it.id == merge.segmentB }?.name ?: "Room ${merge.segmentB}"
+        val nameA = pm?.rooms?.find { it.id == merge.segmentA }?.name ?: stringResource(Res.string.mapedit_room_number, merge.segmentA)
+        val nameB = pm?.rooms?.find { it.id == merge.segmentB }?.name ?: stringResource(Res.string.mapedit_room_number, merge.segmentB)
         AlertDialog(
             onDismissRequest = { pendingMerge = null },
-            title = { Text("Merge rooms?") },
+            title = { Text(stringResource(Res.string.mapedit_merge_title)) },
             text = {
-                Text(
-                    "$nameA and $nameB become one room. They must be next to each other, or the robot " +
-                        "refuses. The merged room may lose its name, and schedules that include either room " +
-                        "may need updating."
-                )
+                Text(stringResource(Res.string.mapedit_merge_text, nameA, nameB))
             },
             confirmButton = {
                 TextButton(onClick = {
                     pendingMerge = null
                     roomAction = RoomAction.None
                     selectedRoom = null
-                    runEdit("Rooms merged. The robot's map shows one room.") {
+                    runEdit(Res.string.mapedit_merge_done) {
                         repository.mergeRooms(merge.segmentA, merge.segmentB)
                         null
                     }
-                }) { Text("Merge") }
+                }) { Text(stringResource(Res.string.mapedit_merge)) }
             },
-            dismissButton = { TextButton(onClick = { pendingMerge = null }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { pendingMerge = null }) { Text(stringResource(Res.string.common_cancel)) } },
         )
     }
 }
@@ -1114,14 +1230,14 @@ private fun ModeSwitch(mode: EditMode, enabled: Boolean, roomsEnabled: Boolean, 
                 onClick = { onMode(EditMode.RESTRICTIONS) },
                 shape = SegmentedButtonDefaults.itemShape(0, 2),
                 enabled = enabled,
-            ) { Text("Zones") }
+            ) { Text(stringResource(Res.string.mapedit_mode_zones)) }
             SegmentedButton(
                 selected = mode == EditMode.ROOMS,
                 onClick = { onMode(EditMode.ROOMS) },
                 shape = SegmentedButtonDefaults.itemShape(1, 2),
                 // Room edits reshape the map under unsaved zone edits, so save or discard first.
                 enabled = roomsEnabled,
-            ) { Text("Rooms") }
+            ) { Text(stringResource(Res.string.mapedit_mode_rooms)) }
         }
     }
 }
@@ -1147,17 +1263,17 @@ private fun EditorDock(content: @Composable () -> Unit) {
     }
 }
 
-private data class ToolSpec(val tool: Tool, val label: String, val icon: ImageVector, val color: Color)
+private data class ToolSpec(val tool: Tool, val label: StringResource, val icon: ImageVector, val color: Color)
 
 private val TOOL_SPECS = listOf(
-    ToolSpec(Tool.NO_GO, "No-go", Icons.Default.Block, NO_GO_COLOR),
-    ToolSpec(Tool.WALL, "Wall", Icons.Default.HorizontalRule, WALL_COLOR),
-    ToolSpec(Tool.CARPET, "Carpet", Icons.Default.Texture, CARPET_COLOR),
-    ToolSpec(Tool.THRESHOLD, "Threshold", Icons.Default.MeetingRoom, THRESHOLD_COLOR),
-    ToolSpec(Tool.CURTAIN, "Curtain", Icons.Default.Texture, CURTAIN_COLOR),
-    ToolSpec(Tool.LOW_SPACE, "Under furniture", Icons.Default.Block, LOW_SPACE_COLOR),
-    ToolSpec(Tool.FURNITURE, "Furniture", Icons.Default.MeetingRoom, FURNITURE_COLOR),
-    ToolSpec(Tool.ERASER, "Eraser", Icons.Default.Block, ERASER_COLOR),
+    ToolSpec(Tool.NO_GO, Res.string.mapedit_tool_no_go, Icons.Default.Block, NO_GO_COLOR),
+    ToolSpec(Tool.WALL, Res.string.mapedit_tool_wall, Icons.Default.HorizontalRule, WALL_COLOR),
+    ToolSpec(Tool.CARPET, Res.string.mapedit_tool_carpet, Icons.Default.Texture, CARPET_COLOR),
+    ToolSpec(Tool.THRESHOLD, Res.string.mapedit_tool_threshold, Icons.Default.MeetingRoom, THRESHOLD_COLOR),
+    ToolSpec(Tool.CURTAIN, Res.string.mapedit_tool_curtain, Icons.Default.Texture, CURTAIN_COLOR),
+    ToolSpec(Tool.LOW_SPACE, Res.string.mapedit_tool_under_furniture, Icons.Default.Block, LOW_SPACE_COLOR),
+    ToolSpec(Tool.FURNITURE, Res.string.mapedit_tool_furniture, Icons.Default.MeetingRoom, FURNITURE_COLOR),
+    ToolSpec(Tool.ERASER, Res.string.mapedit_tool_eraser, Icons.Default.Block, ERASER_COLOR),
 )
 
 /**
@@ -1168,9 +1284,9 @@ private val TOOL_SPECS = listOf(
 private fun ToolDock(tools: List<Tool>, toolEnabled: (Tool) -> Boolean, onAdd: (Tool) -> Unit, vertices: Int) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Add to map", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            Text(stringResource(Res.string.mapedit_add_to_map), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
             Text(
-                "Zone points $vertices/$MAX_RESTRICTION_VERTICES",
+                stringResource(Res.string.mapedit_zone_points, vertices, MAX_RESTRICTION_VERTICES),
                 style = MaterialTheme.typography.labelMedium,
                 color = if (vertices >= MAX_RESTRICTION_VERTICES) MaterialTheme.colorScheme.error
                 else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1192,12 +1308,13 @@ private fun ToolDock(tools: List<Tool>, toolEnabled: (Tool) -> Boolean, onAdd: (
 @Composable
 private fun ToolTile(spec: ToolSpec, enabled: Boolean, onClick: () -> Unit) {
     val alpha = if (enabled) 1f else 0.38f
+    val label = stringResource(spec.label)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
-            .clickable(enabled = enabled, role = Role.Button, onClickLabel = "Add ${spec.label.lowercase()}", onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Button, onClickLabel = stringResource(Res.string.mapedit_add_tool, label.lowercase()), onClick = onClick)
             .widthIn(min = 72.dp)
             .padding(horizontal = 6.dp, vertical = 4.dp),
     ) {
@@ -1208,42 +1325,49 @@ private fun ToolTile(spec: ToolSpec, enabled: Boolean, onClick: () -> Unit) {
             Icon(spec.icon, contentDescription = null, tint = spec.color.copy(alpha = alpha), modifier = Modifier.size(26.dp))
         }
         Text(
-            spec.label,
+            label,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
         )
     }
 }
 
-private fun kindTitle(kind: ZoneKind?, round: Boolean = false) = when (kind) {
-    null -> "Wall"
-    ZoneKind.NO_GO -> "No-go zone"
-    ZoneKind.NO_MOP -> "No-mop zone"
-    ZoneKind.CARPET -> if (round) "Round carpet" else "Carpet"
-    ZoneKind.THRESHOLD -> "Threshold"
-    ZoneKind.CURTAIN -> "Curtain"
-    ZoneKind.LOW_SPACE -> "Under furniture"
-    ZoneKind.FURNITURE -> "Furniture"
-    ZoneKind.ERASER -> "Erased area"
-}
+@Composable
+private fun kindTitle(kind: ZoneKind?, round: Boolean = false) = stringResource(
+    when (kind) {
+        null -> Res.string.mapedit_tool_wall
+        ZoneKind.NO_GO -> Res.string.mapedit_kind_no_go
+        ZoneKind.NO_MOP -> Res.string.mapedit_kind_no_mop
+        ZoneKind.CARPET -> if (round) Res.string.mapedit_kind_round_carpet else Res.string.mapedit_tool_carpet
+        ZoneKind.THRESHOLD -> Res.string.mapedit_tool_threshold
+        ZoneKind.CURTAIN -> Res.string.mapedit_tool_curtain
+        ZoneKind.LOW_SPACE -> Res.string.mapedit_tool_under_furniture
+        ZoneKind.FURNITURE -> Res.string.mapedit_tool_furniture
+        ZoneKind.ERASER -> Res.string.mapedit_kind_erased
+    },
+)
 
-/** A carpet the robot found can only be deleted, as in the official app; deleting it ignores carpet there. */
-private const val DETECTED_CARPET_HELP = "Found by the robot. Deleting it turns carpet detection off in this area."
+// A carpet the robot found can only be deleted, as in the official app; deleting it ignores carpet
+// there (help text: mapedit_detected_carpet_help).
 
+@Composable
 private fun kindHelp(kind: ZoneKind?, round: Boolean = false) = when {
-    round -> "Drag to move. Resize round carpets in the Roborock app."
+    round -> stringResource(Res.string.mapedit_help_round_carpet)
     else -> kindHelpFor(kind)
 }
 
-private fun kindHelpFor(kind: ZoneKind?) = when (kind) {
-    null, ZoneKind.THRESHOLD -> "Drag to move, drag the ends to reshape."
-    ZoneKind.CURTAIN -> "The robot cleans behind it. Drag to move, drag the ends to reshape."
-    ZoneKind.LOW_SPACE -> "A low space the robot cleans under. Drag to move. Corners resize, the knob rotates."
-    ZoneKind.FURNITURE -> "Drag to move. Corners resize, the knob rotates."
-    ZoneKind.ERASER -> "Hides stray bits of map inside it. Drag to move. Corners resize, the knob rotates."
-    ZoneKind.NO_GO, ZoneKind.CARPET -> "Drag to move. Corners resize, the knob rotates."
-    ZoneKind.NO_MOP -> "Set in the Roborock app. LocalRock can't change it yet."
-}
+@Composable
+private fun kindHelpFor(kind: ZoneKind?) = stringResource(
+    when (kind) {
+        null, ZoneKind.THRESHOLD -> Res.string.mapedit_help_line
+        ZoneKind.CURTAIN -> Res.string.mapedit_help_curtain
+        ZoneKind.LOW_SPACE -> Res.string.mapedit_help_low_space
+        ZoneKind.FURNITURE -> Res.string.mapedit_help_box
+        ZoneKind.ERASER -> Res.string.mapedit_help_eraser
+        ZoneKind.NO_GO, ZoneKind.CARPET -> Res.string.mapedit_help_box
+        ZoneKind.NO_MOP -> Res.string.mapedit_help_no_mop
+    },
+)
 
 /** Replaces the tool dock while a shape is selected: what it is, and what can be done to it. */
 @Composable
@@ -1254,38 +1378,43 @@ private fun ShapeBar(kind: ZoneKind?, round: Boolean, title: String? = null, hel
         Column(Modifier.weight(1f)) {
             Text(title ?: kindTitle(kind, round), style = MaterialTheme.typography.titleSmall)
             Text(
-                if (canEdit || kind == ZoneKind.NO_MOP) help ?: kindHelp(kind, round) else "Can't be changed right now.",
+                if (canEdit || kind == ZoneKind.NO_MOP) help ?: kindHelp(kind, round) else stringResource(Res.string.mapedit_cant_change),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (canEdit) {
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete ${kindTitle(kind).lowercase()}", tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.mapedit_delete_kind, kindTitle(kind).lowercase()), tint = MaterialTheme.colorScheme.error)
             }
         }
         FilledTonalButton(onClick = onDone) {
             Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))
-            Text("Done")
+            Text(stringResource(Res.string.mapedit_done))
         }
     }
 }
 
 @Composable
-private fun RoomDock(action: RoomAction, roomName: (Int) -> String, onCancel: () -> Unit) {
+private fun RoomDock(action: RoomAction, roomName: (Int) -> String?, onCancel: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(Modifier.weight(1f)) {
             val (title, help) = when (action) {
-                RoomAction.None -> "Rooms" to "Tap a room to rename it, change its floor type, split or merge it."
-                is RoomAction.Split -> "Split ${roomName(action.segment)}" to "Draw a line all the way across the room, past the wall on both sides."
-                is RoomAction.Merge -> "Merge ${roomName(action.segment)}" to "Tap the neighbouring room to merge with."
+                RoomAction.None ->
+                    stringResource(Res.string.mapedit_mode_rooms) to stringResource(Res.string.mapedit_rooms_help)
+                is RoomAction.Split ->
+                    stringResource(Res.string.mapedit_split_room_title, roomName(action.segment) ?: stringResource(Res.string.mapedit_room_number, action.segment)) to
+                        stringResource(Res.string.mapedit_split_help)
+                is RoomAction.Merge ->
+                    stringResource(Res.string.mapedit_merge_room_title, roomName(action.segment) ?: stringResource(Res.string.mapedit_room_number, action.segment)) to
+                        stringResource(Res.string.mapedit_merge_help)
             }
             Text(title, style = MaterialTheme.typography.titleSmall)
             Text(help, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (action != RoomAction.None) {
-            OutlinedButton(onClick = onCancel) { Text("Cancel") }
+            OutlinedButton(onClick = onCancel) { Text(stringResource(Res.string.common_cancel)) }
         }
     }
 }
@@ -1304,7 +1433,7 @@ private fun RoomSheet(
     onMerge: () -> Unit,
 ) {
     val room = map.rooms.find { it.id == segment }
-    val currentName = room?.name ?: "Room $segment"
+    val currentName = room?.name ?: stringResource(Res.string.mapedit_room_number, segment)
     var nameInput by remember(segment, currentName) { mutableStateOf(currentName) }
     val nameError = runCatching { validateRoomName(nameInput) }.exceptionOrNull()?.message
     val canAct = enabled && !working
@@ -1324,9 +1453,9 @@ private fun RoomSheet(
             if (working) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
         }
 
-        Text("Room type", style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(Res.string.mapedit_room_type), style = MaterialTheme.typography.titleSmall)
         Text(
-            "In some modes, the robot adjusts its cleaning to the room type.",
+            stringResource(Res.string.mapedit_room_type_text),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1341,9 +1470,9 @@ private fun RoomSheet(
             }
         }
 
-        Text("Custom name", style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(Res.string.mapedit_custom_name), style = MaterialTheme.typography.titleSmall)
         Text(
-            "Keeps the room's type; only the label changes.",
+            stringResource(Res.string.mapedit_custom_name_text),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1360,12 +1489,12 @@ private fun RoomSheet(
             Button(
                 onClick = { onRename(nameInput) },
                 enabled = canAct && nameError == null && nameInput.trim() != currentName,
-            ) { Text("Rename") }
+            ) { Text(stringResource(Res.string.mapedit_rename)) }
         }
 
         HorizontalDivider()
 
-        Text("Floor type", style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(Res.string.mapedit_floor_type), style = MaterialTheme.typography.titleSmall)
         val materialId = map.segmentMaterials[segment]
         val direction = map.segmentMaterialDirections[segment]
         val current = FLOOR_CHOICES.firstOrNull { choice ->
@@ -1374,11 +1503,13 @@ private fun RoomSheet(
         }
         Text(
             when {
-                materialId == null -> "This robot's map doesn't report the current floor type."
-                current != null -> "Current: ${current.label}"
-                FloorMaterial.fromId(materialId) == FloorMaterial.WOOD -> "Current: Wood"
-                FloorMaterial.fromId(materialId) == FloorMaterial.CARPET -> "Current: Carpet"
-                else -> "Current: a type LocalRock doesn't know (id $materialId)"
+                materialId == null -> stringResource(Res.string.mapedit_floor_not_reported)
+                current != null -> stringResource(Res.string.mapedit_floor_current, stringResource(current.label))
+                FloorMaterial.fromId(materialId) == FloorMaterial.WOOD ->
+                    stringResource(Res.string.mapedit_floor_current, stringResource(Res.string.mapedit_floor_wood))
+                FloorMaterial.fromId(materialId) == FloorMaterial.CARPET ->
+                    stringResource(Res.string.mapedit_floor_current, stringResource(Res.string.mapedit_tool_carpet))
+                else -> stringResource(Res.string.mapedit_floor_current_unknown, materialId)
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1388,7 +1519,7 @@ private fun RoomSheet(
                 FilterChip(
                     selected = choice == current,
                     onClick = { if (choice != current) onFloor(choice) },
-                    label = { Text(choice.label) },
+                    label = { Text(stringResource(choice.label)) },
                     enabled = canAct,
                 )
             }
@@ -1398,7 +1529,7 @@ private fun RoomSheet(
                 FilterChip(
                     selected = choice == current,
                     onClick = { if (choice != current) onFloor(choice) },
-                    label = { Text(choice.label) },
+                    label = { Text(stringResource(choice.label)) },
                     enabled = canAct,
                 )
             }
@@ -1407,9 +1538,9 @@ private fun RoomSheet(
         HorizontalDivider()
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = onSplit, enabled = canAct, modifier = Modifier.weight(1f)) { Text("Split room") }
+            OutlinedButton(onClick = onSplit, enabled = canAct, modifier = Modifier.weight(1f)) { Text(stringResource(Res.string.mapedit_split_room)) }
             OutlinedButton(onClick = onMerge, enabled = canAct && map.rooms.size > 1, modifier = Modifier.weight(1f)) {
-                Text("Merge with...")
+                Text(stringResource(Res.string.mapedit_merge_with))
             }
         }
     }
@@ -1452,7 +1583,7 @@ private fun NoticePill(notice: Notice, onDismiss: () -> Unit, modifier: Modifier
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(notice.text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f, fill = false))
-            IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, contentDescription = "Dismiss") }
+            IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.app_dismiss)) }
         }
     }
 }
@@ -1463,9 +1594,9 @@ private fun MapNotLoaded() {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(Icons.Default.Map, null, Modifier.size(48.dp), MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(12.dp))
-            Text("Map not loaded", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(Res.string.mapedit_map_not_loaded), style = MaterialTheme.typography.titleMedium)
             Text(
-                "Go back and wait for the map to load first",
+                stringResource(Res.string.mapedit_map_not_loaded_text),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

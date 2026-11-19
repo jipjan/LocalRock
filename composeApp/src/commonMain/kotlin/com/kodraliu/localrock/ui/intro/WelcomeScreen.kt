@@ -36,6 +36,19 @@ import androidx.compose.ui.unit.dp
 import com.kodraliu.localrock.ui.LocalAppContainer
 import com.kodraliu.localrock.ui.adaptive.CenteredContent
 import com.kodraliu.localrock.ui.settings.APP_VERSION
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.intro_credentials_body
+import com.kodraliu.localrock.resources.intro_credentials_title
+import com.kodraliu.localrock.resources.intro_disclaimer
+import com.kodraliu.localrock.resources.intro_get_started
+import com.kodraliu.localrock.resources.intro_headline
+import com.kodraliu.localrock.resources.intro_lead
+import com.kodraliu.localrock.resources.intro_network_body
+import com.kodraliu.localrock.resources.intro_network_title
+import com.kodraliu.localrock.resources.intro_server_body
+import com.kodraliu.localrock.resources.intro_server_title
+import com.kodraliu.localrock.resources.intro_setup_guide
+import org.jetbrains.compose.resources.stringResource
 
 private const val PROJECT_URL = "https://github.com/Python-roborock/local_roborock_server"
 
@@ -56,12 +69,12 @@ fun WelcomeScreen() {
             ) {
                 Spacer(Modifier.height(24.dp))
                 Text(
-                    "Control your vacuum\nwithout the cloud",
+                    stringResource(Res.string.intro_headline),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    "LocalRock runs entirely on your own network. Three things to know before you start.",
+                    stringResource(Res.string.intro_lead),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -69,32 +82,31 @@ fun WelcomeScreen() {
                 Spacer(Modifier.height(4.dp))
                 Point(
                     Icons.Default.Dns,
-                    "You need the server first",
-                    "LocalRock talks to a self-hosted LocalRock server. Until that is running on your " +
-                        "network, the app has nothing to control.",
+                    stringResource(Res.string.intro_server_title),
+                    stringResource(Res.string.intro_server_body),
                 )
                 Point(
                     Icons.Default.VpnKey,
-                    "Sign in with server credentials",
-                    "The email and login code come from your own server setup — not a new cloud account.",
+                    stringResource(Res.string.intro_credentials_title),
+                    stringResource(Res.string.intro_credentials_body),
                 )
                 Point(
                     Icons.Default.Wifi,
-                    "Stay on the same network",
-                    "Your phone and the server have to be able to reach each other locally.",
+                    stringResource(Res.string.intro_network_title),
+                    stringResource(Res.string.intro_network_body),
                 )
 
                 TextButton(
                     onClick = { uriHandler.openUri(PROJECT_URL) },
                     modifier = Modifier.padding(start = 4.dp),
                 ) {
-                    Text("Server setup guide")
+                    Text(stringResource(Res.string.intro_setup_guide))
                     Spacer(Modifier.width(6.dp))
                     Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
                 }
 
                 Text(
-                    "LocalRock is an independent community project, not affiliated with or endorsed by Roborock.",
+                    stringResource(Res.string.intro_disclaimer),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -114,7 +126,7 @@ fun WelcomeScreen() {
                     .padding(top = 8.dp, bottom = 24.dp)
                     .height(52.dp),
             ) {
-                Text("Get started")
+                Text(stringResource(Res.string.intro_get_started))
             }
         }
     }

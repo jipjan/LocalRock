@@ -42,6 +42,9 @@ import com.kodraliu.localrock.shared.messages.AppMessage
 import com.kodraliu.localrock.shared.messages.MessageCenter
 import com.kodraliu.localrock.shared.messages.MessageSeverity
 import kotlinx.coroutines.delay
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.app_dismiss
+import org.jetbrains.compose.resources.stringResource
 
 private data class SeverityVisuals(val container: Color, val content: Color, val icon: ImageVector)
 
@@ -73,7 +76,7 @@ fun MessageBannerArea(center: MessageCenter, modifier: Modifier = Modifier) {
                     Text(banner.text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                     if (banner.dismissible) {
                         IconButton(onClick = { center.dismissBanner(banner.key) }, modifier = Modifier.size(24.dp)) {
-                            Icon(Icons.Default.Close, contentDescription = "Dismiss", modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.app_dismiss), modifier = Modifier.size(16.dp))
                         }
                     }
                 }
@@ -123,7 +126,7 @@ fun BoxScope.TransientMessageHost(center: MessageCenter) {
                     Icon(v.icon, contentDescription = null, modifier = Modifier.size(20.dp))
                     Text(msg.text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
                     IconButton(onClick = { current = null }, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Dismiss", modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Close, contentDescription = stringResource(Res.string.app_dismiss), modifier = Modifier.size(16.dp))
                     }
                 }
             }

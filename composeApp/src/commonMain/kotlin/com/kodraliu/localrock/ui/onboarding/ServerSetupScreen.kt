@@ -42,6 +42,20 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.kodraliu.localrock.ui.LocalAppContainer
+import com.kodraliu.localrock.resources.Res
+import com.kodraliu.localrock.resources.intro_setup_guide
+import com.kodraliu.localrock.resources.login_server
+import com.kodraliu.localrock.resources.onboarding_back
+import com.kodraliu.localrock.resources.onboarding_connect
+import com.kodraliu.localrock.resources.onboarding_continue
+import com.kodraliu.localrock.resources.onboarding_demo_instead
+import com.kodraliu.localrock.resources.onboarding_no_server
+import com.kodraliu.localrock.resources.onboarding_server_address
+import com.kodraliu.localrock.resources.onboarding_url_hint
+import com.kodraliu.localrock.resources.onboarding_url_scheme
+import com.kodraliu.localrock.resources.onboarding_where
+import com.kodraliu.localrock.resources.onboarding_where_text
+import org.jetbrains.compose.resources.stringResource
 
 private const val SERVER_GUIDE_URL = "https://github.com/Python-roborock/local_roborock_server"
 
@@ -65,11 +79,11 @@ fun ServerSetupScreen(onDone: () -> Unit, onBack: (() -> Unit)? = null) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (savedUrl.isNullOrBlank()) "Connect" else "Server") },
+                title = { Text(stringResource(if (savedUrl.isNullOrBlank()) Res.string.onboarding_connect else Res.string.login_server)) },
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.onboarding_back))
                         }
                     }
                 },
@@ -108,12 +122,11 @@ fun ServerSetupScreen(onDone: () -> Unit, onBack: (() -> Unit)? = null) {
                 }
 
                 Text(
-                    "Where is your server?",
+                    stringResource(Res.string.onboarding_where),
                     style = MaterialTheme.typography.headlineSmall,
                 )
                 Text(
-                    "LocalRock talks only to the LocalRock server running on your own network. " +
-                        "Enter its address to continue.",
+                    stringResource(Res.string.onboarding_where_text),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -121,18 +134,18 @@ fun ServerSetupScreen(onDone: () -> Unit, onBack: (() -> Unit)? = null) {
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text("Server address") },
+                    label = { Text(stringResource(Res.string.onboarding_server_address)) },
                     placeholder = { Text("https://192.168.1.10:555") },
                     singleLine = true,
                     isError = url.isNotBlank() && !looksValid,
                     supportingText = {
                         Text(
                             if (url.isNotBlank() && !looksValid) {
-                                "Start with http:// or https://"
+                                stringResource(Res.string.onboarding_url_scheme)
                             } else {
                                 // The Ktor client keeps only scheme/host/port, so a trailing path is
                                 // silently dropped — worth saying before someone debugs it for an hour.
-                                "Use the server root, including the port. Don't add /admin."
+                                stringResource(Res.string.onboarding_url_hint)
                             }
                         )
                     },
@@ -147,7 +160,7 @@ fun ServerSetupScreen(onDone: () -> Unit, onBack: (() -> Unit)? = null) {
                         onDone()
                     },
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Continue") }
+                ) { Text(stringResource(Res.string.onboarding_continue)) }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -155,7 +168,7 @@ fun ServerSetupScreen(onDone: () -> Unit, onBack: (() -> Unit)? = null) {
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TextButton(onClick = { uriHandler.openUri(SERVER_GUIDE_URL) }) {
-                        Text("Server setup guide")
+                        Text(stringResource(Res.string.intro_setup_guide))
                         Spacer(Modifier.width(6.dp))
                         Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
                     }
@@ -163,12 +176,12 @@ fun ServerSetupScreen(onDone: () -> Unit, onBack: (() -> Unit)? = null) {
 
                 if (userData == null) {
                     Text(
-                        "No server yet?",
+                        stringResource(Res.string.onboarding_no_server),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     TextButton(onClick = { container.authRepository.enterDemo() }) {
-                        Text("Explore the demo instead")
+                        Text(stringResource(Res.string.onboarding_demo_instead))
                     }
                 }
                 Spacer(Modifier.height(24.dp))
