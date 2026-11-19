@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Start card of a clean's timeline: the official app's cleaning preference lines -->
+    <string name="timeline_pref_home_perception">Comprehensive home environment perception</string>
+    <string name="timeline_pref_order_sequential">Sequential room cleaning</string>
+    <string name="timeline_pref_order_custom">Custom room cleaning sequence</string>
+    <string name="timeline_pref_order_default">Default room cleaning sequence</string>
+    <string name="timeline_pref_path_ai">AI-powered dynamic path planning</string>
+    <string name="timeline_pref_path_floor">Cleaning along the floor direction</string>
+    <string name="timeline_pref_path_switch">Automatic cleaning direction switch</string>
+    <string name="timeline_pref_coverage_high">High coverage</string>
+    <string name="timeline_pref_coverage_less_collision">Fewer collisions</string>
+</resources>

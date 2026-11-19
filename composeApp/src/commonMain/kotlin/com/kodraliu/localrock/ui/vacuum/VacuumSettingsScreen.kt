@@ -1,5 +1,16 @@
 package com.kodraliu.localrock.ui.vacuum
 
+import com.kodraliu.localrock.resources.timeline_pref_coverage_less_collision
+import com.kodraliu.localrock.resources.timeline_pref_coverage_high
+import com.kodraliu.localrock.resources.timeline_pref_path_switch
+import com.kodraliu.localrock.resources.timeline_pref_path_floor
+import com.kodraliu.localrock.resources.timeline_pref_path_ai
+import com.kodraliu.localrock.resources.timeline_pref_order_default
+import com.kodraliu.localrock.resources.timeline_pref_order_custom
+import com.kodraliu.localrock.resources.timeline_pref_order_sequential
+import com.kodraliu.localrock.resources.timeline_pref_home_perception
+import org.jetbrains.compose.resources.StringResource
+import com.kodraliu.localrock.shared.vacuum.CleanPreference
 import com.kodraliu.localrock.resources.Res
 import com.kodraliu.localrock.resources.settings_after_cleaning
 import com.kodraliu.localrock.resources.settings_also_advertised
@@ -1805,6 +1816,19 @@ internal fun TimelineRow(entry: CleanTimelineEntry, first: Boolean, last: Boolea
             )
             if (entry.milestone && entry.settings != null) {
                 RoomSettingsCard(entry.settings)
+            } else if (entry.milestone && entry.preferences.isNotEmpty()) {
+                // The official app's start card: its cleaning preferences as bullets, the mode last.
+                Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val lines = entry.preferences.map { stringResource(cleanPreferenceText(it)) } + listOfNotNull(entry.detail)
+                        lines.forEach { text ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("•", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(text, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                }
             } else if (entry.milestone) {
                 entry.detail?.let {
                     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
@@ -3036,3 +3060,14 @@ private fun oneDecimal(value: Float): String {
     return "${scaled / 10}.${(scaled % 10).absoluteValue}"
 }
 
+private fun cleanPreferenceText(p: CleanPreference): StringResource = when (p) {
+    CleanPreference.HOME_PERCEPTION -> Res.string.timeline_pref_home_perception
+    CleanPreference.ORDER_SEQUENTIAL -> Res.string.timeline_pref_order_sequential
+    CleanPreference.ORDER_CUSTOM -> Res.string.timeline_pref_order_custom
+    CleanPreference.ORDER_DEFAULT -> Res.string.timeline_pref_order_default
+    CleanPreference.PATH_AI -> Res.string.timeline_pref_path_ai
+    CleanPreference.PATH_FLOOR_DIRECTION -> Res.string.timeline_pref_path_floor
+    CleanPreference.PATH_DIRECTION_SWITCH -> Res.string.timeline_pref_path_switch
+    CleanPreference.COVERAGE_HIGH -> Res.string.timeline_pref_coverage_high
+    CleanPreference.COVERAGE_LESS_COLLISION -> Res.string.timeline_pref_coverage_less_collision
+}

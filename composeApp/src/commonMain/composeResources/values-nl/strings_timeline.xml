@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Start card of a clean's timeline: the official app's cleaning preference lines -->
+    <string name="timeline_pref_home_perception">Uitgebreide waarneming van de thuisomgeving</string>
+    <string name="timeline_pref_order_sequential">Opeenvolgende ruimtereiniging</string>
+    <string name="timeline_pref_order_custom">Aangepaste schoonmaakvolgorde voor ruimtes</string>
+    <string name="timeline_pref_order_default">Standaard schoonmaakvolgorde voor ruimtes</string>
+    <string name="timeline_pref_path_ai">Dynamische routeplanning op basis van AI</string>
+    <string name="timeline_pref_path_floor">Reinigen langs de vloerrichting</string>
+    <string name="timeline_pref_path_switch">Automatische wisseling van reinigingsrichting</string>
+    <string name="timeline_pref_coverage_high">Grote dekking</string>
+    <string name="timeline_pref_coverage_less_collision">Minder botsingen</string>
+</resources>

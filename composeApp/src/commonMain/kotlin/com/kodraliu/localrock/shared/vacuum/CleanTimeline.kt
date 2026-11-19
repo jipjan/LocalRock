@@ -67,7 +67,36 @@ data class CleanTimelineEntry(
     val milestone: Boolean = false,
     /** How a room (or the whole clean) was cleaned, shown as the official app's row of icons. */
     val settings: CleanRunSettings? = null,
+    /** The start's cleaning preferences, the official app's bullet lines under "Start full clean". */
+    val preferences: List<CleanPreference> = emptyList(),
 )
+
+/** One line of the official app's start card (plugin strings `clean_node_clean_pref_line*`). */
+enum class CleanPreference {
+    HOME_PERCEPTION, ORDER_SEQUENTIAL, ORDER_CUSTOM, ORDER_DEFAULT,
+    PATH_AI, PATH_FLOOR_DIRECTION, PATH_DIRECTION_SWITCH, COVERAGE_HIGH, COVERAGE_LESS_COLLISION,
+}
+
+/**
+ * The start card's lines from field 254 of the start event (four numbers), as the a296 plugin reads
+ * them: the room order from bits 24–27 of the first (1 sequential, 2 custom, 3 default), the path from
+ * bits 28–31 (1 along the floor direction, 2 automatic direction switch, otherwise AI path planning),
+ * the coverage from the low 4 bits of the third (1 high coverage, 2 fewer collisions). The first line
+ * is always there. Checked against the official app's timeline of two a296 cleans (2026-11-18).
+ */
+fun cleanPreferences(values: List<Long>): List<CleanPreference> {
+    if (values.isEmpty()) return emptyList()
+    val first = values[0]
+    val order = ((first shr 24) and 15).toInt()
+    val path = ((first shr 28) and 15).toInt()
+    val coverage = values.getOrNull(2)?.let { (it and 15).toInt() }
+    return listOfNotNull(
+        CleanPreference.HOME_PERCEPTION,
+        when (order) { 1 -> CleanPreference.ORDER_SEQUENTIAL; 2 -> CleanPreference.ORDER_CUSTOM; 3 -> CleanPreference.ORDER_DEFAULT; else -> null },
+        when (path) { 1 -> CleanPreference.PATH_FLOOR_DIRECTION; 2 -> CleanPreference.PATH_DIRECTION_SWITCH; else -> CleanPreference.PATH_AI },
+        when (coverage) { 1 -> CleanPreference.COVERAGE_HIGH; 2 -> CleanPreference.COVERAGE_LESS_COLLISION; else -> null },
+    )
+}
 
 /**
  * The settings a start or room event carries: fields 3 (suction), 4 (water), 5 (route) and 6 (passes).
@@ -138,7 +167,14 @@ fun describeCleanEvents(events: List<CleanEvent>, roomName: (Int) -> String?): L
             25 -> if (f.int("252") == null && f.int("251") == null) null else {
                 val type = when (f.int("252")) { 1 -> "full clean"; else -> "clean" }
                 val source = when (f.int("251")) { 2 -> "from the app"; else -> null }
-                CleanTimelineEntry(e.epoch, "Started $type", listOfNotNull(source, cleanMode(f)).joinToString(" · ").ifEmpty { null }, milestone = true)
+                // The preferences come in a separate start event at the same moment.
+                val prefs = events.firstOrNull { it.type == 25 && it.epoch == e.epoch && it.fields["254"] is JsonArray }
+                    ?.let { p -> (p.fields["254"] as JsonArray).mapNotNull { (it as? JsonPrimitive)?.longOrNull } }
+                    ?.let(::cleanPreferences).orEmpty()
+                CleanTimelineEntry(
+                    e.epoch, "Started $type", listOfNotNull(source, cleanMode(f)).joinToString(" · ").ifEmpty { null },
+                    milestone = true, preferences = prefs,
+                )
             }
             42 -> run {
                 val room = f.int("2")

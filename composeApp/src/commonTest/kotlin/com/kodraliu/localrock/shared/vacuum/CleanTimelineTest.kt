@@ -123,4 +123,22 @@ class CleanTimelineResumeTest {
         assertEquals("Clean water tank empty", lines[0].detail)
         assertEquals("Light", lines[2].detail)
     }
+
+    @Test
+    fun theStartCardListsTheCleaningPreferencesLikeTheOfficialApp() {
+        // a296, 2026-11-18 17:21: the official app showed "Uitgebreide waarneming van de thuisomgeving",
+        // "Dynamische routeplanning op basis van AI", "Grote dekking", "Stofzuigen en dweilen".
+        val start = describeCleanEvents(listOf(
+            ev(1795022488, 25, """{"254":[275,269549841,304087057,4113]}"""),
+            ev(1795022488, 25, """{"251":2,"252":1,"3":3,"4":35,"5":0,"6":1}"""),
+        )) { null }.single()
+        assertEquals(
+            listOf(CleanPreference.HOME_PERCEPTION, CleanPreference.PATH_AI, CleanPreference.COVERAGE_HIGH),
+            start.preferences,
+        )
+        assertEquals(
+            listOf(CleanPreference.HOME_PERCEPTION, CleanPreference.ORDER_CUSTOM, CleanPreference.PATH_FLOOR_DIRECTION, CleanPreference.COVERAGE_LESS_COLLISION),
+            cleanPreferences(listOf((1L shl 28) or (2L shl 24), 0, 2, 0)),
+        )
+    }
 }
