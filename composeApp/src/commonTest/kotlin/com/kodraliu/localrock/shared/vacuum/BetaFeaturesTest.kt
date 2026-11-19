@@ -197,20 +197,26 @@ class BetaFeaturesTest {
     }
 
     @Test
-    fun a_camera_option_changes_only_its_own_bit() {
-        val pets = supportedBetaFeatures(null).first { it.id == "have_pets" }
-        // Captured: 387 with "I have pets" off, 419 with it on.
-        assertEquals(419, bitmaskWithBit(387, pets, 1))
-        assertEquals(387, bitmaskWithBit(419, pets, 0))
-        val light = supportedBetaFeatures(null).first { it.id == "fill_light" }
-        assertEquals(385, bitmaskWithBit(387, light, 0))
+    fun a_camera_option_changes_only_its_own_bits() {
+        // Captured from the official app on an a296, 2026-11-19.
+        fun def(id: String) = BetaFeatureDefs.first { it.id == id }
+        assertEquals(11687, bitmaskWithBit(10663, def("obstacle_photos"), 1))
+        assertEquals(28071, bitmaskWithBit(11687, def("pet_snaps"), 1))
+        assertEquals(28087, bitmaskWithBit(28071, def("fill_light"), 2))
+        assertEquals(28071, bitmaskWithBit(28087, def("fill_light"), 0))
+        // "I have pets" is bit 1 (2), per the plugin's parseCameraStatus.
+        assertEquals(28069, bitmaskWithBit(28071, def("have_pets"), 0))
     }
 
     @Test
     fun a_camera_option_is_read_from_the_bitmask() {
         val json = kotlinx.serialization.json.Json
-        val pets = supportedBetaFeatures(null).first { it.id == "have_pets" }
-        assertEquals(1, readFeatureReply(pets, json.parseToJsonElement("[419]"))?.second)
-        assertEquals(0, readFeatureReply(pets, json.parseToJsonElement("[387]"))?.second)
+        fun read(id: String, raw: Int) = readFeatureReply(BetaFeatureDefs.first { it.id == id }, json.parseToJsonElement("[$raw]"))?.second
+        assertEquals(1, read("pet_snaps", 28071))
+        assertEquals(0, read("pet_snaps", 11687))
+        assertEquals(1, read("have_pets", 28071))
+        assertEquals(0, read("fill_light", 28071))
+        assertEquals(2, read("fill_light", 28087))
+        assertEquals(1, read("obstacle_photos", 28071))
     }
 }

@@ -365,4 +365,25 @@ Not matched to anything shown: 13, 22, 24, 41 (room entered), 43 (room left), 47
   - "Obstakelfoto's" on, after its privacy notice: `set_camera_status [10663]`, then `[11687]`. Bit 1024
     is obstacle photos.
   - Pet Snaps can't be changed in the official app while a clean runs: it asks to end the clean first.
+- **Camera settings bitmask (`get_camera_status` / `set_camera_status [n]`), from the a296 plugin's
+  `parseCameraStatus`, checked 2026-11-19:**
+
+  | Bit | Value | Meaning |
+  |---|---|---|
+  | 0 | 1 | camera on |
+  | 1 | 2 | I have pets |
+  | 2 | 4 | remote viewing |
+  | 3–4 | 8, 16 | fill light: 0 automatic, 2 off |
+  | 5 | 32 | remote-viewing privacy consent |
+  | 6 | 64 | exploration |
+  | 7 | 128 | pet alert shown |
+  | 8–9 | 256, 512 | video setting |
+  | 10 | 1024 | obstacle photos |
+  | 11 | 2048 | obstacle-photo consent |
+  | 12–13 | 4096, 8192 | two-key real-time video |
+  | 14 | 16384 | Pet Snaps |
+  | 15 | 32768 | mechanical camera |
+
+  - Captured: Pet Snaps on 11687 → 28071; fill light off 28071 → 28087, then back.
+  - The earlier reading of 14 November (fill light = 2, "I have pets" = 32, Pet Snaps = 4096) was wrong.
 

@@ -56,6 +56,8 @@ data class BetaFeatureDef(
      * this bit changed, `[n]`, as the official app does with `set_camera_status`.
      */
     val bitmaskWrite: Boolean = false,
+    /** How many bits of the bitmask [readBit] starts (the fill light takes two: 0 automatic, 2 off). */
+    val bitWidth: Int = 1,
     /** Shown only while the option with this id is on; the robot refuses it otherwise (as the official app hides it). */
     val shownWhenOn: String? = null,
 )
@@ -99,9 +101,12 @@ private fun statusBitSwitch(
 )
 
 /**
- * One bit of the camera's option bitmask (`get_camera_status` / `set_camera_status [n]`). Bits seen on an
- * a296 with the official app (2026-11-14): 2 fill light automatic (385 ↔ 387), 32 "I have pets" (387 →
- * 419), 4096 Pet Snaps (419 ↔ 4515), 1024 obstacle photos (10663 → 11687, 2026-11-19). Bit 4 (0x4) is the remote-viewing authorization and cannot be set.
+ * One option in the camera's bitmask (`get_camera_status` / `set_camera_status [n]`), as the a296 plugin's
+ * `parseCameraStatus` reads it: bit 0 camera on, 1 "I have pets", 2 remote viewing, 3–4 fill light (0
+ * automatic, 2 off), 5 remote-viewing privacy consent, 6 exploration, 7 pet alert shown, 8–9 video
+ * setting, 10 obstacle photos, 11 obstacle-photo privacy consent, 12–13 two-key real-time video,
+ * 14 Pet Snaps, 15 mechanical camera. Checked on 2026-11-19 against the official app: obstacle photos
+ * 10663 → 11687, Pet Snaps 11687 → 28071, fill light off 28071 → 28087 and back.
  */
 private fun cameraBitSwitch(
     id: String,
@@ -111,16 +116,18 @@ private fun cameraBitSwitch(
     bit: Int?,
     section: FeatureSection,
     choices: List<Pair<Int, UiText>>? = null,
+    bitWidth: Int = 1,
 ) = BetaFeatureDef(
     id = id, title = title, description = description, bit = bit,
     getMethod = "get_camera_status", setMethod = "set_camera_status", section = section,
-    choices = choices, readBit = bitIndex, bitmaskWrite = true,
+    choices = choices, readBit = bitIndex, bitmaskWrite = true, bitWidth = bitWidth,
 )
 
-/** The value to write for [def] set to [value] (0/1), when the robot's whole bitmask is [raw]. */
+/** The value to write for [def] set to [value], when the robot's whole bitmask is [raw]. */
 fun bitmaskWithBit(raw: Int, def: BetaFeatureDef, value: Int): Int {
-    val mask = 1 shl requireNotNull(def.readBit)
-    return if (value == 1) raw or mask else raw and mask.inv()
+    val shift = requireNotNull(def.readBit)
+    val mask = ((1 shl def.bitWidth) - 1) shl shift
+    return (raw and mask.inv()) or ((value shl shift) and mask)
 }
 
 val BetaFeatureDefs = listOf(
@@ -371,10 +378,10 @@ val BetaFeatureDefs = listOf(
         setKey = "status",
     ),
     cameraBitSwitch(
-        id = "fill_light", bitIndex = 1,
+        id = "fill_light", bitIndex = 3, bitWidth = 2,
         title = uiText(Res.string.feature_fill_light_title, "Fill light"), description = uiText(Res.string.feature_fill_light_desc, "Lights up dark spots so obstacles are recognised better"),
         bit = null, section = FeatureSection.OBSTACLE,
-        choices = listOf(1 to uiText(Res.string.feature_choice_automatic, "Automatic"), 0 to uiText(Res.string.feature_choice_off, "Off")),
+        choices = listOf(0 to uiText(Res.string.feature_choice_automatic, "Automatic"), 2 to uiText(Res.string.feature_choice_off, "Off")),
     ),
     // Bit 10 (1024), captured 2026-11-19: the official app's "Obstakelfoto's" sent [10663] then [11687]
     // after its privacy notice (the photos are kept in the robot's memory).
@@ -385,12 +392,12 @@ val BetaFeatureDefs = listOf(
         bit = null, section = FeatureSection.OBSTACLE,
     ),
     cameraBitSwitch(
-        id = "have_pets", bitIndex = 5,
+        id = "have_pets", bitIndex = 1,
         title = uiText(Res.string.feature_have_pets_title, "I have pets"), description = uiText(Res.string.feature_have_pets_desc, "Watches out for pet waste and cleans pet areas with more care"),
         bit = null, section = FeatureSection.PETS,
     ),
     cameraBitSwitch(
-        id = "pet_snaps", bitIndex = 12,
+        id = "pet_snaps", bitIndex = 14,
         title = uiText(Res.string.feature_pet_snaps_title, "Pet Snaps"), description = uiText(Res.string.feature_pet_snaps_desc, "Takes photos of your pets while cleaning"),
         bit = 50, section = FeatureSection.PETS,
     ),
@@ -604,7 +611,7 @@ fun featureReadParams(def: BetaFeatureDef): JsonElement =
 fun readFeatureReply(def: BetaFeatureDef, result: JsonElement?): Pair<String?, Int>? {
     if (def.bitmaskWrite) {
         val raw = parseBetaReply(result)?.second ?: return null
-        return null to ((raw shr requireNotNull(def.readBit)) and 1)
+        return null to ((raw shr requireNotNull(def.readBit)) and ((1 shl def.bitWidth) - 1))
     }
     val field = def.readField ?: return parseBetaReply(result)
     val obj = (if (result is JsonArray) result.firstOrNull() else result) as? JsonObject ?: return null
