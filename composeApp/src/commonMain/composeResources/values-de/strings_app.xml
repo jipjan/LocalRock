@@ -142,11 +142,6 @@
     <string name="appsettings_connection">Verbindung</string>
     <string name="appsettings_server_url">Server-URL</string>
     <string name="appsettings_server_url_text">Die Adresse deines selbst gehosteten LocalRock-Servers in deinem Netzwerk.</string>
-    <string name="appsettings_contribute">Mitmachen</string>
-    <string name="appsettings_contribute_text">LocalRock ist ein kostenloses Open-Source-Community-Projekt. Fehlerberichte, Ideen und Pull-Requests sind alle willkommen.</string>
-    <string name="appsettings_contribute_github">Auf GitHub mitmachen</string>
-    <string name="appsettings_donate_text">Eine kleine Spende hilft, es weiter zu pflegen. Sie ist nie nötig – die App ist und bleibt kostenlos.</string>
-    <string name="appsettings_donate">Spenden</string>
     <string name="appsettings_about">Über</string>
     <string name="appsettings_about_text">Steuere Sauger lokal über deinen eigenen Server. Nicht mit Roborock verbunden, von Roborock unterstützt oder an Roborock angeschlossen. „Roborock“ ist eine Marke ihres Inhabers.</string>
     <string name="appsettings_whats_new">Neu in %1$s</string>

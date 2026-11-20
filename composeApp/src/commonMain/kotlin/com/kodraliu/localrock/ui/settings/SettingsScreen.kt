@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -47,8 +46,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.kodraliu.localrock.shared.notify.backgroundAlertsSupported
 import com.kodraliu.localrock.shared.settings.ThemeMode
-import com.kodraliu.localrock.shared.platform.donationUrl
-import com.kodraliu.localrock.shared.platform.donationsEnabled
 import com.kodraliu.localrock.ui.LocalAppContainer
 import com.kodraliu.localrock.ui.rememberNotificationPermissionRequest
 import com.kodraliu.localrock.ui.whatsnew.WhatsNewSheet
@@ -63,11 +60,6 @@ import com.kodraliu.localrock.resources.appsettings_alerts_note_ios
 import com.kodraliu.localrock.resources.appsettings_appearance
 import com.kodraliu.localrock.resources.appsettings_built_for
 import com.kodraliu.localrock.resources.appsettings_connection
-import com.kodraliu.localrock.resources.appsettings_contribute
-import com.kodraliu.localrock.resources.appsettings_contribute_github
-import com.kodraliu.localrock.resources.appsettings_contribute_text
-import com.kodraliu.localrock.resources.appsettings_donate
-import com.kodraliu.localrock.resources.appsettings_donate_text
 import com.kodraliu.localrock.resources.appsettings_notifications
 import com.kodraliu.localrock.resources.appsettings_notifications_denied
 import com.kodraliu.localrock.resources.appsettings_notify_background
@@ -99,7 +91,6 @@ import org.jetbrains.compose.resources.stringResource
 
 const val APP_VERSION: String = "1.4.0"
 
-private const val PROJECT_URL = "https://github.com/DonSidro/LocalRock/"
 
 private const val PRIVACY_URL = "https://donsidro.github.io/LocalRock/"
 
@@ -206,35 +197,6 @@ fun SettingsScreen(onDone: () -> Unit, allowCancel: Boolean) {
                 if (userData != null) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                     NotificationSettings()
-                }
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-                SectionLabel(stringResource(Res.string.appsettings_contribute))
-                Text(
-                    stringResource(Res.string.appsettings_contribute_text),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Button(
-                    onClick = { uriHandler.openUri(PROJECT_URL) },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Icon(Icons.Default.Favorite, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(Res.string.appsettings_contribute_github))
-                }
-
-                if (donationsEnabled) {
-                    Text(
-                        stringResource(Res.string.appsettings_donate_text),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    OutlinedButton(
-                        onClick = { uriHandler.openUri(donationUrl) },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) { Text(stringResource(Res.string.appsettings_donate)) }
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))

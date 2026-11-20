@@ -142,11 +142,6 @@
     <string name="appsettings_connection">Verbinding</string>
     <string name="appsettings_server_url">Server-URL</string>
     <string name="appsettings_server_url_text">Het adres van je zelfgehoste LocalRock-server op je netwerk.</string>
-    <string name="appsettings_contribute">Bijdragen</string>
-    <string name="appsettings_contribute_text">LocalRock is een gratis opensource-communityproject. Probleemmeldingen, ideeën en pull requests zijn allemaal welkom.</string>
-    <string name="appsettings_contribute_github">Bijdragen op GitHub</string>
-    <string name="appsettings_donate_text">Een kleine donatie helpt om het te blijven onderhouden. Het is nooit verplicht: de app is en blijft gratis.</string>
-    <string name="appsettings_donate">Doneren</string>
     <string name="appsettings_about">Over</string>
     <string name="appsettings_about_text">Bedien stofzuigers lokaal via je eigen server. Niet verbonden aan, goedgekeurd door of gelieerd aan Roborock. "Roborock" is een handelsmerk van de eigenaar.</string>
     <string name="appsettings_whats_new">Nieuw in %1$s</string>

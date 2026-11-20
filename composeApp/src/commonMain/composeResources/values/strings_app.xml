@@ -142,11 +142,6 @@
     <string name="appsettings_connection">Connection</string>
     <string name="appsettings_server_url">Server URL</string>
     <string name="appsettings_server_url_text">The address of your self-hosted LocalRock server on your network.</string>
-    <string name="appsettings_contribute">Contribute</string>
-    <string name="appsettings_contribute_text">LocalRock is a free, open-source community project. Issue reports, ideas, and pull requests are all welcome.</string>
-    <string name="appsettings_contribute_github">Contribute on GitHub</string>
-    <string name="appsettings_donate_text">A small donation helps keep it maintained. It is never required — the app is and stays free.</string>
-    <string name="appsettings_donate">Donate</string>
     <string name="appsettings_about">About</string>
     <string name="appsettings_about_text">Control vacuums locally through your own server. Not affiliated with, endorsed by, or connected to Roborock. "Roborock" is a trademark of its owner.</string>
     <string name="appsettings_whats_new">What's new in %1$s</string>
